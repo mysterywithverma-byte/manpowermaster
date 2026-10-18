@@ -13,6 +13,7 @@ export interface ExperienceItem {
 
 export interface MockUser {
   _id: string;
+  id?: string;
   name: string;
   email: string;
   role: "seeker" | "employer" | "admin";

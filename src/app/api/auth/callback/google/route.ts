@@ -82,6 +82,7 @@ export async function GET(request: Request) {
 
     // 4. Return client-side script to store user in localStorage and redirect
     const userPayload = JSON.stringify({
+      _id: dbUser._id.toString(),
       id: dbUser._id.toString(),
       name: dbUser.name,
       email: dbUser.email,

@@ -39,7 +39,8 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
   const fetchApps = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/applications?applicantId=${user?._id || "user-seeker-1"}`);
+      const applicantId = user?._id || user?.id || "user-seeker-1";
+      const res = await fetch(`/api/applications?applicantId=${applicantId}`);
       const data = await res.json();
       if (data.success) {
         setApplications(data.data || []);

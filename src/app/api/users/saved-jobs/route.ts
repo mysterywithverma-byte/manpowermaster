@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/lib/models/User";
 import { inMemoryStore } from "@/lib/mock-data";
@@ -15,7 +16,12 @@ export async function POST(request: NextRequest) {
     const db = await connectToDatabase();
 
     if (db) {
-      const user = await User.findById(userId);
+      let user = null;
+      if (mongoose.Types.ObjectId.isValid(userId)) {
+        user = await User.findById(userId);
+      } else {
+        user = await User.findOne({ email: userId });
+      }
       if (!user) {
         return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
       }

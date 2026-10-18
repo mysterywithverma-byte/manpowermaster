@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/lib/models/User";
 import { inMemoryStore } from "@/lib/mock-data";
@@ -23,7 +24,7 @@ async function handleProfileUpdate(request: NextRequest) {
 
     // 1. Try updating in MongoDB Atlas
     let updatedUser = null;
-    if (userId) {
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
       updatedUser = await User.findByIdAndUpdate(
         userId,
         { $set: profileData },
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
     let user = null;
-    if (userId) {
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
       user = await User.findById(userId);
     } else if (email) {
       user = await User.findOne({ email });

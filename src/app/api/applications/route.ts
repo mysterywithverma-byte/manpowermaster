@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { Application } from "@/lib/models/Application";
 import { Job } from "@/lib/models/Job";
@@ -10,13 +11,23 @@ export async function GET(request: NextRequest) {
     const applicantId = searchParams.get("applicantId");
     const jobId = searchParams.get("jobId");
 
+    // If applicantId is provided but not a valid MongoDB ObjectId (e.g. demo "user-seeker-1")
+    if (applicantId && !mongoose.Types.ObjectId.isValid(applicantId)) {
+      const apps = inMemoryStore.getApplications(applicantId, jobId || undefined);
+      const hydrated = apps.map((app) => ({
+        ...app,
+        jobId: inMemoryStore.getJobById(app.jobId) || { _id: app.jobId, title: "Role", company: "Company" },
+      }));
+      return NextResponse.json({ success: true, count: hydrated.length, source: "in-memory", data: hydrated });
+    }
+
     const db = await connectToDatabase();
 
     if (db) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const query: any = {};
       if (applicantId) query.applicantId = applicantId;
-      if (jobId) query.jobId = jobId;
+      if (jobId && mongoose.Types.ObjectId.isValid(jobId)) query.jobId = jobId;
 
       const applications = await Application.find(query)
         .populate("jobId")
