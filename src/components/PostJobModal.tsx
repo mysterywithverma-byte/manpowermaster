@@ -9,6 +9,8 @@ import {
   CheckCircle,
   Upload,
   ImageIcon,
+  Building2,
+  User,
 } from "lucide-react";
 import { compressImageToWebP, formatBytes } from "@/lib/image-compressor";
 
@@ -19,7 +21,7 @@ interface PostJobModalProps {
 }
 
 export function PostJobModal({ isOpen, onClose, onJobCreated }: PostJobModalProps) {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   const [title, setTitle] = useState("");
   const [company, setCompany] = useState(user?.companyName || "Manpower Master");
@@ -110,13 +112,17 @@ export function PostJobModal({ isOpen, onClose, onJobCreated }: PostJobModalProp
           requirements: requirements.split("\n").filter(Boolean),
           benefits: benefits.split("\n").filter(Boolean),
           featured,
-          postedBy: user?._id || "user-employer-1",
+          postedBy: user?._id || user?.id || user?.email || "user-employer-1",
         }),
       });
 
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Failed to publish job");
+      }
+
+      if (user && user.role !== "employer") {
+        updateUser({ role: "employer" });
       }
 
       setSuccess(true);
@@ -169,6 +175,15 @@ export function PostJobModal({ isOpen, onClose, onJobCreated }: PostJobModalProp
                 Target verified candidates across India with transparent compensation.
               </p>
             </div>
+
+            {user && user.role === "seeker" && (
+              <div className="mb-4 p-3 rounded-2xl bg-orange-50 border border-orange-200 flex items-center gap-2.5 text-xs text-orange-950">
+                <Building2 className="w-4 h-4 text-orange-600 shrink-0" />
+                <span>
+                  Posting as <strong>{user.name}</strong> ({user.email}). Your account will automatically activate as an <strong>Employer</strong> so you can review incoming candidate applications!
+                </span>
+              </div>
+            )}
 
             {error && (
               <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-bold">

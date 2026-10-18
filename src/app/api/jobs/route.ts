@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { Job } from "@/lib/models/Job";
 import { User } from "@/lib/models/User";
@@ -107,6 +108,27 @@ export async function POST(request: NextRequest) {
     const db = await connectToDatabase();
 
     if (db) {
+      let resolvedPosterId = postedBy || "user-employer-1";
+      if (postedBy) {
+        try {
+          const userDoc = await User.findOne({
+            $or: [
+              ...(mongoose.Types.ObjectId.isValid(postedBy) ? [{ _id: postedBy }] : []),
+              { email: postedBy },
+            ],
+          });
+          if (userDoc) {
+            resolvedPosterId = userDoc._id.toString();
+            if (userDoc.role === "seeker") {
+              userDoc.role = "employer";
+              await userDoc.save();
+            }
+          }
+        } catch {
+          // ignore lookup error
+        }
+      }
+
       const createdJob = await Job.create({
         title,
         company,
@@ -122,7 +144,7 @@ export async function POST(request: NextRequest) {
         requirements: Array.isArray(requirements) ? requirements : requirements?.split("\n").filter(Boolean) || [],
         skills: Array.isArray(skills) ? skills : skills?.split(",").map((s: string) => s.trim()).filter(Boolean) || [],
         benefits: Array.isArray(benefits) ? benefits : benefits?.split("\n").filter(Boolean) || [],
-        postedBy: postedBy || "654321654321654321654321",
+        postedBy: resolvedPosterId,
         featured: Boolean(body.featured),
         status: "active",
       });

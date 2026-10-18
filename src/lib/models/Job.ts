@@ -51,7 +51,7 @@ const JobSchema = new Schema<IJob>(
     requirements: { type: [String], default: [] },
     skills: { type: [String], default: [] },
     benefits: { type: [String], default: [] },
-    postedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    postedBy: { type: Schema.Types.Mixed, required: true, index: true },
     applicantsCount: { type: Number, default: 0 },
     featured: { type: Boolean, default: false },
     status: { type: String, enum: ["active", "closed"], default: "active" },
@@ -60,5 +60,9 @@ const JobSchema = new Schema<IJob>(
     timestamps: true,
   }
 );
+
+if (process.env.NODE_ENV !== "production" && models.Job) {
+  delete (models as Record<string, unknown>).Job;
+}
 
 export const Job = models.Job || model<IJob>("Job", JobSchema);

@@ -20,8 +20,8 @@ export interface IApplication extends Document {
 
 const ApplicationSchema = new Schema<IApplication>(
   {
-    jobId: { type: Schema.Types.ObjectId, ref: "Job", required: true, index: true },
-    applicantId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    jobId: { type: Schema.Types.Mixed, required: true, index: true },
+    applicantId: { type: Schema.Types.Mixed, required: true, index: true },
     status: {
       type: String,
       enum: ["Applied", "Shortlisted", "Interviewed", "Hired", "Rejected"],
@@ -46,5 +46,9 @@ const ApplicationSchema = new Schema<IApplication>(
 );
 
 ApplicationSchema.index({ jobId: 1, applicantId: 1 }, { unique: true });
+
+if (process.env.NODE_ENV !== "production" && models.Application) {
+  delete (models as Record<string, unknown>).Application;
+}
 
 export const Application = models.Application || model<IApplication>("Application", ApplicationSchema);
