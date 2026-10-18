@@ -17,6 +17,7 @@ import { EmployerDashboard } from "@/components/EmployerDashboard";
 import { AdminDashboard } from "@/components/AdminDashboard";
 import { Footer } from "@/components/Footer";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { JobJsonLd } from "@/components/JobJsonLd";
 import {
   SlidersHorizontal,
   ArrowUpDown,
@@ -166,13 +167,33 @@ export default function HomePage() {
     });
   }, [jobs, sortBy]);
 
+  const handleSelectJobById = (jobId: string) => {
+    const match = jobs.find((j) => j._id === jobId);
+    if (match) {
+      setSelectedJob(match);
+    } else {
+      fetch(`/api/jobs/${jobId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.data) {
+            setSelectedJob(data.data);
+          }
+        })
+        .catch(() => {});
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-900 selection:bg-orange-600 selection:text-white">
+      {/* Google Jobs Schema.org JSON-LD Structured Data */}
+      <JobJsonLd jobs={jobs} />
+
       {/* Navigation */}
       <Navbar
         onOpenAuth={() => setIsAuthOpen(true)}
         onOpenRegister={() => setIsOnboardingOpen(true)}
         onOpenPostJob={() => setIsPostJobOpen(true)}
+        onSelectJobId={handleSelectJobById}
       />
 
       {/* Main View Switching */}

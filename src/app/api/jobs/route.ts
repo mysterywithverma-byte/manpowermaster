@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { Job } from "@/lib/models/Job";
+import { User } from "@/lib/models/User";
+import { Notification } from "@/lib/models/Notification";
 import { inMemoryStore } from "@/lib/mock-data";
 
 export async function GET(request: NextRequest) {
@@ -124,6 +126,45 @@ export async function POST(request: NextRequest) {
         featured: Boolean(body.featured),
         status: "active",
       });
+
+      // Free automated candidate notifications based on matching skills or location
+      try {
+        const jobSkills = Array.isArray(createdJob.skills) ? createdJob.skills : [];
+        const matchConditions: any[] = [];
+
+        if (jobSkills.length > 0) {
+          matchConditions.push({ skills: { $in: jobSkills } });
+        }
+        if (createdJob.location && createdJob.location !== "All") {
+          const city = createdJob.location.split(",")[0].trim();
+          matchConditions.push({ location: { $regex: city, $options: "i" } });
+        }
+
+        const candidateQuery: any = { role: "seeker" };
+        if (matchConditions.length > 0) {
+          candidateQuery.$or = matchConditions;
+        }
+
+        const matchedCandidates = await User.find(candidateQuery)
+          .select("_id email name")
+          .limit(50)
+          .lean();
+
+        if (matchedCandidates.length > 0) {
+          const notificationsToInsert = matchedCandidates.map((c: any) => ({
+            userId: c._id.toString(),
+            jobId: createdJob._id.toString(),
+            title: `New Role Matching Your Profile: ${createdJob.title}`,
+            message: `${createdJob.company} has an active opening in ${createdJob.location} (₹${createdJob.salaryMin} - ₹${createdJob.salaryMax} LPA).`,
+            type: "job_match",
+            read: false,
+            link: `/?job=${createdJob._id}`,
+          }));
+          await Notification.insertMany(notificationsToInsert);
+        }
+      } catch (notifError) {
+        console.warn("Candidate matching alert notice:", notifError);
+      }
 
       return NextResponse.json({ success: true, source: "mongodb", data: createdJob }, { status: 201 });
     }

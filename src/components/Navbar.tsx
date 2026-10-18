@@ -15,14 +15,16 @@ import {
   Phone,
 } from "lucide-react";
 import { TextLogo } from "@/components/TextLogo";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface NavbarProps {
   onOpenAuth: () => void;
   onOpenRegister?: () => void;
   onOpenPostJob: () => void;
+  onSelectJobId?: (jobId: string) => void;
 }
 
-export function Navbar({ onOpenAuth, onOpenRegister, onOpenPostJob }: NavbarProps) {
+export function Navbar({ onOpenAuth, onOpenRegister, onOpenPostJob, onSelectJobId }: NavbarProps) {
   const { user, role, activeView, setActiveView, loginAsDemo, logout, savedJobs } = useAuth();
   const [demoMenuOpen, setDemoMenuOpen] = useState(false);
 
@@ -177,6 +179,7 @@ export function Navbar({ onOpenAuth, onOpenRegister, onOpenPostJob }: NavbarProp
           {/* User Profile or Sign In */}
           {user ? (
             <div className="flex items-center gap-2">
+              <NotificationBell onSelectJobId={onSelectJobId} />
               <div
                 onClick={() => {
                   if (role === "seeker") setActiveView("seeker-dashboard");

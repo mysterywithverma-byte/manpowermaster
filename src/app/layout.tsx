@@ -14,9 +14,74 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Manpower Master | Verified Jobs in Punjab, Delhi NCR, Bengaluru & Pan-India",
+  metadataBase: new URL("https://manpowermaster.com"),
+  title: {
+    default: "Manpower Master | Verified Corporate Jobs & Placement in India",
+    template: "%s | Manpower Master",
+  },
   description:
-    "Official career staffing & job recruitment ecosystem by Manpower Master (Manpowermaster.com). Govt. GSTIN Verified (03IPTPB9968A1ZJ). Find verified jobs across IT, Sales, Marketing, Accounts, Technical & Remote roles with transparent ₹ LPA compensation.",
+    "Official direct hiring & corporate talent placement portal by Manpower Master (Govt. GSTIN Regd: 03IPTPB9968A1ZJ). Find verified jobs in Jalandhar, Ludhiana, Chandigarh, Delhi NCR, and PAN-India with transparent ₹ LPA salary packages.",
+  keywords: [
+    "Jobs in Jalandhar",
+    "Jobs in Punjab",
+    "Jobs in Ludhiana",
+    "Jobs in Chandigarh",
+    "Accountant Jobs in Punjab",
+    "Tally Accounts Jobs",
+    "Direct Hiring Companies India",
+    "Manpower Master",
+    "Recruitment Agency Jalandhar",
+    "Corporate Staffing India",
+    "Sales Executive Vacancies",
+    "Work From Home Jobs India",
+  ],
+  authors: [{ name: "Manpower Master Recruitment Team", url: "https://manpowermaster.com" }],
+  creator: "Manpower Master (03IPTPB9968A1ZJ)",
+  publisher: "Manpower Master",
+  alternates: {
+    canonical: "https://manpowermaster.com",
+  },
+  openGraph: {
+    title: "Manpower Master | Direct Corporate Hiring & Verified Jobs in India",
+    description:
+      "Search verified career openings across Accounts, Sales, IT, Office Admin & Operations in Punjab & PAN-India with direct HR interview invites.",
+    url: "https://manpowermaster.com",
+    siteName: "Manpower Master",
+    images: [
+      {
+        url: "https://manpowermaster.com/illustrations/hero-search.png",
+        width: 1200,
+        height: 630,
+        alt: "Manpower Master Direct Hiring Portal",
+      },
+    ],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Manpower Master | Verified Jobs in India",
+    description:
+      "Find verified jobs with direct employer callbacks. Govt. GSTIN Regd: 03IPTPB9968A1ZJ.",
+    images: ["https://manpowermaster.com/illustrations/hero-search.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  other: {
+    "geo.region": "IN-PB",
+    "geo.placename": "Jalandhar, Punjab, India",
+    "geo.position": "31.3260;75.5762",
+    "ICBM": "31.3260, 75.5762",
+  },
 };
 
 export default function RootLayout({
