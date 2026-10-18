@@ -55,7 +55,7 @@ export function NaukriOnboardingModal({
   onClose,
   onCompleted,
 }: NaukriOnboardingModalProps) {
-  const { user, login } = useAuth();
+  const { user, login, updateUser } = useAuth();
 
   // Step Tracker (1 to 4)
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -185,6 +185,7 @@ export function NaukriOnboardingModal({
     const profilePayload = {
       name: fullName || user?.name || "Job Candidate",
       email: email || user?.email || "candidate@gmail.com",
+      avatar: user?.avatar || undefined,
       phone,
       location,
       headline,
@@ -231,7 +232,7 @@ export function NaukriOnboardingModal({
         throw new Error((data && data.error) || `Profile update failed (${res.status})`);
       }
 
-      // Re-login locally to update AuthContext
+      updateUser(profilePayload);
       await login(profilePayload.email);
 
       confetti({

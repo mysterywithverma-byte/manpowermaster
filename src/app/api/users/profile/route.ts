@@ -11,7 +11,7 @@ async function handleProfileUpdate(request: NextRequest) {
     // Support both nested { userId, profileData } and flat profile payload { name, email, ... }
     const profileData = body.profileData || body;
     const userId = body.userId || profileData.id || profileData._id;
-    const email = profileData.email?.toLowerCase();
+    const email = (body.email || profileData.email)?.toLowerCase();
 
     if (!userId && !email) {
       return NextResponse.json(
@@ -43,19 +43,24 @@ async function handleProfileUpdate(request: NextRequest) {
         success: true,
         source: "mongodb",
         user: {
+          _id: updatedUser._id.toString(),
           id: updatedUser._id.toString(),
           name: updatedUser.name,
           email: updatedUser.email,
           role: updatedUser.role,
-          phone: updatedUser.phone,
-          location: updatedUser.location,
-          headline: updatedUser.headline,
+          avatar: updatedUser.avatar || updatedUser.companyLogo || "",
+          phone: updatedUser.phone || "",
+          location: updatedUser.location || "",
+          headline: updatedUser.headline || "",
+          bio: updatedUser.bio || "",
           skills: updatedUser.skills || [],
-          noticePeriod: updatedUser.noticePeriod,
-          expectedCtc: updatedUser.expectedCtc,
-          resumeUrl: updatedUser.resumeUrl,
-          education: updatedUser.education,
-          experienceHistory: updatedUser.experienceHistory,
+          noticePeriod: updatedUser.noticePeriod || "Immediate",
+          expectedCtc: updatedUser.expectedCtc || 0,
+          currentCtc: updatedUser.currentCtc || 0,
+          resumeUrl: updatedUser.resumeUrl || "",
+          resumeFileName: updatedUser.resumeFileName || "",
+          education: updatedUser.education || [],
+          experienceHistory: updatedUser.experienceHistory || [],
         },
       });
     }

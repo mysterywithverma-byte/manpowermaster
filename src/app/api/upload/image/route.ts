@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { uploadFileToCloud } from "@/lib/storage";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,31 +13,24 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Save to public/uploads/images directory
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "images");
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-
-    // Generate unique webp filename
-    const timestamp = Date.now();
-    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const filename = `${timestamp}-${safeName}`;
-    const filePath = path.join(uploadDir, filename);
-
-    fs.writeFileSync(filePath, buffer);
-
-    const publicUrl = `/uploads/images/${filename}`;
+    const uploadResult = await uploadFileToCloud(
+      buffer,
+      file.name,
+      file.type || "image/webp",
+      "images"
+    );
 
     return NextResponse.json({
       success: true,
       message: "Image uploaded and stored in lightweight format successfully",
-      url: publicUrl,
+      url: uploadResult.url,
+      provider: uploadResult.provider,
       sizeBytes: buffer.length,
       mimeType: file.type,
-      filename,
+      filename: uploadResult.fileName,
     });
   } catch (error: unknown) {
+    console.error("Image upload error:", error);
     const message = error instanceof Error ? error.message : "Image upload failed";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }

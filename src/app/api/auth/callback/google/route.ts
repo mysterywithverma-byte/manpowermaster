@@ -73,12 +73,19 @@ export async function GET(request: Request) {
         name: googleProfile.name || googleProfile.email.split("@")[0],
         email: googleProfile.email.toLowerCase(),
         role: role,
+        avatar: googleProfile.picture || "",
         companyName: role === "employer" ? "My Hiring Organization" : "",
         companyLogo: googleProfile.picture || "",
         savedJobs: [],
         skills: [],
       });
+    } else if (!dbUser.avatar && googleProfile.picture) {
+      // If existing user has no custom avatar yet, set Google photo
+      dbUser.avatar = googleProfile.picture;
+      await dbUser.save();
     }
+
+    const userAvatar = dbUser.avatar || dbUser.companyLogo || googleProfile.picture || "";
 
     // 4. Return client-side script to store user in localStorage and redirect
     const userPayload = JSON.stringify({
@@ -87,11 +94,21 @@ export async function GET(request: Request) {
       name: dbUser.name,
       email: dbUser.email,
       role: dbUser.role,
+      avatar: userAvatar,
       phone: dbUser.phone || "",
       location: dbUser.location || "",
+      headline: dbUser.headline || "",
+      bio: dbUser.bio || "",
       companyName: dbUser.companyName || "",
       savedJobs: dbUser.savedJobs || [],
       skills: dbUser.skills || [],
+      noticePeriod: dbUser.noticePeriod || "Immediate",
+      expectedCtc: dbUser.expectedCtc || 0,
+      currentCtc: dbUser.currentCtc || 0,
+      education: dbUser.education || [],
+      experienceHistory: dbUser.experienceHistory || [],
+      resumeUrl: dbUser.resumeUrl || "",
+      resumeFileName: dbUser.resumeFileName || "",
     });
 
     const html = `<!DOCTYPE html>

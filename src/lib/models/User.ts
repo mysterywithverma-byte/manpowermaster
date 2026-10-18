@@ -19,6 +19,7 @@ export interface IUser extends Document {
   savedJobs: string[];
   companyName?: string;
   companyLogo?: string;
+  avatar?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,6 +49,7 @@ const UserSchema = new Schema<IUser>(
     savedJobs: { type: [String], default: [] },
     companyName: { type: String, default: "" },
     companyLogo: { type: String, default: "" },
+    avatar: { type: String, default: "" },
   },
   {
     timestamps: true,

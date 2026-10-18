@@ -13,6 +13,7 @@ interface AuthContextType {
   login: (email: string) => Promise<boolean>;
   register: (data: { name: string; email: string; role: "seeker" | "employer"; companyName?: string }) => Promise<boolean>;
   logout: () => void;
+  updateUser: (data: Partial<MockUser>) => void;
   toggleSaveJob: (jobId: string) => Promise<void>;
   isJobSaved: (jobId: string) => boolean;
 }
@@ -20,9 +21,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<MockUser | null>(INITIAL_USERS[0]); // Default to Seeker for instant rich experience
+  const [user, setUser] = useState<MockUser | null>(null);
   const [activeView, setActiveView] = useState<"explore" | "seeker-dashboard" | "employer-dashboard" | "admin-dashboard">("explore");
-  const [savedJobs, setSavedJobs] = useState<string[]>(INITIAL_USERS[0].savedJobs);
+  const [savedJobs, setSavedJobs] = useState<string[]>([]);
 
   useEffect(() => {
     const stored = localStorage.getItem("jn_user");
@@ -31,8 +32,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const parsed = JSON.parse(stored);
         setUser(parsed);
         setSavedJobs(parsed.savedJobs || []);
+
+        // Asynchronously fetch fresh live profile from MongoDB Atlas
+        if (parsed.email) {
+          fetch(`/api/users/profile?email=${encodeURIComponent(parsed.email)}`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success && data.user) {
+                const refreshed = {
+                  ...parsed,
+                  ...data.user,
+                  _id: data.user._id || data.user.id || parsed._id,
+                  id: data.user.id || data.user._id || parsed.id,
+                  avatar: data.user.avatar || data.user.companyLogo || parsed.avatar,
+                };
+                setUser(refreshed);
+                setSavedJobs(refreshed.savedJobs || []);
+                localStorage.setItem("jn_user", JSON.stringify(refreshed));
+              }
+            })
+            .catch(() => {});
+        }
       } catch {
-        // use default
+        // invalid JSON
       }
     }
     if (typeof window !== "undefined" && window.location.search.includes("google_auth_success")) {
@@ -41,6 +63,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ""));
     }
   }, []);
+
+  const updateUser = (data: Partial<MockUser>) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const updated = { ...prev, ...data };
+      localStorage.setItem("jn_user", JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   const loginAsDemo = (demoRole: "seeker" | "employer" | "admin") => {
     const found = INITIAL_USERS.find((u) => u.role === demoRole) || INITIAL_USERS[0];
@@ -144,6 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        updateUser,
         toggleSaveJob,
         isJobSaved,
       }}

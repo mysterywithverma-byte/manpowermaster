@@ -30,7 +30,7 @@ export function ProfileBuilderModal({
   onClose,
   onProfileUpdated,
 }: ProfileBuilderModalProps) {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   const [name, setName] = useState(user?.name || "");
   const [headline, setHeadline] = useState(user?.headline || "");
@@ -46,9 +46,29 @@ export function ProfileBuilderModal({
   const [linkedinUrl, setLinkedinUrl] = useState(user?.linkedinUrl || "");
 
   // Avatar Image & Lightweight WebP Compression state
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatar || "/company-profile.jpeg");
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar || "");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarSavings, setAvatarSavings] = useState("");
+
+  // Sync state when user changes
+  React.useEffect(() => {
+    if (user) {
+      if (user.name) setName(user.name);
+      if (user.headline) setHeadline(user.headline);
+      if (user.bio) setBio(user.bio);
+      if (user.phone) setPhone(user.phone);
+      if (user.location) setLocation(user.location);
+      if (user.noticePeriod) setNoticePeriod(user.noticePeriod);
+      if (user.currentCtc) setCurrentCtc(user.currentCtc.toString());
+      if (user.expectedCtc) setExpectedCtc(user.expectedCtc.toString());
+      if (user.skills) setSkills(user.skills.join(", "));
+      if (user.avatar) setAvatarUrl(user.avatar);
+      if (user.resumeUrl) setResumeUrl(user.resumeUrl);
+      if (user.resumeFileName) setResumeFileName(user.resumeFileName);
+      if (user.education && user.education.length > 0) setEducation(user.education);
+      if (user.experienceHistory && user.experienceHistory.length > 0) setExperienceHistory(user.experienceHistory);
+    }
+  }, [user]);
 
   // Resume state
   const [resumeUrl, setResumeUrl] = useState(user?.resumeUrl || "");
@@ -195,10 +215,11 @@ export function ProfileBuilderModal({
       };
 
       const res = await fetch("/api/users/profile", {
-        method: "POST",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user?._id || "user-seeker-1",
+          userId: user?._id || user?.id,
+          email: user?.email,
           profileData,
         }),
       });
@@ -206,17 +227,13 @@ export function ProfileBuilderModal({
       const data = await res.json();
       if (data.success) {
         setSaveSuccess(true);
+        updateUser(profileData);
         confetti({
           particleCount: 50,
           spread: 60,
           origin: { y: 0.7 },
           colors: ["#f97316", "#fb923c", "#10b981"],
         });
-
-        if (user) {
-          const updatedUser = { ...user, ...profileData };
-          localStorage.setItem("jn_user", JSON.stringify(updatedUser));
-        }
 
         setTimeout(() => {
           setSaveSuccess(false);
@@ -282,12 +299,18 @@ export function ProfileBuilderModal({
               <div className="p-4 rounded-2xl bg-white border-2 border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3 text-left w-full sm:w-auto">
                   <div className="relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={avatarUrl}
-                      alt={name || "Profile"}
-                      className="w-14 h-14 rounded-2xl object-cover border-2 border-orange-400 shadow-sm"
-                    />
+                    {avatarUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={avatarUrl}
+                        alt={name || "Profile"}
+                        className="w-14 h-14 rounded-2xl object-cover border-2 border-orange-400 shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-14 h-14 rounded-2xl bg-orange-600 text-white flex items-center justify-center font-black text-xl border-2 border-orange-400 shadow-sm">
+                        {name ? name.charAt(0).toUpperCase() : "U"}
+                      </div>
+                    )}
                     <div className="absolute -bottom-1 -right-1 p-1 rounded-full bg-orange-600 text-white shadow-xs">
                       <Camera className="w-3 h-3" />
                     </div>

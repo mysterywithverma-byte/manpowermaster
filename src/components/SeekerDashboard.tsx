@@ -18,6 +18,7 @@ import {
   GraduationCap,
   Download,
   Edit3,
+  Camera,
 } from "lucide-react";
 
 interface SeekerDashboardProps {
@@ -107,8 +108,26 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
       <div className="p-5 sm:p-8 rounded-3xl bg-white border-2 border-slate-200 shadow-sm mb-8 relative overflow-hidden">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-orange-600 flex items-center justify-center text-2xl font-bold text-white shadow-xs shrink-0">
-              {user?.name.charAt(0) || "A"}
+            <div
+              onClick={() => setIsProfileModalOpen(true)}
+              className="relative cursor-pointer group shrink-0"
+              title="Click to update profile photo"
+            >
+              {user?.avatar ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={user.avatar}
+                  alt={user?.name || "Profile"}
+                  className="w-16 h-16 rounded-2xl object-cover border-2 border-orange-400 shadow-md group-hover:opacity-90 transition-opacity"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-2xl bg-orange-600 flex items-center justify-center text-2xl font-black text-white shadow-xs">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : "A"}
+                </div>
+              )}
+              <div className="absolute -bottom-1 -right-1 p-1 rounded-full bg-slate-900/80 text-white shadow-xs group-hover:bg-orange-600 transition-colors">
+                <Camera className="w-3.5 h-3.5" />
+              </div>
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">

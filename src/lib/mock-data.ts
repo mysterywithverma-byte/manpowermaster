@@ -26,7 +26,7 @@ export interface MockUser {
   resumeFileName?: string;
   avatar?: string;
   savedJobs: string[];
-  noticePeriod?: "Immediate" | "15 Days" | "30 Days" | "60 Days" | "Serving Notice";
+  noticePeriod?: string;
   currentCtc?: number;
   expectedCtc?: number;
   education?: EducationItem[];

@@ -185,9 +185,18 @@ export function Navbar({ onOpenAuth, onOpenRegister, onOpenPostJob }: NavbarProp
                 }}
                 className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-orange-50 cursor-pointer"
               >
-                <div className="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-xs font-black text-white shadow-xs">
-                  {user.name.charAt(0)}
-                </div>
+                {user.avatar ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-8 h-8 rounded-full object-cover border border-orange-300 shadow-xs"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-xs font-black text-white shadow-xs">
+                    {user.name.charAt(0)}
+                  </div>
+                )}
                 <div className="hidden lg:block text-left">
                   <div className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[100px]">
                     {user.name.split(" ")[0]}
