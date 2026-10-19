@@ -20,22 +20,24 @@ async function handleProfileUpdate(request: NextRequest) {
       );
     }
 
-    await connectToDatabase();
+    const db = await connectToDatabase();
 
     // 1. Try updating in MongoDB Atlas
     let updatedUser = null;
-    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
-      updatedUser = await User.findByIdAndUpdate(
-        userId,
-        { $set: profileData },
-        { new: true, upsert: true }
-      );
-    } else if (email) {
-      updatedUser = await User.findOneAndUpdate(
-        { email },
-        { $set: profileData },
-        { new: true, upsert: true }
-      );
+    if (db) {
+      if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+        updatedUser = await User.findByIdAndUpdate(
+          userId,
+          { $set: profileData },
+          { new: true, upsert: true }
+        );
+      } else if (email) {
+        updatedUser = await User.findOneAndUpdate(
+          { email },
+          { $set: profileData },
+          { new: true, upsert: true }
+        );
+      }
     }
 
     if (updatedUser) {
@@ -95,19 +97,28 @@ export async function GET(request: NextRequest) {
   const userId = searchParams.get("userId");
 
   try {
-    await connectToDatabase();
+    const db = await connectToDatabase();
     let user = null;
-    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
-      user = await User.findById(userId);
-    } else if (email) {
-      user = await User.findOne({ email });
+
+    if (db) {
+      if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+        user = await User.findById(userId).lean();
+      } else if (email) {
+        user = await User.findOne({ email }).lean();
+      }
+    }
+
+    // In-memory fallback
+    if (!user) {
+      user = (email ? inMemoryStore.getUserByEmail(email) : null) || (userId ? inMemoryStore.getUser(userId) : null);
     }
 
     if (user) {
       return NextResponse.json({ success: true, user });
     }
     return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Profile fetch error";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

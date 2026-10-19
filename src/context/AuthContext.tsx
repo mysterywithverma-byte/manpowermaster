@@ -10,12 +10,14 @@ interface AuthContextType {
   activeView: "explore" | "seeker-dashboard" | "employer-dashboard" | "admin-dashboard";
   setActiveView: (view: "explore" | "seeker-dashboard" | "employer-dashboard" | "admin-dashboard") => void;
   loginAsDemo: (role: "seeker" | "employer" | "admin") => void;
-  login: (email: string) => Promise<boolean>;
-  register: (data: { name: string; email: string; role: "seeker" | "employer"; companyName?: string }) => Promise<boolean>;
+  login: (email: string, name?: string, chosenRole?: "seeker" | "employer") => Promise<{ success: boolean; error?: string } | boolean>;
+  register: (data: { name: string; email: string; role: "seeker" | "employer"; companyName?: string }) => Promise<{ success: boolean; error?: string } | boolean>;
   logout: () => void;
+  clearDemoSession: () => void;
   updateUser: (data: Partial<MockUser>) => void;
   toggleSaveJob: (jobId: string) => Promise<void>;
   isJobSaved: (jobId: string) => boolean;
+  isDemoUser: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -88,12 +90,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (email: string) => {
+  const isDemoUser = Boolean(
+    user && (
+      user._id?.startsWith("user-") ||
+      user.email === "recruiter@razorpay.com" ||
+      user.email === "aarav.sharma@example.com" ||
+      user.email === "admin@jobnexus.in"
+    )
+  );
+
+  const login = async (email: string, name?: string, chosenRole: "seeker" | "employer" = "seeker") => {
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, name, role: chosenRole }),
       });
       const data = await res.json();
       if (data.success && data.user) {
@@ -102,11 +113,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("jn_user", JSON.stringify(data.user));
         if (data.user.role === "employer") setActiveView("employer-dashboard");
         else if (data.user.role === "admin") setActiveView("admin-dashboard");
-        return true;
+        else setActiveView("explore");
+        return { success: true };
       }
-      return false;
-    } catch {
-      return false;
+      return { success: false, error: data.error || "Authentication failed" };
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Network error" };
     }
   };
 
@@ -123,11 +135,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSavedJobs([]);
         localStorage.setItem("jn_user", JSON.stringify(data.user));
         if (data.user.role === "employer") setActiveView("employer-dashboard");
-        return true;
+        return { success: true };
       }
-      return false;
-    } catch {
-      return false;
+      return { success: false, error: data.error || "Registration failed" };
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Network error" };
     }
   };
 
@@ -136,6 +148,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSavedJobs([]);
     localStorage.removeItem("jn_user");
     setActiveView("explore");
+  };
+
+  const clearDemoSession = () => {
+    logout();
   };
 
   const toggleSaveJob = async (jobId: string) => {
@@ -175,9 +191,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        clearDemoSession,
         updateUser,
         toggleSaveJob,
         isJobSaved,
+        isDemoUser,
       }}
     >
       {children}

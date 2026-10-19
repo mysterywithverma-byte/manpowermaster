@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { Job } from "@/lib/models/Job";
 import { inMemoryStore } from "@/lib/mock-data";
+import mongoose from "mongoose";
 
 export async function GET(
   _request: NextRequest,
@@ -11,12 +12,11 @@ export async function GET(
     const { id } = await params;
     const db = await connectToDatabase();
 
-    if (db) {
+    if (db && mongoose.Types.ObjectId.isValid(id)) {
       const job = await Job.findById(id).lean();
-      if (!job) {
-        return NextResponse.json({ success: false, error: "Job not found" }, { status: 404 });
+      if (job) {
+        return NextResponse.json({ success: true, source: "mongodb", data: job });
       }
-      return NextResponse.json({ success: true, source: "mongodb", data: job });
     }
 
     const job = inMemoryStore.getJobById(id);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { Application } from "@/lib/models/Application";
 import { inMemoryStore, MockApplication } from "@/lib/mock-data";
+import mongoose from "mongoose";
 
 export async function PATCH(
   request: NextRequest,
@@ -19,16 +20,15 @@ export async function PATCH(
 
     const db = await connectToDatabase();
 
-    if (db) {
+    if (db && mongoose.Types.ObjectId.isValid(id)) {
       const updated = await Application.findByIdAndUpdate(
         id,
         { status },
         { new: true }
       );
-      if (!updated) {
-        return NextResponse.json({ success: false, error: "Application not found" }, { status: 404 });
+      if (updated) {
+        return NextResponse.json({ success: true, source: "mongodb", data: updated });
       }
-      return NextResponse.json({ success: true, source: "mongodb", data: updated });
     }
 
     // In-memory fallback

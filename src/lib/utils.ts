@@ -27,3 +27,7 @@ export function timeAgo(dateString: string | Date): string {
   const months = Math.floor(days / 30);
   return `${months}mo ago`;
 }
+
+export function escapeRegex(text: string): string {
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+}

@@ -50,26 +50,6 @@ export function ProfileBuilderModal({
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarSavings, setAvatarSavings] = useState("");
 
-  // Sync state when user changes
-  React.useEffect(() => {
-    if (user) {
-      if (user.name) setName(user.name);
-      if (user.headline) setHeadline(user.headline);
-      if (user.bio) setBio(user.bio);
-      if (user.phone) setPhone(user.phone);
-      if (user.location) setLocation(user.location);
-      if (user.noticePeriod) setNoticePeriod(user.noticePeriod);
-      if (user.currentCtc) setCurrentCtc(user.currentCtc.toString());
-      if (user.expectedCtc) setExpectedCtc(user.expectedCtc.toString());
-      if (user.skills) setSkills(user.skills.join(", "));
-      if (user.avatar) setAvatarUrl(user.avatar);
-      if (user.resumeUrl) setResumeUrl(user.resumeUrl);
-      if (user.resumeFileName) setResumeFileName(user.resumeFileName);
-      if (user.education && user.education.length > 0) setEducation(user.education);
-      if (user.experienceHistory && user.experienceHistory.length > 0) setExperienceHistory(user.experienceHistory);
-    }
-  }, [user]);
-
   // Resume state
   const [resumeUrl, setResumeUrl] = useState(user?.resumeUrl || "");
   const [resumeFileName, setResumeFileName] = useState(user?.resumeFileName || "");
@@ -100,6 +80,26 @@ export function ProfileBuilderModal({
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState("");
+
+  // Sync state when user changes
+  React.useEffect(() => {
+    if (user) {
+      if (user.name) setName(user.name);
+      if (user.headline) setHeadline(user.headline);
+      if (user.bio) setBio(user.bio);
+      if (user.phone) setPhone(user.phone);
+      if (user.location) setLocation(user.location);
+      if (user.noticePeriod) setNoticePeriod(user.noticePeriod);
+      if (user.currentCtc) setCurrentCtc(user.currentCtc.toString());
+      if (user.expectedCtc) setExpectedCtc(user.expectedCtc.toString());
+      if (user.skills) setSkills(user.skills.join(", "));
+      if (user.avatar) setAvatarUrl(user.avatar);
+      if (user.resumeUrl) setResumeUrl(user.resumeUrl);
+      if (user.resumeFileName) setResumeFileName(user.resumeFileName);
+      if (user.education && user.education.length > 0) setEducation(user.education);
+      if (user.experienceHistory && user.experienceHistory.length > 0) setExperienceHistory(user.experienceHistory);
+    }
+  }, [user]);
 
   if (!isOpen) return null;
 

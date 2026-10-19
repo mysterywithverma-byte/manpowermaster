@@ -10,10 +10,22 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const applicantId = searchParams.get("applicantId");
     const jobId = searchParams.get("jobId");
+    const recruiterId = searchParams.get("recruiterId");
+
+    // Security Guard: Prevent open data dumping of candidate personal details
+    if (!applicantId && !jobId && !recruiterId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Access denied. Please provide applicantId, jobId, or recruiterId to view applications.",
+        },
+        { status: 403 }
+      );
+    }
 
     // If applicantId is provided but not a valid MongoDB ObjectId (e.g. demo "user-seeker-1")
     if (applicantId && !mongoose.Types.ObjectId.isValid(applicantId)) {
-      const apps = inMemoryStore.getApplications(applicantId, jobId || undefined);
+      const apps = inMemoryStore.getApplications(applicantId, jobId || undefined, recruiterId || undefined);
       const hydrated = apps.map((app) => ({
         ...app,
         jobId: inMemoryStore.getJobById(app.jobId) || { _id: app.jobId, title: "Role", company: "Company" },
@@ -27,7 +39,25 @@ export async function GET(request: NextRequest) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const query: any = {};
       if (applicantId) query.applicantId = applicantId;
-      if (jobId && mongoose.Types.ObjectId.isValid(jobId)) query.jobId = jobId;
+
+      if (recruiterId) {
+        // Find jobs owned by this recruiter
+        const recruiterJobs = await Job.find({
+          $or: [
+            { postedBy: recruiterId },
+            ...(mongoose.Types.ObjectId.isValid(recruiterId) ? [{ postedBy: new mongoose.Types.ObjectId(recruiterId) }] : []),
+          ],
+        }).select("_id").lean();
+
+        const employerJobIds = recruiterJobs.map((j) => j._id);
+        if (jobId && mongoose.Types.ObjectId.isValid(jobId)) {
+          query.jobId = jobId;
+        } else {
+          query.jobId = { $in: employerJobIds };
+        }
+      } else if (jobId && mongoose.Types.ObjectId.isValid(jobId)) {
+        query.jobId = jobId;
+      }
 
       const applications = await Application.find(query)
         .populate("jobId")
@@ -40,7 +70,8 @@ export async function GET(request: NextRequest) {
     // In-memory fallback
     const apps = inMemoryStore.getApplications(
       applicantId || undefined,
-      jobId || undefined
+      jobId || undefined,
+      recruiterId || undefined
     );
 
     // Hydrate job details for UI convenience

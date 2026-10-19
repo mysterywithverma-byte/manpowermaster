@@ -5,6 +5,7 @@ import { Job } from "@/lib/models/Job";
 import { User } from "@/lib/models/User";
 import { Notification } from "@/lib/models/Notification";
 import { inMemoryStore } from "@/lib/mock-data";
+import { escapeRegex } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,6 +16,8 @@ export async function GET(request: NextRequest) {
     const experienceLevel = searchParams.get("experienceLevel") || "";
     const workplaceType = searchParams.get("workplaceType") || "";
     const minSalary = searchParams.get("minSalary") ? Number(searchParams.get("minSalary")) : 0;
+    const postedBy = searchParams.get("postedBy");
+    const company = searchParams.get("company");
 
     const db = await connectToDatabase();
 
@@ -23,16 +26,26 @@ export async function GET(request: NextRequest) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const query: any = { status: "active" };
 
-      if (search) {
+      if (postedBy) {
+        query.status = { $in: ["active", "closed"] }; // Recruiters can view all their jobs
         query.$or = [
-          { title: { $regex: search, $options: "i" } },
-          { company: { $regex: search, $options: "i" } },
-          { skills: { $in: [new RegExp(search, "i")] } },
+          { postedBy: postedBy },
+          ...(mongoose.Types.ObjectId.isValid(postedBy) ? [{ postedBy: new mongoose.Types.ObjectId(postedBy) }] : []),
+          ...(company ? [{ company: { $regex: escapeRegex(company), $options: "i" } }] : []),
+        ];
+      }
+
+      if (search) {
+        const escapedSearch = escapeRegex(search.trim());
+        query.$or = [
+          { title: { $regex: escapedSearch, $options: "i" } },
+          { company: { $regex: escapedSearch, $options: "i" } },
+          { skills: { $in: [new RegExp(escapedSearch, "i")] } },
         ];
       }
 
       if (location && location !== "All") {
-        query.location = { $regex: location, $options: "i" };
+        query.location = { $regex: escapeRegex(location.trim()), $options: "i" };
       }
 
       if (jobType && jobType !== "All") {
@@ -63,6 +76,8 @@ export async function GET(request: NextRequest) {
       experienceLevel,
       workplaceType,
       minSalary,
+      postedBy: postedBy || undefined,
+      company: company || undefined,
     });
 
     return NextResponse.json({
@@ -159,7 +174,7 @@ export async function POST(request: NextRequest) {
         }
         if (createdJob.location && createdJob.location !== "All") {
           const city = createdJob.location.split(",")[0].trim();
-          matchConditions.push({ location: { $regex: city, $options: "i" } });
+          matchConditions.push({ location: { $regex: escapeRegex(city), $options: "i" } });
         }
 
         const candidateQuery: any = { role: "seeker" };

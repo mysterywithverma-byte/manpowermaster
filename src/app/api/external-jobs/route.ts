@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { inMemoryStore, MockJob } from "@/lib/mock-data";
+import { connectToDatabase } from "@/lib/db";
+import { Job } from "@/lib/models/Job";
 
 export async function GET(request: NextRequest) {
   try {
@@ -128,6 +130,7 @@ export async function GET(request: NextRequest) {
 export async function POST() {
   try {
     let importedCount = 0;
+    const db = await connectToDatabase();
 
     // 1. Fetch from Remotive
     try {
@@ -139,36 +142,53 @@ export async function POST() {
         const rawJobs = data.jobs || [];
 
         for (const item of rawJobs) {
-          const exists = inMemoryStore.jobs.some(
-            (j) => j.title.toLowerCase() === item.title.toLowerCase() && j.company.toLowerCase() === item.company_name?.toLowerCase()
+          const companyName = item.company_name || "Tech Corp";
+          const title = item.title;
+
+          let alreadyExists = inMemoryStore.jobs.some(
+            (j) => j.title.toLowerCase() === title.toLowerCase() && j.company.toLowerCase() === companyName.toLowerCase()
           );
 
-          if (!exists) {
-            const isSenior = item.title.toLowerCase().includes("senior") || item.title.toLowerCase().includes("lead");
-            const minLpa = isSenior ? 35 : 22;
+          if (db && !alreadyExists) {
+            const dbMatch = await Job.findOne({
+              title: { $regex: `^${title.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")}$`, $options: "i" },
+              company: { $regex: `^${companyName.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")}$`, $options: "i" },
+            });
+            if (dbMatch) alreadyExists = true;
+          }
 
-            inMemoryStore.addJob({
-              title: item.title,
-              company: item.company_name || "Tech Corp",
-              companyLogo:
-                item.company_logo ||
-                `https://www.google.com/s2/favicons?domain=${encodeURIComponent(
-                  item.company_name?.toLowerCase().replace(/[^a-z0-9]/g, "") + ".com"
-                )}&sz=128`,
+          if (!alreadyExists) {
+            const isSenior = title.toLowerCase().includes("senior") || title.toLowerCase().includes("lead");
+            const minLpa = isSenior ? 35 : 22;
+            const logo =
+              item.company_logo ||
+              `https://www.google.com/s2/favicons?domain=${encodeURIComponent(
+                companyName.toLowerCase().replace(/[^a-z0-9]/g, "") + ".com"
+              )}&sz=128`;
+
+            const jobPayload = {
+              title,
+              company: companyName,
+              companyLogo: logo,
               location: "Remote (India & Global)",
-              workplaceType: "Remote",
+              workplaceType: "Remote" as const,
               salaryMin: minLpa,
               salaryMax: minLpa + 16,
               salaryCurrency: "INR",
-              experienceLevel: isSenior ? "Senior" : "Mid-Level",
-              jobType: "Full-time",
+              experienceLevel: isSenior ? ("Senior" as const) : ("Mid-Level" as const),
+              jobType: "Full-time" as const,
               description: item.description?.replace(/<[^>]*>?/gm, "").slice(0, 320) + "...",
               requirements: ["3+ years professional software development experience", "Strong analytical skills and ownership"],
               skills: item.tags?.slice(0, 4) || ["Engineering", "Remote"],
               benefits: ["100% Remote (WFH)", "Health Insurance", "Annual Learning Stipend"],
               postedBy: "user-employer-1",
               featured: true,
-            });
+            };
+
+            if (db) {
+              await Job.create({ ...jobPayload, status: "active" });
+            }
+            inMemoryStore.addJob(jobPayload);
             importedCount++;
           }
         }
@@ -187,34 +207,51 @@ export async function POST() {
         const rawJobs = (data.data || []).slice(0, 10);
 
         for (const item of rawJobs) {
-          const exists = inMemoryStore.jobs.some(
-            (j) => j.title.toLowerCase() === item.title.toLowerCase() && j.company.toLowerCase() === item.company_name?.toLowerCase()
+          const companyName = item.company_name || "Global Systems";
+          const title = item.title;
+
+          let alreadyExists = inMemoryStore.jobs.some(
+            (j) => j.title.toLowerCase() === title.toLowerCase() && j.company.toLowerCase() === companyName.toLowerCase()
           );
 
-          if (!exists) {
-            const isSenior = item.title.toLowerCase().includes("senior") || item.title.toLowerCase().includes("lead");
-            const minLpa = isSenior ? 38 : 24;
+          if (db && !alreadyExists) {
+            const dbMatch = await Job.findOne({
+              title: { $regex: `^${title.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")}$`, $options: "i" },
+              company: { $regex: `^${companyName.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")}$`, $options: "i" },
+            });
+            if (dbMatch) alreadyExists = true;
+          }
 
-            inMemoryStore.addJob({
-              title: item.title,
-              company: item.company_name || "Global Systems",
-              companyLogo: `https://www.google.com/s2/favicons?domain=${encodeURIComponent(
-                item.company_name?.toLowerCase().replace(/[^a-z0-9]/g, "") + ".com"
-              )}&sz=128`,
+          if (!alreadyExists) {
+            const isSenior = title.toLowerCase().includes("senior") || title.toLowerCase().includes("lead");
+            const minLpa = isSenior ? 38 : 24;
+            const logo = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(
+              companyName.toLowerCase().replace(/[^a-z0-9]/g, "") + ".com"
+            )}&sz=128`;
+
+            const jobPayload = {
+              title,
+              company: companyName,
+              companyLogo: logo,
               location: item.location || "Remote (India & Global)",
-              workplaceType: item.remote ? "Remote" : "Hybrid",
+              workplaceType: (item.remote ? "Remote" : "Hybrid") as "Remote" | "Hybrid",
               salaryMin: minLpa,
               salaryMax: minLpa + 18,
               salaryCurrency: "INR",
-              experienceLevel: isSenior ? "Senior" : "Mid-Level",
-              jobType: "Full-time",
+              experienceLevel: isSenior ? ("Senior" as const) : ("Mid-Level" as const),
+              jobType: "Full-time" as const,
               description: item.description?.replace(/<[^>]*>?/gm, "").slice(0, 320) + "...",
               requirements: ["Hands-on production problem solving", "Demonstrated software design competence"],
               skills: item.tags?.slice(0, 4) || ["Full-stack", "TypeScript", "Cloud"],
               benefits: ["Flexible Working Hours", "Competitive ₹ LPA Package", "Direct Leadership Access"],
               postedBy: "user-employer-1",
               featured: false,
-            });
+            };
+
+            if (db) {
+              await Job.create({ ...jobPayload, status: "active" });
+            }
+            inMemoryStore.addJob(jobPayload);
             importedCount++;
           }
         }

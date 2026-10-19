@@ -5,9 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { MockJob } from "@/lib/mock-data";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
-import { JobCard } from "@/components/JobCard";
 import { JobFilters } from "@/components/JobFilters";
-import { JobDetailsModal } from "@/components/JobDetailsModal";
+import { JobSplitView } from "@/components/JobSplitView";
 import { ApplyJobModal } from "@/components/ApplyJobModal";
 import { PostJobModal } from "@/components/PostJobModal";
 import { AuthModal } from "@/components/AuthModal";
@@ -46,10 +45,9 @@ const INITIAL_FILTERS: FilterState = {
 };
 
 export default function HomePage() {
-  const { activeView, setActiveView } = useAuth();
+  const { user, activeView, setActiveView } = useAuth();
 
   // Modals state
-  const [selectedJob, setSelectedJob] = useState<MockJob | null>(null);
   const [jobToApply, setJobToApply] = useState<MockJob | null>(null);
   const [isPostJobOpen, setIsPostJobOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -167,20 +165,9 @@ export default function HomePage() {
     });
   }, [jobs, sortBy]);
 
-  const handleSelectJobById = (jobId: string) => {
-    const match = jobs.find((j) => j._id === jobId);
-    if (match) {
-      setSelectedJob(match);
-    } else {
-      fetch(`/api/jobs/${jobId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && data.data) {
-            setSelectedJob(data.data);
-          }
-        })
-        .catch(() => {});
-    }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleSelectJobById = (_jobId: string) => {
+    // Job selection is now handled internally by JobSplitView
   };
 
   return (
@@ -192,7 +179,13 @@ export default function HomePage() {
       <Navbar
         onOpenAuth={() => setIsAuthOpen(true)}
         onOpenRegister={() => setIsOnboardingOpen(true)}
-        onOpenPostJob={() => setIsPostJobOpen(true)}
+        onOpenPostJob={() => {
+          if (!user) {
+            setIsAuthOpen(true);
+          } else {
+            setIsPostJobOpen(true);
+          }
+        }}
         onSelectJobId={handleSelectJobById}
       />
 
@@ -271,10 +264,10 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Layout: Sidebar Filters + Job Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 sm:gap-8 items-start">
+              {/* Layout: Sidebar Filters + Indeed-Style Split Screen */}
+              <div className="flex flex-col md:flex-row gap-4 items-start">
                 {/* Desktop Filters Sidebar */}
-                <aside className="hidden md:block md:col-span-1 sticky top-24">
+                <aside className="hidden md:block w-56 lg:w-60 flex-shrink-0 sticky top-24">
                   <JobFilters
                     filters={filters}
                     setFilters={setFilters}
@@ -283,7 +276,7 @@ export default function HomePage() {
                   />
                 </aside>
 
-                {/* Mobile Filters Drawer Modal (Pure White Sheet) */}
+                {/* Mobile Filters Drawer Modal */}
                 {mobileFiltersOpen && (
                   <div className="md:hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm p-3 overflow-y-auto flex flex-col justify-end">
                     <div className="bg-white rounded-3xl p-4 sm:p-5 border-2 border-orange-300 shadow-2xl max-h-[85vh] overflow-y-auto">
@@ -292,10 +285,7 @@ export default function HomePage() {
                           <SlidersHorizontal className="w-4 h-4 text-orange-600" />
                           <span className="text-sm font-black text-slate-900">Filter Job Openings</span>
                         </div>
-                        <button
-                          onClick={() => setMobileFiltersOpen(false)}
-                          className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer"
-                        >
+                        <button onClick={() => setMobileFiltersOpen(false)} className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
                           <X className="w-5 h-5" />
                         </button>
                       </div>
@@ -305,86 +295,66 @@ export default function HomePage() {
                         onReset={handleResetFilters}
                         resultsCount={sortedJobs.length}
                       />
-                      <button
-                        onClick={() => setMobileFiltersOpen(false)}
-                        className="w-full mt-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 font-bold text-xs text-white shadow-xs cursor-pointer"
-                      >
+                      <button onClick={() => setMobileFiltersOpen(false)} className="w-full mt-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 font-bold text-xs text-white shadow-xs cursor-pointer">
                         Apply Filters &amp; View Roles ({sortedJobs.length})
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* Jobs Grid */}
-                <div className="md:col-span-3">
-                  {loading ? (
-                    <div className="p-16 text-center space-y-3">
-                      <div className="w-8 h-8 rounded-full border-2 border-orange-600 border-t-transparent animate-spin mx-auto"></div>
-                      <p className="text-xs text-slate-500 font-medium">Searching active openings...</p>
-                    </div>
-                  ) : sortedJobs.length === 0 ? (
-                    <div className="p-14 rounded-3xl bg-white border-2 border-slate-200 text-center shadow-md">
-                      <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                      <h3 className="text-base font-bold text-slate-900 mb-1">No matching roles found</h3>
-                      <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4">
-                        Try resetting or loosening the location or salary threshold.
-                      </p>
-                      <button
-                        onClick={handleResetFilters}
-                        className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-xs font-bold text-white transition-colors cursor-pointer"
-                      >
-                        Reset All Filters
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {sortedJobs.map((job, idx) => (
-                        <JobCard
-                          key={`${job._id}-${idx}`}
-                          job={job}
-                          onSelectJob={(j) => setSelectedJob(j)}
-                          onApplyJob={(j) => setJobToApply(j)}
-                        />
-                      ))}
-                    </div>
-                  )}
+                {/* Indeed-Style Split Screen Job View */}
+                <div className="flex-1 min-w-0">
+                  <JobSplitView
+                    jobs={sortedJobs}
+                    loading={loading}
+                    onApplyJob={(j) => {
+                      if (!user) {
+                        setIsAuthOpen(true);
+                      } else {
+                        setJobToApply(j);
+                      }
+                    }}
+                    onResetFilters={handleResetFilters}
+                  />
                 </div>
               </div>
 
-              {/* Naukri-Style Candidate Registration Banner with Illustration */}
-              <div className="mt-12 rounded-3xl bg-gradient-to-r from-orange-50 via-white to-orange-50 border-2 border-orange-200 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
-                <div className="flex items-center gap-5">
-                  <div className="hidden sm:flex w-24 h-24 shrink-0 bg-white rounded-2xl p-2 border border-orange-200 shadow-xs items-center justify-center">
-                    <img
-                      src="/illustrations/hero-search.png"
-                      alt="Job Search"
-                      className="w-full h-full object-contain"
-                    />
+              {/* Naukri-Style Candidate Registration Banner — Only for guests */}
+              {!user && (
+                <div className="mt-12 rounded-3xl bg-gradient-to-r from-orange-50 via-white to-orange-50 border-2 border-orange-200 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+                  <div className="flex items-center gap-5">
+                    <div className="hidden sm:flex w-24 h-24 shrink-0 bg-white rounded-2xl p-2 border border-orange-200 shadow-xs items-center justify-center">
+                      <img
+                        src="/illustrations/hero-search.png"
+                        alt="Job Search"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-600 text-white text-[10px] font-black uppercase tracking-wider mb-2">
+                        Fast-Track Hiring
+                      </span>
+                      <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                        Accelerate your career search with Manpower Master
+                      </h3>
+                      <p className="text-xs text-slate-600 mt-1 max-w-xl">
+                        Complete your candidate profile, upload your resume, and get direct interview invites from verified corporate employers with zero recruiter spam.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-600 text-white text-[10px] font-black uppercase tracking-wider mb-2">
-                      Fast-Track Hiring
+                  <div className="flex sm:flex-col items-center gap-2 w-full md:w-auto shrink-0">
+                    <button
+                      onClick={() => setIsOnboardingOpen(true)}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer text-center"
+                    >
+                      Register as Job Seeker
+                    </button>
+                    <span className="text-[11px] text-slate-400 font-medium hidden sm:block text-center">
+                      Takes under 2 minutes
                     </span>
-                    <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                      Accelerate your career search with Manpower Master
-                    </h3>
-                    <p className="text-xs text-slate-600 mt-1 max-w-xl">
-                      Complete your candidate profile, upload your resume, and get direct interview invites from verified corporate employers with zero recruiter spam.
-                    </p>
                   </div>
                 </div>
-                <div className="flex sm:flex-col items-center gap-2 w-full md:w-auto shrink-0">
-                  <button
-                    onClick={() => setIsOnboardingOpen(true)}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer text-center"
-                  >
-                    Register as Job Seeker
-                  </button>
-                  <span className="text-[11px] text-slate-400 font-medium hidden sm:block text-center">
-                    Takes under 2 minutes
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         )}
@@ -392,7 +362,7 @@ export default function HomePage() {
         {/* Role Dashboard Views */}
         {activeView === "seeker-dashboard" && (
           <SeekerDashboard
-            onSelectJob={(j) => setSelectedJob(j)}
+            onSelectJob={() => {}}
             onApplyJob={(j) => setJobToApply(j)}
           />
         )}
@@ -414,15 +384,11 @@ export default function HomePage() {
       />
 
       {/* Interactive Modals */}
-      <JobDetailsModal
-        job={selectedJob}
-        onClose={() => setSelectedJob(null)}
-        onApply={(j) => setJobToApply(j)}
-      />
 
       <ApplyJobModal
         job={jobToApply}
         onClose={() => setJobToApply(null)}
+        onOpenAuth={() => setIsAuthOpen(true)}
         onAppliedSuccessfully={() => {
           fetchJobs();
           setActiveView("seeker-dashboard");

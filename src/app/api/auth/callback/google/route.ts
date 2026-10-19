@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/lib/models/User";
+import { inMemoryStore } from "@/lib/mock-data";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -64,25 +65,46 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/?auth_error=NoEmailFromGoogle`);
     }
 
-    // 3. Find or Create User in MongoDB Atlas
-    await connectToDatabase();
-    let dbUser = await User.findOne({ email: googleProfile.email.toLowerCase() });
+    // 3. Find or Create User in MongoDB Atlas or inMemoryStore fallback
+    const db = await connectToDatabase();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let dbUser: any = null;
 
-    if (!dbUser) {
-      dbUser = await User.create({
-        name: googleProfile.name || googleProfile.email.split("@")[0],
-        email: googleProfile.email.toLowerCase(),
-        role: role,
-        avatar: googleProfile.picture || "",
-        companyName: role === "employer" ? "My Hiring Organization" : "",
-        companyLogo: googleProfile.picture || "",
-        savedJobs: [],
-        skills: [],
-      });
-    } else if (!dbUser.avatar && googleProfile.picture) {
-      // If existing user has no custom avatar yet, set Google photo
-      dbUser.avatar = googleProfile.picture;
-      await dbUser.save();
+    if (db) {
+      dbUser = await User.findOne({ email: googleProfile.email.toLowerCase() });
+
+      if (!dbUser) {
+        dbUser = await User.create({
+          name: googleProfile.name || googleProfile.email.split("@")[0],
+          email: googleProfile.email.toLowerCase(),
+          role: role,
+          avatar: googleProfile.picture || "",
+          companyName: role === "employer" ? "My Hiring Organization" : "",
+          companyLogo: googleProfile.picture || "",
+          savedJobs: [],
+          skills: [],
+        });
+      } else if (!dbUser.avatar && googleProfile.picture) {
+        dbUser.avatar = googleProfile.picture;
+        await dbUser.save();
+      }
+    } else {
+      dbUser = inMemoryStore.getUserByEmail(googleProfile.email.toLowerCase());
+      if (!dbUser) {
+        dbUser = inMemoryStore.addUser({
+          name: googleProfile.name || googleProfile.email.split("@")[0],
+          email: googleProfile.email.toLowerCase(),
+          role: role as "seeker" | "employer",
+          avatar: googleProfile.picture || "",
+          companyName: role === "employer" ? "My Hiring Organization" : "",
+          headline: role === "employer" ? "Recruiter" : "Job Seeker",
+          bio: "Member of JobNexus India ecosystem.",
+          phone: "+91 98000 00000",
+          location: "India",
+          skills: [],
+          resumeUrl: "",
+        });
+      }
     }
 
     const userAvatar = dbUser.avatar || dbUser.companyLogo || googleProfile.picture || "";

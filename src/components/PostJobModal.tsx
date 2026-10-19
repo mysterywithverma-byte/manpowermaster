@@ -89,6 +89,11 @@ export function PostJobModal({ isOpen, onClose, onJobCreated }: PostJobModalProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      setError("Please sign in or register as an employer to publish an opening.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -112,7 +117,7 @@ export function PostJobModal({ isOpen, onClose, onJobCreated }: PostJobModalProp
           requirements: requirements.split("\n").filter(Boolean),
           benefits: benefits.split("\n").filter(Boolean),
           featured,
-          postedBy: user?._id || user?.id || user?.email || "user-employer-1",
+          postedBy: user._id || user.id || user.email,
         }),
       });
 

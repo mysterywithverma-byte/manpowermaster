@@ -44,8 +44,20 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const key = searchParams.get("key") || request.headers.get("x-admin-key");
+    const allowedKey = process.env.NEXTAUTH_SECRET || "super_secret_jwt_key_manpower_master";
+
+    // Strictly protect seeding in production
+    if (process.env.NODE_ENV === "production" && key !== allowedKey) {
+      return NextResponse.json(
+        { success: false, error: "Database seeding is disabled in production without admin key authorization." },
+        { status: 403 }
+      );
+    }
+
     const db = await connectToDatabase();
     if (!db) {
       return NextResponse.json({
@@ -55,7 +67,17 @@ export async function POST() {
       });
     }
 
-    // Seed into MongoDB
+    // Only seed if database is empty to prevent destructive data loss
+    const existingJobCount = await Job.countDocuments();
+    if (existingJobCount > 0 && key !== allowedKey) {
+      return NextResponse.json({
+        success: true,
+        message: `Database already contains ${existingJobCount} active jobs. Destructive overwrite blocked. Pass valid admin key to force reset.`,
+        mode: "mongodb",
+      });
+    }
+
+    // Seed into MongoDB only when empty or explicitly authorized
     await User.deleteMany({});
     await Job.deleteMany({});
     await Application.deleteMany({});

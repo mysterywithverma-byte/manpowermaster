@@ -37,9 +37,12 @@ export function EmployerDashboard({ onOpenPostJob }: EmployerDashboardProps) {
   const fetchData = async () => {
     try {
       setLoading(true);
+      const recruiterId = user?._id || "user-employer-1";
+      const companyParam = user?.companyName ? `&company=${encodeURIComponent(user.companyName)}` : "";
+
       const [jobsRes, appsRes] = await Promise.all([
-        fetch("/api/jobs"),
-        fetch("/api/applications"),
+        fetch(`/api/jobs?postedBy=${recruiterId}${companyParam}`),
+        fetch(`/api/applications?recruiterId=${recruiterId}`),
       ]);
 
       const jobsData = await jobsRes.json();
@@ -60,7 +63,7 @@ export function EmployerDashboard({ onOpenPostJob }: EmployerDashboardProps) {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [user]);
 
   const handleSyncLiveJobs = async () => {
     setSyncingJobs(true);

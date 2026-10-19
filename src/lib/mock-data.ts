@@ -424,8 +424,18 @@ class Store {
     experienceLevel?: string;
     workplaceType?: string;
     minSalary?: number;
+    postedBy?: string;
+    company?: string;
   }) {
     let list = [...this.jobs];
+
+    if (filters?.postedBy) {
+      list = list.filter(
+        (j) =>
+          j.postedBy === filters.postedBy ||
+          (filters.company && j.company.toLowerCase() === filters.company.toLowerCase())
+      );
+    }
 
     if (filters?.search) {
       const q = filters.search.toLowerCase();
@@ -496,6 +506,13 @@ class Store {
     return newUser;
   }
 
+  updateUser(id: string, updates: Partial<MockUser>) {
+    const user = this.getUser(id);
+    if (!user) return undefined;
+    Object.assign(user, updates);
+    return user;
+  }
+
   toggleSaveJob(userId: string, jobId: string) {
     const user = this.getUser(userId);
     if (!user) return [];
@@ -507,13 +524,19 @@ class Store {
     return user.savedJobs;
   }
 
-  getApplications(applicantId?: string, jobId?: string) {
+  getApplications(applicantId?: string, jobId?: string, recruiterId?: string) {
     let list = [...this.applications];
     if (applicantId) {
       list = list.filter((a) => a.applicantId === applicantId);
     }
     if (jobId) {
       list = list.filter((a) => a.jobId === jobId);
+    }
+    if (recruiterId) {
+      const recruiterJobIds = new Set(
+        this.jobs.filter((j) => j.postedBy === recruiterId).map((j) => j._id)
+      );
+      list = list.filter((a) => recruiterJobIds.has(a.jobId));
     }
     return list;
   }

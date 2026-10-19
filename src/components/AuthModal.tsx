@@ -6,11 +6,9 @@ import {
   X,
   User,
   Building2,
-  ShieldCheck,
   Mail,
   ArrowRight,
   Sparkles,
-  CheckCircle,
 } from "lucide-react";
 
 interface AuthModalProps {
@@ -19,7 +17,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const { loginAsDemo, login, register } = useAuth();
+  const { login, register } = useAuth();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [role, setRole] = useState<"seeker" | "employer">("seeker");
   const [name, setName] = useState("");
@@ -29,11 +27,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [error, setError] = useState("");
 
   if (!isOpen) return null;
-
-  const handleDemoSelect = (demoRole: "seeker" | "employer" | "admin") => {
-    loginAsDemo(demoRole);
-    onClose();
-  };
 
   const handleGoogleSignIn = () => {
     setLoading(true);
@@ -48,18 +41,28 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     try {
       if (mode === "login") {
-        const ok = await login(email);
-        if (ok) onClose();
-        else setError("Could not authenticate account.");
+        const result = await login(email);
+        const ok = typeof result === "boolean" ? result : result.success;
+        if (ok) {
+          onClose();
+        } else {
+          const errMsg = typeof result === "object" && result.error ? result.error : "Could not authenticate account.";
+          setError(errMsg);
+        }
       } else {
-        const ok = await register({
+        const result = await register({
           name,
           email,
           role,
           companyName: role === "employer" ? companyName : undefined,
         });
-        if (ok) onClose();
-        else setError("Registration could not be completed.");
+        const ok = typeof result === "boolean" ? result : result.success;
+        if (ok) {
+          onClose();
+        } else {
+          const errMsg = typeof result === "object" && result.error ? result.error : "Registration could not be completed.";
+          setError(errMsg);
+        }
       }
     } catch {
       setError("An unexpected error occurred.");
@@ -121,45 +124,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </svg>
             <span>Continue with Google</span>
           </button>
-        </div>
-
-        <div className="relative my-4 text-center">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200"></div>
-          </div>
-          <span className="relative px-3 bg-white text-[10px] text-slate-400 uppercase font-bold tracking-wider">
-            Or Test 1-Click Persona
-          </span>
-        </div>
-
-        {/* 1-Click Evaluation Personas */}
-        <div className="mb-4 p-2.5 rounded-2xl bg-orange-50 border border-orange-200">
-          <div className="grid grid-cols-3 gap-1.5">
-            <button
-              type="button"
-              onClick={() => handleDemoSelect("seeker")}
-              className="px-2 py-1.5 rounded-xl bg-white border border-orange-200 text-orange-600 text-xs font-bold transition-all flex flex-col items-center gap-0.5 hover:bg-orange-50"
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Seeker</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDemoSelect("employer")}
-              className="px-2 py-1.5 rounded-xl bg-white border border-orange-200 text-orange-600 text-xs font-bold transition-all flex flex-col items-center gap-0.5 hover:bg-orange-50"
-            >
-              <Building2 className="w-3.5 h-3.5" />
-              <span>Recruiter</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDemoSelect("admin")}
-              className="px-2 py-1.5 rounded-xl bg-white border border-orange-200 text-orange-600 text-xs font-bold transition-all flex flex-col items-center gap-0.5 hover:bg-orange-50"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Admin</span>
-            </button>
-          </div>
         </div>
 
         {/* Tab Toggle */}
