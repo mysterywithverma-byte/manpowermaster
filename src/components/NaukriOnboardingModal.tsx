@@ -668,7 +668,7 @@ export function NaukriOnboardingModal({
     const profilePayload = {
       name: fullName || user?.name || "Candidate",
       email: email || user?.email || "candidate@gmail.com",
-      role: "seeker",
+      role: "seeker" as const,
       avatar: user?.avatar || undefined,
       phone,
       location,
