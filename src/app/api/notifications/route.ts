@@ -12,7 +12,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, count: 0, data: [] });
     }
 
-    await connectToDatabase();
+    const db = await connectToDatabase();
+    if (!db) {
+      return NextResponse.json({
+        success: true,
+        unreadCount: 0,
+        count: 0,
+        data: [],
+      });
+    }
 
     // Query by userId or email
     const query: any = {
@@ -46,7 +54,10 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { notificationId, markAll, userId } = body;
 
-    await connectToDatabase();
+    const db = await connectToDatabase();
+    if (!db) {
+      return NextResponse.json({ success: true, message: "Acknowledged (in-memory mode)" });
+    }
 
     if (markAll && userId) {
       await Notification.updateMany({ userId }, { $set: { read: true } });

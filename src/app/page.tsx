@@ -404,7 +404,14 @@ export default function HomePage() {
         }}
       />
 
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        onOpenDetailedRegistration={() => {
+          setIsAuthOpen(false);
+          setIsOnboardingOpen(true);
+        }}
+      />
 
       <NaukriOnboardingModal
         isOpen={isOnboardingOpen}

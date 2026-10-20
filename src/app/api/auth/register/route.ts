@@ -6,7 +6,23 @@ import { inMemoryStore } from "@/lib/mock-data";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, role, headline, companyName, location, skills } = body;
+    const {
+      name,
+      email,
+      role,
+      headline,
+      companyName,
+      location,
+      skills,
+      phone,
+      noticePeriod,
+      expectedCtc,
+      currentCtc,
+      resumeUrl,
+      resumeFileName,
+      education,
+      experienceHistory,
+    } = body;
 
     if (!name || !email || !role) {
       return NextResponse.json({ success: false, error: "Name, email and role are required." }, { status: 400 });
@@ -24,10 +40,18 @@ export async function POST(request: NextRequest) {
         name,
         email: email.toLowerCase(),
         role,
-        headline: headline || (role === "employer" ? `Hiring Manager @ ${companyName || "Tech Co"}` : "Software Engineer"),
+        headline: headline || (role === "employer" ? `Hiring Manager @ ${companyName || "Tech Co"}` : "Job Candidate"),
         companyName: companyName || "",
-        location: location || "Bengaluru, India",
+        location: location || "Jalandhar, Punjab",
         skills: Array.isArray(skills) ? skills : skills?.split(",").map((s: string) => s.trim()).filter(Boolean) || [],
+        phone: phone || "",
+        noticePeriod: noticePeriod || "Immediate",
+        expectedCtc: Number(expectedCtc) || 0,
+        currentCtc: Number(currentCtc) || 0,
+        resumeUrl: resumeUrl || "",
+        resumeFileName: resumeFileName || "",
+        education: education || [],
+        experienceHistory: experienceHistory || [],
         savedJobs: [],
       });
 

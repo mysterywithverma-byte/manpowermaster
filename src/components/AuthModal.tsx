@@ -14,9 +14,10 @@ import {
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenDetailedRegistration?: () => void;
 }
 
-export function AuthModal({ isOpen, onClose }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, onOpenDetailedRegistration }: AuthModalProps) {
   const { login, register } = useAuth();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [role, setRole] = useState<"seeker" | "employer">("seeker");
@@ -193,6 +194,22 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   </button>
                 </div>
               </div>
+
+              {role === "seeker" && onOpenDetailedRegistration && (
+                <div className="p-3 rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-between gap-2">
+                  <div className="text-[11px] text-slate-700 font-medium">
+                    <strong className="text-orange-700 block font-bold">Recommended for Candidates:</strong>
+                    Build complete profile with custom degree, passing year &amp; resume.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onOpenDetailedRegistration}
+                    className="px-2.5 py-1 rounded-xl bg-orange-600 text-white text-[11px] font-bold shrink-0 hover:bg-orange-700 transition-all cursor-pointer shadow-2xs"
+                  >
+                    Full Registration
+                  </button>
+                </div>
+              )}
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
