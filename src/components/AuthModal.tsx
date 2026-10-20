@@ -27,6 +27,17 @@ export function AuthModal({ isOpen, onClose, onOpenDetailedRegistration }: AuthM
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("authError") === "google_env_missing") {
+        setError(
+          "Google Sign-In requires GOOGLE_CLIENT_ID in Vercel environment variables. Please use Email below."
+        );
+      }
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleGoogleSignIn = () => {

@@ -755,8 +755,8 @@ export function NaukriOnboardingModal({
           <X className="w-5 h-5" />
         </button>
 
-        {/* Left Side: Concise Value Prop */}
-        <div className="w-full md:w-5/12 bg-gradient-to-b from-orange-50/70 via-orange-50/30 to-white p-5 sm:p-7 border-b md:border-b-0 md:border-r border-slate-200 flex flex-col justify-between shrink-0">
+        {/* Left Side: Concise Value Prop (Desktop Only for fast mobile UX) */}
+        <div className="hidden md:flex md:w-5/12 bg-gradient-to-b from-orange-50/70 via-orange-50/30 to-white p-6 sm:p-7 border-r border-slate-200 flex-col justify-between shrink-0">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-orange-200 text-xs font-semibold text-orange-800 mb-3.5 shadow-2xs">
               <ShieldCheck className="w-3.5 h-3.5 text-orange-600" />
@@ -768,30 +768,24 @@ export function NaukriOnboardingModal({
             </h3>
 
             <div className="mt-4 space-y-2 text-xs font-medium text-slate-700">
-              <div className="flex items-center gap-2 p-2 rounded-xl bg-white/80 border border-orange-100">
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/80 border border-orange-100">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>100% Free Registration</span>
               </div>
-              <div className="flex items-center gap-2 p-2 rounded-xl bg-white/80 border border-orange-100">
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/80 border border-orange-100">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>Custom Course &amp; Passing Year</span>
               </div>
-              <div className="flex items-center gap-2 p-2 rounded-xl bg-white/80 border border-orange-100">
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/80 border border-orange-100">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>Direct HR Interview Invites</span>
               </div>
             </div>
           </div>
-
-          <div className="mt-6 pt-3 border-t border-slate-200/60 text-center">
-            <div className="text-[11px] text-slate-500 font-semibold">
-              Govt. GSTIN: 03IPTPB9968A1ZJ
-            </div>
-          </div>
         </div>
 
-        {/* Right Side: Clean Form Wizard */}
-        <div className="w-full md:w-7/12 p-5 sm:p-7 overflow-y-auto flex flex-col justify-between">
+        {/* Right Side: Clean Form Wizard (Full width on mobile) */}
+        <div className="w-full md:w-7/12 p-4 sm:p-7 overflow-y-auto flex flex-col justify-between">
           <div>
             {/* Step Indicators */}
             <div className="mb-5">

@@ -6,10 +6,10 @@ export async function GET(request: Request) {
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   if (!clientId) {
-    return NextResponse.json(
-      { error: "Google Client ID is not configured in environment variables." },
-      { status: 500 }
-    );
+    const url = new URL("/", request.url);
+    url.searchParams.set("authModal", "true");
+    url.searchParams.set("authError", "google_env_missing");
+    return NextResponse.redirect(url);
   }
 
   // Determine host for redirect URI

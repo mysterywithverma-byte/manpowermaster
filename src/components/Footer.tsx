@@ -11,7 +11,7 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           {/* Brand Info & Govt Registration */}
           <div className="space-y-3">
-            <TextLogo size="sm" showDomain={true} showBadge={false} showEmblem={true} />
+            <TextLogo size="sm" showEmblem={true} />
 
             <p className="text-xs text-slate-500 leading-relaxed font-normal">
               Official job recruitment and career staffing ecosystem connecting genuine job seekers directly with verified employers across Punjab, Delhi NCR, Bengaluru &amp; Pan-India.

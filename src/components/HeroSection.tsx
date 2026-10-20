@@ -202,7 +202,7 @@ export function HeroSection({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Enter skills / designations / companies..."
+                    placeholder="Job title, skill, or company"
                     className="w-full bg-transparent text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none font-medium"
                   />
                 </div>
@@ -224,7 +224,7 @@ export function HeroSection({
                         setShowLocationDropdown(true);
                       }}
                       onFocus={() => setShowLocationDropdown(true)}
-                      placeholder="Location or City..."
+                      placeholder="City or location"
                       className="w-full bg-transparent text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none font-semibold truncate"
                     />
                     {locationInput ? (

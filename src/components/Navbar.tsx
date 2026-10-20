@@ -23,14 +23,14 @@ export function Navbar({ onOpenAuth, onOpenRegister, onOpenPostJob, onSelectJobI
   const { user, role, activeView, setActiveView, logout, savedJobs } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-md border-b border-orange-100 bg-white/95 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Brand Text Logo (Indeed Style) with DP */}
+    <header className="sticky top-0 z-40 w-full backdrop-blur-md border-b border-orange-100 bg-white/95 shadow-xs">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
+        {/* Brand Text Logo (Clean Minimalist Style) */}
         <div
           onClick={() => setActiveView("explore")}
-          className="cursor-pointer group select-none"
+          className="cursor-pointer group select-none shrink-0"
         >
-          <TextLogo size="md" showDomain={true} showBadge={true} showEmblem={true} />
+          <TextLogo size="md" showEmblem={true} />
         </div>
 
         {/* View Navigation Tabs (Desktop) */}
@@ -82,12 +82,12 @@ export function Navbar({ onOpenAuth, onOpenRegister, onOpenPostJob, onSelectJobI
         </nav>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {/* Post Job Button (Desktop for employers) */}
           {user && role === "employer" ? (
             <button
               onClick={onOpenPostJob}
-              className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-orange-600 text-white shadow-xs hover:bg-orange-700 transition-all cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-orange-600 text-white shadow-xs hover:bg-orange-700 transition-all cursor-pointer whitespace-nowrap"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               <span>Post Job</span>
@@ -95,7 +95,7 @@ export function Navbar({ onOpenAuth, onOpenRegister, onOpenPostJob, onSelectJobI
           ) : !user ? (
             <button
               onClick={onOpenPostJob}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 hover:text-orange-600 hover:bg-orange-50 transition-all cursor-pointer"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 hover:text-orange-600 hover:bg-orange-50 transition-all cursor-pointer whitespace-nowrap"
             >
               <Building2 className="w-3.5 h-3.5 text-orange-600" />
               <span>For Employers</span>
@@ -104,7 +104,7 @@ export function Navbar({ onOpenAuth, onOpenRegister, onOpenPostJob, onSelectJobI
 
           {/* User Profile or Sign In */}
           {user ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <NotificationBell onSelectJobId={onSelectJobId} />
               <div
                 onClick={() => {
@@ -112,17 +112,17 @@ export function Navbar({ onOpenAuth, onOpenRegister, onOpenPostJob, onSelectJobI
                   else if (role === "employer") setActiveView("employer-dashboard");
                   else setActiveView("admin-dashboard");
                 }}
-                className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-orange-50 cursor-pointer"
+                className="flex items-center gap-1.5 pl-1.5 pr-1 py-1 rounded-xl hover:bg-orange-50 cursor-pointer shrink-0"
               >
                 {user.avatar ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={user.avatar}
                     alt={user.name}
-                    className="w-8 h-8 rounded-full object-cover border border-orange-300 shadow-xs"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-orange-300 shadow-xs"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-xs font-black text-white shadow-xs">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-orange-600 flex items-center justify-center text-xs font-black text-white shadow-xs">
                     {user.name.charAt(0)}
                   </div>
                 )}
@@ -145,16 +145,16 @@ export function Navbar({ onOpenAuth, onOpenRegister, onOpenPostJob, onSelectJobI
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 onClick={onOpenAuth}
-                className="px-3 sm:px-4 py-1.5 text-xs font-bold rounded-xl border border-orange-600 text-orange-700 hover:bg-orange-50 transition-all cursor-pointer"
+                className="px-2.5 sm:px-3.5 py-1.5 text-xs font-bold rounded-xl border border-orange-600 text-orange-700 hover:bg-orange-50 transition-all cursor-pointer whitespace-nowrap"
               >
                 Sign In
               </button>
               <button
                 onClick={onOpenRegister || onOpenAuth}
-                className="px-3 sm:px-4 py-1.5 text-xs font-bold rounded-xl bg-orange-600 hover:bg-orange-700 text-white shadow-xs transition-all cursor-pointer"
+                className="px-2.5 sm:px-4 py-1.5 text-xs font-bold rounded-xl bg-orange-600 hover:bg-orange-700 text-white shadow-xs transition-all cursor-pointer whitespace-nowrap"
               >
                 Register
               </button>

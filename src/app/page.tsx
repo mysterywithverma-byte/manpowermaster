@@ -120,6 +120,15 @@ export default function HomePage() {
     filters.minSalary,
   ]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("authModal") === "true") {
+        setIsAuthOpen(true);
+      }
+    }
+  }, []);
+
   const handleSearchSubmit = () => {
     fetchJobs();
   };
@@ -189,8 +198,8 @@ export default function HomePage() {
         onSelectJobId={handleSelectJobById}
       />
 
-      {/* Main View Switching */}
-      <main className="flex-1 bg-white">
+      {/* Main View Switching with mobile bottom nav padding */}
+      <main className="flex-1 bg-white pb-20 md:pb-0">
         {activeView === "explore" && (
           <div>
             {/* Hero Section with Sensible Search and Location Dropdown */}
