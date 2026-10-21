@@ -120,6 +120,78 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [newTechSkill, setNewTechSkill] = useState("");
+  const [newTool, setNewTool] = useState("");
+  const [newSoftSkill, setNewSoftSkill] = useState("");
+
+  const addTechSkill = (skill: string) => {
+    const trimmed = skill.trim();
+    if (!trimmed || resume.skills.technical.includes(trimmed)) return;
+    setResume((prev) => ({
+      ...prev,
+      skills: {
+        ...prev.skills,
+        technical: [...prev.skills.technical, trimmed],
+      },
+    }));
+    setNewTechSkill("");
+  };
+
+  const removeTechSkill = (index: number) => {
+    setResume((prev) => ({
+      ...prev,
+      skills: {
+        ...prev.skills,
+        technical: prev.skills.technical.filter((_, i) => i !== index),
+      },
+    }));
+  };
+
+  const addTool = (tool: string) => {
+    const trimmed = tool.trim();
+    if (!trimmed || resume.skills.tools.includes(trimmed)) return;
+    setResume((prev) => ({
+      ...prev,
+      skills: {
+        ...prev.skills,
+        tools: [...prev.skills.tools, trimmed],
+      },
+    }));
+    setNewTool("");
+  };
+
+  const removeTool = (index: number) => {
+    setResume((prev) => ({
+      ...prev,
+      skills: {
+        ...prev.skills,
+        tools: prev.skills.tools.filter((_, i) => i !== index),
+      },
+    }));
+  };
+
+  const addSoftSkill = (soft: string) => {
+    const trimmed = soft.trim();
+    if (!trimmed || resume.skills.soft.includes(trimmed)) return;
+    setResume((prev) => ({
+      ...prev,
+      skills: {
+        ...prev.skills,
+        soft: [...prev.skills.soft, trimmed],
+      },
+    }));
+    setNewSoftSkill("");
+  };
+
+  const removeSoftSkill = (index: number) => {
+    setResume((prev) => ({
+      ...prev,
+      skills: {
+        ...prev.skills,
+        soft: prev.skills.soft.filter((_, i) => i !== index),
+      },
+    }));
+  };
 
   // Resume State initialized from user profile
   const [resume, setResume] = useState<ResumeData>({
@@ -603,7 +675,7 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
                 { id: "summary", label: "Summary", icon: Sparkles },
                 { id: "experience", label: "Experience", icon: Briefcase },
                 { id: "education", label: "Education", icon: GraduationCap },
-                { id: "skills", label: "Skills", icon: Code2 },
+                { id: "skills", label: "Core Competencies & Skills", icon: Code2 },
                 { id: "projects", label: "Projects", icon: FolderGit2 },
                 { id: "extras", label: "Certs & Langs", icon: Award },
               ].map((item) => {
@@ -1185,82 +1257,204 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
                 </div>
               )}
 
-              {/* TAB 5: Skills */}
+              {/* TAB 5: Core Competencies & Skills */}
               {activeTab === "skills" && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                      <Code2 className="w-3.5 h-3.5 text-orange-600" />
-                      <span>Technical Skills (Comma separated)</span>
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={resume.skills.technical.join(", ")}
-                      onChange={(e) =>
-                        setResume({
-                          ...resume,
-                          skills: {
-                            ...resume.skills,
-                            technical: e.target.value
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(Boolean),
-                          },
-                        })
-                      }
-                      className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium"
-                      placeholder="e.g. React.js, TypeScript, Node.js, MongoDB, Docker, REST APIs"
-                    />
+                <div className="space-y-5">
+                  {/* Category 1: Technical & Core Competencies */}
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/90 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                        <Code2 className="w-4 h-4 text-orange-600" />
+                        <span>Technical &amp; Core Competencies ({resume.skills.technical.length})</span>
+                      </label>
+                      <span className="text-[10px] text-slate-500 font-medium">Visible on Resume Sheet</span>
+                    </div>
+
+                    {/* Interactive Add Skill Input */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newTechSkill}
+                        onChange={(e) => setNewTechSkill(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addTechSkill(newTechSkill);
+                          }
+                        }}
+                        className="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium focus:outline-hidden focus:ring-1 focus:ring-orange-500 bg-white"
+                        placeholder="Type skill (e.g. Next.js, Python, AWS, Docker) & press Enter"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => addTechSkill(newTechSkill)}
+                        className="px-3.5 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs flex items-center gap-1 shadow-xs transition-colors cursor-pointer shrink-0"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Skill</span>
+                      </button>
+                    </div>
+
+                    {/* Interactive Chip List with Delete "X" */}
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {resume.skills.technical.map((skill, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs font-semibold shadow-2xs hover:border-slate-300 transition-colors"
+                        >
+                          <span>{skill}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeTechSkill(i)}
+                            className="text-slate-400 hover:text-rose-600 p-0.5 rounded-full hover:bg-rose-50 transition-colors cursor-pointer"
+                            title={`Remove ${skill}`}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* 1-Click Popular Suggestions */}
+                    <div className="pt-2 border-t border-slate-200/70">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                        + 1-Click Popular Suggestions
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {[
+                          "React.js",
+                          "Next.js",
+                          "TypeScript",
+                          "Node.js",
+                          "Python",
+                          "Java",
+                          "AWS",
+                          "Docker",
+                          "MongoDB",
+                          "PostgreSQL",
+                          "SQL",
+                          "Tailwind CSS",
+                          "REST APIs",
+                          "GraphQL",
+                          "Git",
+                          "Redis",
+                        ]
+                          .filter((s) => !resume.skills.technical.includes(s))
+                          .slice(0, 8)
+                          .map((s) => (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => addTechSkill(s)}
+                              className="px-2 py-0.5 rounded-md bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-200/80 text-[10px] font-semibold transition-colors cursor-pointer"
+                            >
+                              + {s}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                      <Wrench className="w-3.5 h-3.5 text-orange-600" />
-                      <span>Tools &amp; Platforms (Comma separated)</span>
+                  {/* Category 2: Tools & Platforms */}
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/90 space-y-3">
+                    <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <Wrench className="w-4 h-4 text-orange-600" />
+                      <span>Tools, Cloud &amp; Platforms ({resume.skills.tools.length})</span>
                     </label>
-                    <input
-                      type="text"
-                      value={resume.skills.tools.join(", ")}
-                      onChange={(e) =>
-                        setResume({
-                          ...resume,
-                          skills: {
-                            ...resume.skills,
-                            tools: e.target.value
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(Boolean),
-                          },
-                        })
-                      }
-                      className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium"
-                      placeholder="e.g. Git, AWS, Postman, Linux, VS Code"
-                    />
+
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newTool}
+                        onChange={(e) => setNewTool(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addTool(newTool);
+                          }
+                        }}
+                        className="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium focus:outline-hidden focus:ring-1 focus:ring-orange-500 bg-white"
+                        placeholder="e.g. Git, Docker, Postman, Linux, VS Code, Figma"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => addTool(newTool)}
+                        className="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs flex items-center gap-1 shadow-xs transition-colors cursor-pointer shrink-0"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Tool</span>
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {resume.skills.tools.map((tool, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-medium shadow-2xs hover:border-slate-300 transition-colors"
+                        >
+                          <span>{tool}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeTool(i)}
+                            className="text-slate-400 hover:text-rose-600 p-0.5 rounded-full hover:bg-rose-50 transition-colors cursor-pointer"
+                            title={`Remove ${tool}`}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-orange-600" />
-                      <span>Soft &amp; Interpersonal Skills</span>
+                  {/* Category 3: Soft & Interpersonal Skills */}
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/90 space-y-3">
+                    <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <User className="w-4 h-4 text-orange-600" />
+                      <span>Soft &amp; Interpersonal Skills ({resume.skills.soft.length})</span>
                     </label>
-                    <input
-                      type="text"
-                      value={resume.skills.soft.join(", ")}
-                      onChange={(e) =>
-                        setResume({
-                          ...resume,
-                          skills: {
-                            ...resume.skills,
-                            soft: e.target.value
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(Boolean),
-                          },
-                        })
-                      }
-                      className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium"
-                      placeholder="e.g. Problem Solving, Agile Leadership, Effective Communication"
-                    />
+
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newSoftSkill}
+                        onChange={(e) => setNewSoftSkill(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addSoftSkill(newSoftSkill);
+                          }
+                        }}
+                        className="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium focus:outline-hidden focus:ring-1 focus:ring-orange-500 bg-white"
+                        placeholder="e.g. Problem Solving, Team Leadership, Agile / Scrum"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => addSoftSkill(newSoftSkill)}
+                        className="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs flex items-center gap-1 shadow-xs transition-colors cursor-pointer shrink-0"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add</span>
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {resume.skills.soft.map((soft, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-medium shadow-2xs hover:border-slate-300 transition-colors"
+                        >
+                          <span>{soft}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeSoftSkill(i)}
+                            className="text-slate-400 hover:text-rose-600 p-0.5 rounded-full hover:bg-rose-50 transition-colors cursor-pointer"
+                            title={`Remove ${soft}`}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1574,13 +1768,24 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
 
                   {/* Skills Grid with Icon */}
                   <div>
-                    <h3
-                      className="text-xs font-black uppercase tracking-wider mb-2 flex items-center gap-1.5"
-                      style={{ color: currentTheme.primary }}
-                    >
-                      <Code2 className="w-3.5 h-3.5" />
-                      <span>Technical &amp; Core Competencies</span>
-                    </h3>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3
+                        className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5"
+                        style={{ color: currentTheme.primary }}
+                      >
+                        <Code2 className="w-3.5 h-3.5" />
+                        <span>Technical &amp; Core Competencies</span>
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("skills")}
+                        className="text-[10px] font-bold text-orange-600 hover:text-orange-700 hover:underline flex items-center gap-1 print:hidden cursor-pointer"
+                        title="Add or Edit Skills"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>+ Add / Edit Skills</span>
+                      </button>
+                    </div>
                     <div className="flex flex-wrap gap-1.5 text-xs">
                       {resume.skills.technical.map((skill, i) => (
                         <span
@@ -1817,10 +2022,19 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
                     {/* Right Column: Skills, Education, Certs */}
                     <div className="space-y-5">
                       <div>
-                        <h4 className="text-xs font-black uppercase text-slate-900 tracking-wider mb-2 border-b pb-1 flex items-center gap-1.5">
-                          <Code2 className="w-3.5 h-3.5" style={{ color: currentTheme.primary }} />
-                          <span>Tech Skills</span>
-                        </h4>
+                        <div className="flex items-center justify-between mb-2 border-b pb-1">
+                          <h4 className="text-xs font-black uppercase text-slate-900 tracking-wider flex items-center gap-1.5">
+                            <Code2 className="w-3.5 h-3.5" style={{ color: currentTheme.primary }} />
+                            <span>Tech Skills</span>
+                          </h4>
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab("skills")}
+                            className="text-[10px] font-bold text-orange-600 hover:underline print:hidden cursor-pointer"
+                          >
+                            + Edit
+                          </button>
+                        </div>
                         <div className="flex flex-wrap gap-1">
                           {resume.skills.technical.map((s, i) => (
                             <span
@@ -1932,10 +2146,19 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
                   </div>
 
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-widest border-b border-slate-300 pb-0.5 mb-2 text-slate-900 flex items-center gap-1.5">
-                      <Code2 className="w-3 h-3 text-slate-500" />
-                      <span>Technical Skills</span>
-                    </h3>
+                    <div className="flex items-center justify-between border-b border-slate-300 pb-0.5 mb-2">
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-slate-900 flex items-center gap-1.5">
+                        <Code2 className="w-3 h-3 text-slate-500" />
+                        <span>Technical &amp; Core Competencies</span>
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("skills")}
+                        className="text-[10px] font-bold text-orange-600 hover:underline print:hidden cursor-pointer"
+                      >
+                        + Add / Edit
+                      </button>
+                    </div>
                     <div className="text-xs text-slate-700">
                       <span className="font-bold">Languages &amp; Frameworks: </span>
                       {resume.skills.technical.join(", ")}
