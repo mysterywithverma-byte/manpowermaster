@@ -14,13 +14,19 @@ export async function POST(request: NextRequest) {
     const cleanEmail = email.toLowerCase().trim();
     const displayName = name?.trim() || cleanEmail.split("@")[0];
 
+    const isAdminEmail = cleanEmail === "admin@manpowermaster.com" || cleanEmail === "admin" || role === "admin";
+    const userRole = isAdminEmail ? "admin" : (role || "seeker");
+
     const db = await connectToDatabase();
 
     if (db) {
       let user = await User.findOne({ email: cleanEmail });
       if (user) {
-        // If user logged in with a real name and DB still has email-prefix name, update it
-        if (name && name.trim() && user.name !== name.trim()) {
+        if (isAdminEmail && user.role !== "admin") {
+          user.role = "admin";
+          user.isVerified = true;
+          await user.save();
+        } else if (name && name.trim() && user.name !== name.trim()) {
           user.name = name.trim();
           await user.save();
         }
@@ -29,14 +35,15 @@ export async function POST(request: NextRequest) {
 
       // Create new user in MongoDB directly
       user = await User.create({
-        name: displayName,
+        name: isAdminEmail ? "Master Admin" : displayName,
         email: cleanEmail,
-        role: role || "seeker",
-        headline: role === "employer" ? `Recruiter @ ${companyName || "Company"}` : "Job Seeker",
+        role: userRole,
+        headline: isAdminEmail ? "Platform Super Administrator" : role === "employer" ? `Recruiter @ ${companyName || "Company"}` : "Job Seeker",
         companyName: companyName || "",
-        location: "India",
-        skills: ["Communication", "Problem Solving"],
+        location: isAdminEmail ? "Jalandhar, Punjab, India" : "India",
+        skills: isAdminEmail ? ["Platform Management", "Recruiter Verification"] : ["Communication", "Problem Solving"],
         savedJobs: [],
+        isVerified: isAdminEmail ? true : false,
       });
       return NextResponse.json({ success: true, user });
     }
@@ -44,7 +51,9 @@ export async function POST(request: NextRequest) {
     // Fallback store
     let user = inMemoryStore.getUserByEmail(cleanEmail) || INITIAL_USERS.find(u => u.email.toLowerCase() === cleanEmail);
     if (user) {
-      if (name && name.trim() && user.name !== name.trim()) {
+      if (isAdminEmail && user.role !== "admin") {
+        user = inMemoryStore.updateUser(user._id, { role: "admin", isVerified: true }) || user;
+      } else if (name && name.trim() && user.name !== name.trim()) {
         user = inMemoryStore.updateUser(user._id, { name: name.trim() }) || user;
       }
       return NextResponse.json({ success: true, user });
@@ -52,16 +61,17 @@ export async function POST(request: NextRequest) {
 
     // Auto-provision with real name and chosen role
     const newUser = inMemoryStore.addUser({
-      name: displayName,
+      name: isAdminEmail ? "Master Admin" : displayName,
       email: cleanEmail,
-      role: role || "seeker",
+      role: userRole,
       companyName: companyName || "",
-      headline: role === "employer" ? `Recruiter @ ${companyName || "Company"}` : "Job Seeker",
-      bio: "Member of JobNexus India ecosystem.",
-      phone: "+91 98000 00000",
+      headline: isAdminEmail ? "Platform Super Administrator" : role === "employer" ? `Recruiter @ ${companyName || "Company"}` : "Job Seeker",
+      bio: "Member of Manpower Master platform.",
+      phone: "+91 98726 20706",
       location: "India",
       skills: ["Problem Solving"],
       resumeUrl: "",
+      isVerified: isAdminEmail ? true : false,
     });
 
     return NextResponse.json({ success: true, user: newUser });

@@ -131,18 +131,22 @@ export function JobSplitView({ jobs, loading, onApplyJob, onResetFilters }: JobS
 
   if (jobs.length === 0) {
     return (
-      <div className="p-12 rounded-2xl bg-white border border-slate-200 text-center shadow-xs">
-        <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-        <h3 className="text-base font-bold text-slate-900 mb-1">No matching roles found</h3>
-        <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4">
-          Try loosening your search filters or exploring remote opportunities.
+      <div className="p-10 sm:p-14 rounded-3xl bg-white border border-slate-200/90 text-center shadow-xs max-w-xl mx-auto my-6">
+        <div className="w-14 h-14 rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-center mx-auto mb-4">
+          <Briefcase className="w-7 h-7 text-orange-600" />
+        </div>
+        <h3 className="text-lg font-bold text-slate-900 mb-1.5">No Job Vacancies Active</h3>
+        <p className="text-xs text-slate-500 max-w-md mx-auto mb-5 leading-relaxed">
+          All mock data has been purged. Only genuine corporate &amp; local job postings by verified employers will appear here.
         </p>
-        <button
-          onClick={onResetFilters}
-          className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-xs font-bold text-white cursor-pointer transition-all"
-        >
-          Reset All Filters
-        </button>
+        <div className="flex items-center justify-center gap-2.5 flex-wrap">
+          <button
+            onClick={onResetFilters}
+            className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-xs font-bold text-white cursor-pointer shadow-xs transition-all"
+          >
+            Refresh Board
+          </button>
+        </div>
       </div>
     );
   }

@@ -132,7 +132,7 @@ export function EmployerDashboard({ onOpenPostJob }: EmployerDashboardProps) {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900">
-                  {user?.companyName || "Razorpay"} Talent Console
+                  {user?.companyName || "Corporate Employer"} Talent Console
                 </h1>
                 <VerifiedBadge size="sm" label="Verified Employer" />
               </div>

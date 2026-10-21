@@ -136,6 +136,14 @@ export function Footer() {
             <span className="hover:underline cursor-pointer">Privacy Policy</span>
             <span className="hover:underline cursor-pointer">Terms of Service</span>
             <span className="hover:underline cursor-pointer">Verified Registration</span>
+            <a
+              href="/admin"
+              className="text-slate-400 hover:text-orange-600 transition-colors flex items-center gap-1 font-semibold"
+              title="Official Administrator Console"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-orange-600" />
+              <span>Admin Portal</span>
+            </a>
           </div>
         </div>
       </div>

@@ -264,7 +264,7 @@ export function AuthModal({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Razorpay, Swiggy, TCS"
+                    placeholder="e.g. Infosys, TCS, Manpower Solutions"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"

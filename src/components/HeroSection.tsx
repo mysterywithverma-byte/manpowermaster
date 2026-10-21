@@ -266,12 +266,12 @@ export function HeroSection({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-10 pt-8 border-t border-slate-200/80 max-w-4xl mx-auto">
           <div className="p-3.5 rounded-2xl bg-white border border-slate-200 text-left shadow-2xs">
             <div className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-1.5">
-              <span>{totalJobsCount > 0 ? totalJobsCount : 1240}+</span>
+              <span>{totalJobsCount}</span>
               <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-700 font-extrabold border border-emerald-200">
-                ACTIVE
+                LIVE
               </span>
             </div>
-            <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Verified Corporate Jobs</div>
+            <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Active Verified Jobs</div>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-white border border-slate-200 text-left shadow-2xs">

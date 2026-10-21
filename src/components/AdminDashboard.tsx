@@ -316,14 +316,14 @@ export function AdminDashboard() {
               <button
                 onClick={() => loginAsDemo("seeker")}
                 className="px-2.5 py-1 text-xs font-bold rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-orange-700 hover:border-orange-300 transition-all cursor-pointer"
-                title="Switch into Aarav Sharma (Candidate) view"
+                title="Switch into Candidate view"
               >
                 Candidate View
               </button>
               <button
                 onClick={() => loginAsDemo("employer")}
                 className="px-2.5 py-1 text-xs font-bold rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-orange-700 hover:border-orange-300 transition-all cursor-pointer"
-                title="Switch into Priya Nair (Razorpay Recruiter) view"
+                title="Switch into Employer Recruiter Console"
               >
                 Employer Console
               </button>
@@ -845,18 +845,18 @@ export function AdminDashboard() {
               <button
                 onClick={async () => {
                   try {
-                    const res = await fetch("/api/seed", { method: "POST" });
+                    const res = await fetch("/api/admin/clean-mock-data", { method: "POST" });
                     const d = await res.json();
-                    showToast(d.message || "Database seeded!");
+                    showToast(d.message || "All fake jobs purged!");
                     loadAllData();
                   } catch {
-                    showToast("Seed error");
+                    showToast("Clean mock data error");
                   }
                 }}
-                className="w-full py-2.5 px-4 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold text-xs border border-orange-200 transition-all text-left flex items-center justify-between cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 font-bold text-xs border border-rose-200 transition-all text-left flex items-center justify-between cursor-pointer"
               >
-                <span>Re-seed Default Mock Profiles &amp; Jobs</span>
-                <RefreshCw className="w-3.5 h-3.5 text-orange-600" />
+                <span>Purge All Mock / Fake Data (Keep Database 100% Clean)</span>
+                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
               </button>
 
               <button
