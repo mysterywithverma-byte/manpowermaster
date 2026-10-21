@@ -202,7 +202,7 @@ export default function AdminPage() {
                   autoComplete="username"
                   value={adminId}
                   onChange={(e) => setAdminId(e.target.value)}
-                  placeholder="admin@manpowermaster.com"
+                  placeholder="name@domain.com"
                   className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 text-xs font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all font-mono"
                 />
               </div>
