@@ -18,6 +18,7 @@ export interface IJob extends Document {
   postedBy: mongoose.Types.ObjectId | string;
   applicantsCount: number;
   featured: boolean;
+  isVerified?: boolean;
   status: "active" | "closed";
   createdAt: Date;
   updatedAt: Date;
@@ -54,6 +55,7 @@ const JobSchema = new Schema<IJob>(
     postedBy: { type: Schema.Types.Mixed, required: true, index: true },
     applicantsCount: { type: Number, default: 0 },
     featured: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: true },
     status: { type: String, enum: ["active", "closed"], default: "active" },
   },
   {

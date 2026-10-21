@@ -37,6 +37,8 @@ export interface MockUser {
   companyName?: string;
   companyLogo?: string;
   whatsappAlerts?: boolean;
+  isVerified?: boolean;
+  isBlocked?: boolean;
   createdAt: string;
 }
 
@@ -60,6 +62,7 @@ export interface MockJob {
   postedBy: string;
   applicantsCount: number;
   featured: boolean;
+  isVerified?: boolean;
   status: "active" | "closed";
   createdAt: string;
 }
@@ -126,6 +129,7 @@ export const INITIAL_USERS: MockUser[] = [
       },
     ],
     savedJobs: ["job-1", "job-3"],
+    isVerified: true,
     createdAt: new Date(Date.now() - 30 * 86400000).toISOString(),
   },
   {
@@ -142,6 +146,7 @@ export const INITIAL_USERS: MockUser[] = [
     skills: ["Technical Recruitment", "Executive Hiring", "Talent Strategy"],
     resumeUrl: "",
     savedJobs: [],
+    isVerified: true,
     createdAt: new Date(Date.now() - 60 * 86400000).toISOString(),
   },
   {
@@ -156,6 +161,7 @@ export const INITIAL_USERS: MockUser[] = [
     skills: ["DevOps", "Platform Moderation", "Data Governance"],
     resumeUrl: "",
     savedJobs: [],
+    isVerified: true,
     createdAt: new Date(Date.now() - 90 * 86400000).toISOString(),
   },
 ];
@@ -487,6 +493,40 @@ class Store {
     return newJob;
   }
 
+  updateJob(id: string, updates: Partial<MockJob>) {
+    const job = this.getJobById(id);
+    if (!job) return undefined;
+    Object.assign(job, updates);
+    return job;
+  }
+
+  deleteJob(id: string) {
+    const idx = this.jobs.findIndex((j) => j._id === id);
+    if (idx === -1) return false;
+    this.jobs.splice(idx, 1);
+    return true;
+  }
+
+  getUsers(filters?: { search?: string; role?: string; isVerified?: boolean }) {
+    let list = [...this.users];
+    if (filters?.role && filters.role !== "all") {
+      list = list.filter((u) => u.role === filters.role);
+    }
+    if (filters?.isVerified !== undefined) {
+      list = list.filter((u) => Boolean(u.isVerified) === filters.isVerified);
+    }
+    if (filters?.search) {
+      const q = filters.search.toLowerCase();
+      list = list.filter(
+        (u) =>
+          u.name.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          (u.companyName && u.companyName.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }
+
   getUser(id: string) {
     return this.users.find((u) => u._id === id);
   }
@@ -511,6 +551,13 @@ class Store {
     if (!user) return undefined;
     Object.assign(user, updates);
     return user;
+  }
+
+  deleteUser(id: string) {
+    const idx = this.users.findIndex((u) => u._id === id);
+    if (idx === -1) return false;
+    this.users.splice(idx, 1);
+    return true;
   }
 
   toggleSaveJob(userId: string, jobId: string) {

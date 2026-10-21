@@ -25,6 +25,7 @@ import {
   Layers,
   IndianRupee,
   Plus,
+  Check,
 } from "lucide-react";
 
 interface NaukriOnboardingModalProps {
@@ -1248,7 +1249,11 @@ export function NaukriOnboardingModal({
                                 : "bg-slate-100 hover:bg-orange-50 text-slate-700 border border-slate-200"
                             }`}
                           >
-                            {isSelected ? "✓ " : "+ "}
+                            {isSelected ? (
+                              <Check className="w-3 h-3 inline mr-1" />
+                            ) : (
+                              <Plus className="w-3 h-3 inline mr-1" />
+                            )}
                             {sk}
                           </button>
                         );

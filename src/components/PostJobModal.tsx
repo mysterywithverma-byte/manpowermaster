@@ -18,10 +18,11 @@ interface PostJobModalProps {
   isOpen: boolean;
   onClose: () => void;
   onJobCreated: () => void;
+  onOpenEmployerAuth?: () => void;
 }
 
-export function PostJobModal({ isOpen, onClose, onJobCreated }: PostJobModalProps) {
-  const { user, updateUser } = useAuth();
+export function PostJobModal({ isOpen, onClose, onJobCreated, onOpenEmployerAuth }: PostJobModalProps) {
+  const { user, updateUser, loginAsDemo } = useAuth();
 
   const [title, setTitle] = useState("");
   const [company, setCompany] = useState(user?.companyName || "Manpower Master");
@@ -180,6 +181,34 @@ export function PostJobModal({ isOpen, onClose, onJobCreated }: PostJobModalProp
                 Target verified candidates across India with transparent compensation.
               </p>
             </div>
+
+            {!user && (
+              <div className="mb-4 p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-950">
+                <div>
+                  <strong className="block font-black text-amber-900">Employer Account Required</strong>
+                  <span>Please sign in or register your organization to broadcast this opening to candidates.</span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onOpenEmployerAuth) onOpenEmployerAuth();
+                      onClose();
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold cursor-pointer transition-all shadow-xs"
+                  >
+                    Employer Sign Up
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => loginAsDemo("employer")}
+                    className="px-2.5 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 font-bold hover:bg-amber-100 transition-colors cursor-pointer"
+                  >
+                    Demo Employer
+                  </button>
+                </div>
+              </div>
+            )}
 
             {user && user.role === "seeker" && (
               <div className="mb-4 p-3 rounded-2xl bg-orange-50 border border-orange-200 flex items-center gap-2.5 text-xs text-orange-950">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
   X,
@@ -9,25 +9,43 @@ import {
   Mail,
   ArrowRight,
   Sparkles,
+  ShieldCheck,
+  CheckCircle2,
 } from "lucide-react";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenDetailedRegistration?: () => void;
+  initialRole?: "seeker" | "employer";
+  initialMode?: "login" | "register";
 }
 
-export function AuthModal({ isOpen, onClose, onOpenDetailedRegistration }: AuthModalProps) {
-  const { login, register } = useAuth();
-  const [mode, setMode] = useState<"login" | "register">("login");
-  const [role, setRole] = useState<"seeker" | "employer">("seeker");
+export function AuthModal({
+  isOpen,
+  onClose,
+  onOpenDetailedRegistration,
+  initialRole = "seeker",
+  initialMode = "login",
+}: AuthModalProps) {
+  const { login, register, loginAsDemo } = useAuth();
+  const [mode, setMode] = useState<"login" | "register">(initialMode);
+  const [role, setRole] = useState<"seeker" | "employer">(initialRole);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  React.useEffect(() => {
+  useEffect(() => {
+    if (isOpen) {
+      setRole(initialRole);
+      setMode(initialMode);
+      setError("");
+    }
+  }, [isOpen, initialRole, initialMode]);
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("authError") === "google_env_missing") {
@@ -42,7 +60,6 @@ export function AuthModal({ isOpen, onClose, onOpenDetailedRegistration }: AuthM
 
   const handleGoogleSignIn = () => {
     setLoading(true);
-    // Redirect to real Google OAuth 2.0 flow
     window.location.href = `/api/auth/google?role=${role}`;
   };
 
@@ -53,12 +70,15 @@ export function AuthModal({ isOpen, onClose, onOpenDetailedRegistration }: AuthM
 
     try {
       if (mode === "login") {
-        const result = await login(email);
+        const result = await login(email, undefined, role);
         const ok = typeof result === "boolean" ? result : result.success;
         if (ok) {
           onClose();
         } else {
-          const errMsg = typeof result === "object" && result.error ? result.error : "Could not authenticate account.";
+          const errMsg =
+            typeof result === "object" && result.error
+              ? result.error
+              : "Could not authenticate account.";
           setError(errMsg);
         }
       } else {
@@ -72,7 +92,10 @@ export function AuthModal({ isOpen, onClose, onOpenDetailedRegistration }: AuthM
         if (ok) {
           onClose();
         } else {
-          const errMsg = typeof result === "object" && result.error ? result.error : "Registration could not be completed.";
+          const errMsg =
+            typeof result === "object" && result.error
+              ? result.error
+              : "Registration could not be completed.";
           setError(errMsg);
         }
       }
@@ -86,31 +109,76 @@ export function AuthModal({ isOpen, onClose, onOpenDetailedRegistration }: AuthM
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-md rounded-3xl bg-white border-2 border-orange-400 shadow-2xl p-6 text-slate-900"
+        className="relative w-full max-w-md rounded-3xl bg-white border-2 border-orange-400 shadow-2xl p-6 text-slate-900 max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
-        <div className="text-center mb-5">
+        <div className="text-center mb-4">
           <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-orange-600 text-white mb-2 shadow-xs">
-            <Sparkles className="w-5 h-5" />
+            {role === "employer" ? (
+              <Building2 className="w-5 h-5" />
+            ) : (
+              <Sparkles className="w-5 h-5" />
+            )}
           </div>
-          <h2 className="text-2xl font-black tracking-tight text-slate-900">
-            {mode === "login" ? "Welcome Back" : "Join Manpower Master"}
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
+            {role === "employer"
+              ? mode === "login"
+                ? "Recruiter / Employer Login"
+                : "Register Employer Account"
+              : mode === "login"
+              ? "Welcome Back"
+              : "Join Manpower Master"}
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            100% Free for candidates • Direct verified placements
+            {role === "employer"
+              ? "Post job vacancies & hire direct verified candidates"
+              : "100% Free for candidates • Direct verified placements"}
           </p>
         </div>
 
+        {/* Role Selector Tabs (Employer vs Candidate) */}
+        <div className="mb-3">
+          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1 text-center">
+            Choose Account Type
+          </label>
+          <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-100 border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setRole("seeker")}
+              className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                role === "seeker"
+                  ? "bg-orange-600 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200"
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Job Seeker</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("employer")}
+              className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                role === "employer"
+                  ? "bg-orange-600 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200"
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Employer / Recruiter</span>
+            </button>
+          </div>
+        </div>
+
         {/* Google Sign-In Button */}
-        <div className="mb-4">
+        <div className="mb-3">
           <button
             type="button"
             onClick={handleGoogleSignIn}
@@ -138,15 +206,15 @@ export function AuthModal({ isOpen, onClose, onOpenDetailedRegistration }: AuthM
           </button>
         </div>
 
-        {/* Tab Toggle */}
+        {/* Tab Toggle: Sign In vs Register */}
         <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200 mb-3">
           <button
             type="button"
             onClick={() => setMode("login")}
-            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               mode === "login"
-                ? "bg-orange-600 text-white shadow-sm"
-                : "text-slate-500"
+                ? "bg-orange-600 text-white shadow-xs"
+                : "text-slate-500 hover:text-slate-900"
             }`}
           >
             Sign In with Email
@@ -154,10 +222,10 @@ export function AuthModal({ isOpen, onClose, onOpenDetailedRegistration }: AuthM
           <button
             type="button"
             onClick={() => setMode("register")}
-            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               mode === "register"
-                ? "bg-orange-600 text-white shadow-sm"
-                : "text-slate-500"
+                ? "bg-orange-600 text-white shadow-xs"
+                : "text-slate-500 hover:text-slate-900"
             }`}
           >
             Create Account
@@ -170,66 +238,18 @@ export function AuthModal({ isOpen, onClose, onOpenDetailedRegistration }: AuthM
           </div>
         )}
 
-        {/* Email Form */}
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3">
           {mode === "register" && (
             <>
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  I am a:
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRole("seeker")}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 ${
-                      role === "seeker"
-                        ? "bg-orange-600 text-white border-orange-600"
-                        : "bg-slate-50 text-slate-600 border-slate-200"
-                    }`}
-                  >
-                    <User className="w-3.5 h-3.5" />
-                    <span>Job Seeker</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRole("employer")}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 ${
-                      role === "employer"
-                        ? "bg-orange-600 text-white border-orange-600"
-                        : "bg-slate-50 text-slate-600 border-slate-200"
-                    }`}
-                  >
-                    <Building2 className="w-3.5 h-3.5" />
-                    <span>Employer</span>
-                  </button>
-                </div>
-              </div>
-
-              {role === "seeker" && onOpenDetailedRegistration && (
-                <div className="p-3 rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-between gap-2">
-                  <div className="text-[11px] text-slate-700 font-medium">
-                    <strong className="text-orange-700 block font-bold">Recommended for Candidates:</strong>
-                    Build complete profile with custom degree, passing year &amp; resume.
-                  </div>
-                  <button
-                    type="button"
-                    onClick={onOpenDetailedRegistration}
-                    className="px-2.5 py-1 rounded-xl bg-orange-600 text-white text-[11px] font-bold shrink-0 hover:bg-orange-700 transition-all cursor-pointer shadow-2xs"
-                  >
-                    Full Registration
-                  </button>
-                </div>
-              )}
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Full Name
+                  {role === "employer" ? "Recruiter / Contact Name" : "Full Name"}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Aarav Sharma"
+                  placeholder={role === "employer" ? "e.g. Priya Nair" : "e.g. Aarav Sharma"}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600"
@@ -239,16 +259,34 @@ export function AuthModal({ isOpen, onClose, onOpenDetailedRegistration }: AuthM
               {role === "employer" && (
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Company Name
+                    Company / Organization Name
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Razorpay, Swiggy"
+                    placeholder="e.g. Razorpay, Swiggy, TCS"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600"
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
                   />
+                </div>
+              )}
+
+              {role === "seeker" && onOpenDetailedRegistration && (
+                <div className="p-3 rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-between gap-2">
+                  <div className="text-[11px] text-slate-700 font-medium">
+                    <strong className="text-orange-700 block font-bold">
+                      Recommended for Candidates:
+                    </strong>
+                    Build complete profile with custom degree, passing year &amp; resume.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onOpenDetailedRegistration}
+                    className="px-2.5 py-1 rounded-xl bg-orange-600 text-white text-[11px] font-bold shrink-0 hover:bg-orange-700 transition-all cursor-pointer shadow-2xs"
+                  >
+                    Full Profile
+                  </button>
                 </div>
               )}
             </>
@@ -256,14 +294,14 @@ export function AuthModal({ isOpen, onClose, onOpenDetailedRegistration }: AuthM
 
           <div>
             <label className="text-xs font-bold text-slate-700 block mb-1">
-              Email Address
+              {role === "employer" ? "Company / Work Email" : "Email Address"}
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="email"
                 required
-                placeholder="name@gmail.com"
+                placeholder={role === "employer" ? "recruiter@company.com" : "candidate@gmail.com"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
@@ -277,11 +315,54 @@ export function AuthModal({ isOpen, onClose, onOpenDetailedRegistration }: AuthM
               disabled={loading}
               className="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
             >
-              <span>{mode === "login" ? "Sign In" : "Register Profile"}</span>
+              <span>
+                {mode === "login"
+                  ? `Sign In as ${role === "employer" ? "Employer" : "Candidate"}`
+                  : `Register as ${role === "employer" ? "Employer" : "Candidate"}`}
+              </span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </form>
+
+        {/* Quick Demo Access Bar */}
+        <div className="mt-4 pt-4 border-t border-slate-100 text-center">
+          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-2">
+            One-Click Demo Switcher
+          </span>
+          <div className="grid grid-cols-3 gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                loginAsDemo("seeker");
+                onClose();
+              }}
+              className="py-1 px-2 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-orange-700 text-[10px] font-bold text-slate-600 transition-colors cursor-pointer"
+            >
+              Demo Candidate
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                loginAsDemo("employer");
+                onClose();
+              }}
+              className="py-1 px-2 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-orange-700 text-[10px] font-bold text-slate-600 transition-colors cursor-pointer"
+            >
+              Demo Employer
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                loginAsDemo("admin");
+                onClose();
+              }}
+              className="py-1 px-2 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-orange-700 text-[10px] font-bold text-slate-600 transition-colors cursor-pointer"
+            >
+              Demo Admin
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

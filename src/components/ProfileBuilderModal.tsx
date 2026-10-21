@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { compressImageToWebP, formatBytes } from "@/lib/image-compressor";
+import { ResumeBuilderModal } from "@/components/ResumeBuilderModal";
 
 interface ProfileBuilderModalProps {
   isOpen: boolean;
@@ -55,6 +56,7 @@ export function ProfileBuilderModal({
   const [resumeFileName, setResumeFileName] = useState(user?.resumeFileName || "");
   const [uploadingResume, setUploadingResume] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
+  const [isResumeBuilderOpen, setIsResumeBuilderOpen] = useState(false);
 
   // Education state
   const [education, setEducation] = useState(
@@ -373,8 +375,17 @@ export function ProfileBuilderModal({
                     </div>
                   </div>
 
-                  <div className="w-full sm:w-auto flex items-center gap-2">
-                    <label className="flex-1 sm:flex-initial cursor-pointer px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition-all">
+                  <div className="w-full sm:w-auto flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsResumeBuilderOpen(true)}
+                      className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-orange-600" />
+                      <span>Create with Resume Builder</span>
+                    </button>
+
+                    <label className="flex-1 sm:flex-initial cursor-pointer px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition-all whitespace-nowrap">
                       {uploadingResume ? (
                         <>
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -399,7 +410,7 @@ export function ProfileBuilderModal({
                         href={resumeUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-orange-50"
+                        className="px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-orange-50"
                       >
                         Preview
                       </a>
@@ -701,6 +712,17 @@ export function ProfileBuilderModal({
           </div>
         )}
       </div>
+
+      {/* Embedded ATS Resume Builder Modal */}
+      <ResumeBuilderModal
+        isOpen={isResumeBuilderOpen}
+        onClose={() => setIsResumeBuilderOpen(false)}
+        onSaved={() => {
+          if (user?.resumeUrl) setResumeUrl(user.resumeUrl);
+          if (user?.resumeFileName) setResumeFileName(user.resumeFileName);
+          onProfileUpdated();
+        }}
+      />
     </div>
   );
 }

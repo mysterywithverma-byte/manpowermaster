@@ -20,6 +20,8 @@ export interface IUser extends Document {
   companyName?: string;
   companyLogo?: string;
   avatar?: string;
+  isVerified?: boolean;
+  isBlocked?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,6 +52,8 @@ const UserSchema = new Schema<IUser>(
     companyName: { type: String, default: "" },
     companyLogo: { type: String, default: "" },
     avatar: { type: String, default: "" },
+    isVerified: { type: Boolean, default: false },
+    isBlocked: { type: Boolean, default: false },
   },
   {
     timestamps: true,

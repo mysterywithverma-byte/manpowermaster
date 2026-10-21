@@ -51,6 +51,7 @@ export default function HomePage() {
   const [jobToApply, setJobToApply] = useState<MockJob | null>(null);
   const [isPostJobOpen, setIsPostJobOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authInitialRole, setAuthInitialRole] = useState<"seeker" | "employer">("seeker");
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
   // Filters & Search state
@@ -180,16 +181,24 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-slate-900 selection:bg-orange-600 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-slate-50/70 text-slate-900 selection:bg-orange-600 selection:text-white">
       {/* Google Jobs Schema.org JSON-LD Structured Data */}
       <JobJsonLd jobs={jobs} />
 
       {/* Navigation */}
       <Navbar
-        onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenAuth={() => {
+          setAuthInitialRole("seeker");
+          setIsAuthOpen(true);
+        }}
+        onOpenEmployerAuth={() => {
+          setAuthInitialRole("employer");
+          setIsAuthOpen(true);
+        }}
         onOpenRegister={() => setIsOnboardingOpen(true)}
         onOpenPostJob={() => {
           if (!user) {
+            setAuthInitialRole("employer");
             setIsAuthOpen(true);
           } else {
             setIsPostJobOpen(true);
@@ -199,7 +208,7 @@ export default function HomePage() {
       />
 
       {/* Main View Switching with mobile bottom nav padding */}
-      <main className="flex-1 bg-white pb-20 md:pb-0">
+      <main className="flex-1 bg-transparent pb-20 md:pb-0">
         {activeView === "explore" && (
           <div>
             {/* Hero Section with Sensible Search and Location Dropdown */}
@@ -328,42 +337,75 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Naukri-Style Candidate Registration Banner — Only for guests */}
-              {!user && (
-                <div className="mt-12 rounded-3xl bg-gradient-to-r from-orange-50 via-white to-orange-50 border-2 border-orange-200 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
-                  <div className="flex items-center gap-5">
-                    <div className="hidden sm:flex w-24 h-24 shrink-0 bg-white rounded-2xl p-2 border border-orange-200 shadow-xs items-center justify-center">
-                      <img
-                        src="/illustrations/hero-search.png"
-                        alt="Job Search"
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                    <div>
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-600 text-white text-[10px] font-black uppercase tracking-wider mb-2">
-                        Fast-Track Hiring
-                      </span>
-                      <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                        Accelerate your career search with Manpower Master
-                      </h3>
-                      <p className="text-xs text-slate-600 mt-1 max-w-xl">
-                        Complete your candidate profile, upload your resume, and get direct interview invites from verified corporate employers with zero recruiter spam.
-                      </p>
-                    </div>
+              {/* Dual Action Banners: Candidate Fast-Track & Employer Talent Hub */}
+              <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Candidate Banner */}
+                <div className="rounded-3xl bg-gradient-to-br from-orange-50 via-white to-orange-50/50 border-2 border-orange-200 p-6 flex flex-col justify-between shadow-xs">
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-600 text-white text-[10px] font-black uppercase tracking-wider mb-2.5">
+                      For Job Seekers
+                    </span>
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                      Accelerate your career search with Manpower Master
+                    </h3>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                      Complete your candidate profile, upload your resume, and get direct interview invites from verified corporate employers with zero recruiter spam.
+                    </p>
                   </div>
-                  <div className="flex sm:flex-col items-center gap-2 w-full md:w-auto shrink-0">
+                  <div className="mt-5 pt-4 border-t border-orange-100 flex items-center justify-between gap-3">
                     <button
                       onClick={() => setIsOnboardingOpen(true)}
-                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer text-center"
+                      className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
                     >
-                      Register as Job Seeker
+                      Register as Candidate
                     </button>
-                    <span className="text-[11px] text-slate-400 font-medium hidden sm:block text-center">
-                      Takes under 2 minutes
-                    </span>
+                    <span className="text-[11px] text-slate-400 font-medium">100% Free Placements</span>
                   </div>
                 </div>
-              )}
+
+                {/* Employer Banner */}
+                <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border-2 border-slate-700 p-6 flex flex-col justify-between shadow-md">
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-black uppercase tracking-wider mb-2.5">
+                      For Employers &amp; HR
+                    </span>
+                    <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
+                      Hiring talent? Post free jobs &amp; screen top candidates
+                    </h3>
+                    <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                      Publish vacancies in under 60 seconds, connect with verified engineers &amp; specialists directly on WhatsApp, and manage candidate hiring stages.
+                    </p>
+                  </div>
+                  <div className="mt-5 pt-4 border-t border-slate-700 flex items-center justify-between gap-3 flex-wrap">
+                    <button
+                      onClick={() => {
+                        if (!user) {
+                          setAuthInitialRole("employer");
+                          setIsAuthOpen(true);
+                        } else {
+                          setIsPostJobOpen(true);
+                        }
+                      }}
+                      className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                    >
+                      Post Free Job
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!user) {
+                          setAuthInitialRole("employer");
+                          setIsAuthOpen(true);
+                        } else {
+                          setActiveView("employer-dashboard");
+                        }
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-bold text-xs transition-all cursor-pointer"
+                    >
+                      Employer Console
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -388,8 +430,18 @@ export default function HomePage() {
 
       {/* Mobile Bottom Navigation Bar (Phone-Friendly) */}
       <MobileBottomNav
-        onOpenPostJob={() => setIsPostJobOpen(true)}
-        onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenPostJob={() => {
+          if (!user) {
+            setAuthInitialRole("employer");
+            setIsAuthOpen(true);
+          } else {
+            setIsPostJobOpen(true);
+          }
+        }}
+        onOpenAuth={() => {
+          setAuthInitialRole("seeker");
+          setIsAuthOpen(true);
+        }}
       />
 
       {/* Interactive Modals */}
@@ -407,6 +459,10 @@ export default function HomePage() {
       <PostJobModal
         isOpen={isPostJobOpen}
         onClose={() => setIsPostJobOpen(false)}
+        onOpenEmployerAuth={() => {
+          setAuthInitialRole("employer");
+          setIsAuthOpen(true);
+        }}
         onJobCreated={() => {
           fetchJobs();
           setActiveView("employer-dashboard");
@@ -415,6 +471,7 @@ export default function HomePage() {
 
       <AuthModal
         isOpen={isAuthOpen}
+        initialRole={authInitialRole}
         onClose={() => setIsAuthOpen(false)}
         onOpenDetailedRegistration={() => {
           setIsAuthOpen(false);

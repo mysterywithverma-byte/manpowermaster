@@ -75,12 +75,12 @@ export function JobFilters({
   };
 
   return (
-    <div className="p-4 sm:p-5 rounded-3xl bg-white border-2 border-slate-200 shadow-sm">
+    <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
       {/* Header */}
       <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="w-4 h-4 text-orange-600" />
-          <h3 className="font-black text-sm text-slate-900">Filters</h3>
+          <SlidersHorizontal className="w-4 h-4 text-slate-700" />
+          <h3 className="font-bold text-sm text-slate-900">All Filters</h3>
           {activeCount > 0 && (
             <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-[10px] font-black border border-orange-200">
               {activeCount}

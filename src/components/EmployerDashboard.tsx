@@ -18,7 +18,9 @@ import {
   MessageCircle,
   RefreshCw,
   Sparkles,
+  Trash2,
 } from "lucide-react";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 interface EmployerDashboardProps {
   onOpenPostJob: () => void;
@@ -132,9 +134,7 @@ export function EmployerDashboard({ onOpenPostJob }: EmployerDashboardProps) {
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900">
                   {user?.companyName || "Razorpay"} Talent Console
                 </h1>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-200">
-                  Verified Employer
-                </span>
+                <VerifiedBadge size="sm" label="Verified Employer" />
               </div>
               <p className="text-xs text-slate-500 mt-1">
                 Recruiter Lead: <strong className="text-slate-800">{user?.name}</strong> ({user?.email})
