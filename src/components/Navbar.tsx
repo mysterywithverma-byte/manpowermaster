@@ -45,10 +45,9 @@ export function Navbar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSwitchRole = (newRole: "seeker" | "employer" | "admin") => {
+  const handleSwitchRole = (newRole: "seeker" | "employer") => {
     updateUser({ role: newRole });
     if (newRole === "employer") setActiveView("employer-dashboard");
-    else if (newRole === "admin") setActiveView("admin-dashboard");
     else setActiveView("seeker-dashboard");
     setProfileMenuOpen(false);
   };
@@ -109,21 +108,6 @@ export function Navbar({
             >
               <Building2 className="w-3.5 h-3.5 text-slate-500" />
               <span>Recruiter Console</span>
-            </button>
-          )}
-
-          {/* Admin Dashboard tab */}
-          {user && role === "admin" && (
-            <button
-              onClick={() => setActiveView("admin-dashboard")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                activeView === "admin-dashboard"
-                  ? "bg-white text-slate-900 shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-purple-600" />
-              <span>Admin Console</span>
             </button>
           )}
         </nav>
@@ -259,17 +243,7 @@ export function Navbar({
                       <span>Employer Talent Console</span>
                     </button>
 
-                    <button
-                      onClick={() => {
-                        setActiveView("admin-dashboard");
-                        setProfileMenuOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:bg-orange-50 hover:text-orange-700 transition-colors flex items-center gap-2 cursor-pointer"
-                    >
-                      <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Admin Operations &amp; Badges</span>
-                    </button>
-                  </div>
+                    </div>
 
                   {/* Switch Role Quick Actions */}
                   <div className="pt-2 border-t border-slate-100 pb-1">

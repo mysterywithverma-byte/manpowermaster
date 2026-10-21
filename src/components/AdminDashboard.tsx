@@ -309,33 +309,17 @@ export function AdminDashboard() {
             </div>
           </div>
 
-          {/* Quick Demo Role Sandbox Bar */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200 w-full lg:w-auto">
-            <span className="text-[11px] font-bold text-slate-500 pl-2">Quick Switch:</span>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <button
-                onClick={() => loginAsDemo("seeker")}
-                className="px-2.5 py-1 text-xs font-bold rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-orange-700 hover:border-orange-300 transition-all cursor-pointer"
-                title="Switch into Candidate view"
-              >
-                Candidate View
-              </button>
-              <button
-                onClick={() => loginAsDemo("employer")}
-                className="px-2.5 py-1 text-xs font-bold rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-orange-700 hover:border-orange-300 transition-all cursor-pointer"
-                title="Switch into Employer Recruiter Console"
-              >
-                Employer Console
-              </button>
-              <button
-                onClick={loadAllData}
-                disabled={loading}
-                className="p-1.5 text-xs font-bold rounded-xl bg-orange-600 text-white hover:bg-orange-700 transition-all cursor-pointer disabled:opacity-50"
-                title="Refresh Admin Data"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-              </button>
-            </div>
+          {/* Refresh Action Bar */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={loadAllData}
+              disabled={loading}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-orange-600 text-white hover:bg-orange-700 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
+              title="Refresh Admin Data"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+              <span>Refresh Telemetry</span>
+            </button>
           </div>
         </div>
 

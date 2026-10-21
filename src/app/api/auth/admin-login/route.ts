@@ -4,16 +4,8 @@ import { User } from "@/lib/models/User";
 import { inMemoryStore, INITIAL_USERS } from "@/lib/mock-data";
 
 // Canonical Admin Credentials
-export const ADMIN_CONFIG = {
-  primaryEmail: "admin@manpowermaster.com",
-  acceptedEmails: ["admin@manpowermaster.com", "admin", "admin@jobnexus.in"],
-  acceptedPasswords: [
-    process.env.ADMIN_PASSWORD || "Admin@12345",
-    "Admin@12345",
-    "admin123",
-    "admin",
-  ],
-};
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "admin@manpowermaster.com").toLowerCase().trim();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@12345";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +14,7 @@ export async function POST(request: NextRequest) {
 
     if (!email || !password) {
       return NextResponse.json(
-        { success: false, error: "Please enter both Admin ID/Email and Password." },
+        { success: false, error: "Please enter both Administrator ID and Password." },
         { status: 400 }
       );
     }
@@ -30,26 +22,21 @@ export async function POST(request: NextRequest) {
     const cleanEmail = String(email).trim().toLowerCase();
     const cleanPassword = String(password).trim();
 
-    // Validate ID/Email
-    const isEmailValid = ADMIN_CONFIG.acceptedEmails.some(
-      (e) => e.toLowerCase() === cleanEmail
-    );
-
-    // Validate Password
-    const isPasswordValid = ADMIN_CONFIG.acceptedPasswords.includes(cleanPassword);
+    // Validate strictly
+    const isEmailValid = cleanEmail === ADMIN_EMAIL || cleanEmail === "admin";
+    const isPasswordValid = cleanPassword === ADMIN_PASSWORD;
 
     if (!isEmailValid || !isPasswordValid) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "Invalid Admin ID or Password. Default Admin ID is admin@manpowermaster.com and Password is Admin@12345",
+          error: "Invalid Administrator ID or Password. Access denied.",
         },
         { status: 401 }
       );
     }
 
-    const adminEmail = ADMIN_CONFIG.primaryEmail;
+    const adminEmail = ADMIN_EMAIL;
     const db = await connectToDatabase();
 
     if (db) {

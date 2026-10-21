@@ -75,20 +75,6 @@ export function MobileBottomNav({ onOpenPostJob, onOpenAuth }: MobileBottomNavPr
           </button>
         )}
 
-        {role === "admin" && (
-          <button
-            onClick={() => setActiveView("admin-dashboard")}
-            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
-              activeView === "admin-dashboard"
-                ? "text-orange-700 bg-orange-50 font-bold"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <ShieldCheck className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] tracking-tight">Admin</span>
-          </button>
-        )}
-
         {/* Saved Jobs (for seeker) */}
         {role === "seeker" && (
           <button
@@ -112,12 +98,10 @@ export function MobileBottomNav({ onOpenPostJob, onOpenAuth }: MobileBottomNavPr
           onClick={() => {
             if (!user) {
               onOpenAuth();
-            } else if (role === "seeker") {
-              setActiveView("seeker-dashboard");
             } else if (role === "employer") {
               setActiveView("employer-dashboard");
             } else {
-              setActiveView("admin-dashboard");
+              setActiveView("seeker-dashboard");
             }
           }}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all cursor-pointer ${

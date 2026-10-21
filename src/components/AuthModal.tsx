@@ -351,16 +351,6 @@ export function AuthModal({
             >
               Demo Employer
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                loginAsDemo("admin");
-                onClose();
-              }}
-              className="py-1 px-2 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-orange-700 text-[10px] font-bold text-slate-600 transition-colors cursor-pointer"
-            >
-              Demo Admin
-            </button>
           </div>
         </div>
       </div>

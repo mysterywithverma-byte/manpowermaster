@@ -13,7 +13,6 @@ import { AuthModal } from "@/components/AuthModal";
 import { NaukriOnboardingModal } from "@/components/NaukriOnboardingModal";
 import { SeekerDashboard } from "@/components/SeekerDashboard";
 import { EmployerDashboard } from "@/components/EmployerDashboard";
-import { AdminDashboard } from "@/components/AdminDashboard";
 import { Footer } from "@/components/Footer";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { JobJsonLd } from "@/components/JobJsonLd";
@@ -421,8 +420,6 @@ export default function HomePage() {
         {activeView === "employer-dashboard" && (
           <EmployerDashboard onOpenPostJob={() => setIsPostJobOpen(true)} />
         )}
-
-        {activeView === "admin-dashboard" && <AdminDashboard />}
       </main>
 
       {/* Footer */}

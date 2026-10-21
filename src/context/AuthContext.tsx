@@ -7,9 +7,9 @@ interface AuthContextType {
   user: MockUser | null;
   role: "seeker" | "employer" | "admin";
   savedJobs: string[];
-  activeView: "explore" | "seeker-dashboard" | "employer-dashboard" | "admin-dashboard";
-  setActiveView: (view: "explore" | "seeker-dashboard" | "employer-dashboard" | "admin-dashboard") => void;
-  loginAsDemo: (role: "seeker" | "employer" | "admin") => void;
+  activeView: "explore" | "seeker-dashboard" | "employer-dashboard";
+  setActiveView: (view: "explore" | "seeker-dashboard" | "employer-dashboard") => void;
+  loginAsDemo: (role: "seeker" | "employer") => void;
   login: (email: string, name?: string, chosenRole?: "seeker" | "employer") => Promise<{ success: boolean; error?: string } | boolean>;
   register: (data: { name: string; email: string; role: "seeker" | "employer"; companyName?: string }) => Promise<{ success: boolean; error?: string } | boolean>;
   logout: () => void;
@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<MockUser | null>(null);
-  const [activeView, setActiveView] = useState<"explore" | "seeker-dashboard" | "employer-dashboard" | "admin-dashboard">("explore");
+  const [activeView, setActiveView] = useState<"explore" | "seeker-dashboard" | "employer-dashboard">("explore");
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
 
   useEffect(() => {
@@ -75,16 +75,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const loginAsDemo = (demoRole: "seeker" | "employer" | "admin") => {
-    const found = INITIAL_USERS.find((u) => u.role === demoRole) || INITIAL_USERS[0];
-    setUser(found);
-    setSavedJobs(found.savedJobs || []);
-    localStorage.setItem("jn_user", JSON.stringify(found));
+  const loginAsDemo = (demoRole: "seeker" | "employer") => {
+    const found = INITIAL_USERS.find((u) => u.role === demoRole);
+    if (found) {
+      setUser(found);
+      setSavedJobs(found.savedJobs || []);
+      localStorage.setItem("jn_user", JSON.stringify(found));
+    }
 
     if (demoRole === "employer") {
       setActiveView("employer-dashboard");
-    } else if (demoRole === "admin") {
-      setActiveView("admin-dashboard");
     } else {
       setActiveView("explore");
     }
@@ -93,9 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isDemoUser = Boolean(
     user && (
       user._id?.startsWith("user-") ||
-      user.email === "recruiter@razorpay.com" ||
-      user.email === "aarav.sharma@example.com" ||
-      user.email === "admin@jobnexus.in"
+      user.email === "demo.recruiter@example.com"
     )
   );
 
@@ -112,7 +110,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSavedJobs(data.user.savedJobs || []);
         localStorage.setItem("jn_user", JSON.stringify(data.user));
         if (data.user.role === "employer") setActiveView("employer-dashboard");
-        else if (data.user.role === "admin") setActiveView("admin-dashboard");
         else setActiveView("explore");
         return { success: true };
       }
