@@ -129,6 +129,12 @@ export default function HomePage() {
     }
   }, []);
 
+  useEffect(() => {
+    if (user && user.profileCompleted === false && !isAuthOpen) {
+      setIsOnboardingOpen(true);
+    }
+  }, [user, isAuthOpen]);
+
   const handleSearchSubmit = () => {
     fetchJobs();
   };

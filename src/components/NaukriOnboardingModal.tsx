@@ -1,32 +1,44 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import confetti from "canvas-confetti";
 import {
-  X,
-  Briefcase,
-  GraduationCap,
+  Modal,
+  Steps,
+  Radio,
+  Input,
+  Select,
+  Tag,
+  Button,
   Upload,
-  FileText,
-  MapPin,
-  CheckCircle2,
-  Loader2,
-  ArrowRight,
-  ArrowLeft,
-  Sparkles,
-  Phone,
-  Mail,
-  User,
-  ShieldCheck,
-  ChevronDown,
-  Building2,
-  Calendar,
-  Layers,
-  IndianRupee,
-  Plus,
-  Check,
-} from "lucide-react";
+  Typography,
+  Space,
+  Divider,
+  Row,
+  Col,
+  Alert,
+  Tooltip,
+} from "antd";
+import {
+  UserOutlined,
+  BankOutlined,
+  SolutionOutlined,
+  ArrowRightOutlined,
+  ArrowLeftOutlined,
+  CheckCircleFilled,
+  UploadOutlined,
+  PhoneOutlined,
+  MailOutlined,
+  EnvironmentOutlined,
+  DollarOutlined,
+  BookOutlined,
+  SafetyCertificateOutlined,
+  GlobalOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
+
+const { Text, Title, Paragraph } = Typography;
 
 interface NaukriOnboardingModalProps {
   isOpen: boolean;
@@ -34,1360 +46,1314 @@ interface NaukriOnboardingModalProps {
   onCompleted?: () => void;
 }
 
-// ==========================================
-// DATASETS
-// ==========================================
-
-export const QUALIFICATION_LEVELS = [
-  { id: "graduation", label: "Graduation / Bachelor's" },
-  { id: "post_graduation", label: "Post Graduation / Master's" },
-  { id: "diploma", label: "Diploma / Polytechnic" },
-  { id: "twelfth", label: "12th Pass / Intermediate" },
-  { id: "tenth", label: "10th Pass / High School" },
-  { id: "doctorate", label: "Doctorate / Ph.D." },
-  { id: "vocational", label: "ITI / Vocational" },
-  { id: "other", label: "Other" },
-];
-
-export const DEGREE_CATALOG: Record<string, string[]> = {
-  graduation: [
-    "B.Com",
-    "B.Com (Honours)",
-    "B.Tech - Computer Science",
-    "B.Tech - Mechanical",
-    "B.Tech - Civil",
-    "B.Tech - Electrical",
-    "B.Tech - IT",
-    "BCA",
-    "BBA",
-    "B.Sc",
-    "B.Sc (IT / CS)",
-    "B.Sc (Agriculture)",
-    "BA",
-    "B.Ed",
-    "B.Pharm",
-    "LLB",
-    "BHM",
-    "B.Des",
-    "B.Voc",
-    "BAMS / BDS",
-  ],
-  post_graduation: [
-    "MBA / PGDM - Finance",
-    "MBA / PGDM - Marketing",
-    "MBA / PGDM - HR",
-    "MBA / PGDM - Operations",
-    "M.Com",
-    "MCA",
-    "M.Tech",
-    "M.Sc",
-    "MA",
-    "Chartered Accountant (CA)",
-    "Company Secretary (CS)",
-    "ICWA / CMA",
-    "LLM",
-  ],
-  diploma: [
-    "Diploma in Mechanical",
-    "Diploma in Civil",
-    "Diploma in Electrical",
-    "Diploma in CS / IT",
-    "Polytechnic Diploma",
-    "Diploma in Pharmacy (D.Pharm)",
-    "Diploma in Hotel Management",
-  ],
-  twelfth: [
-    "12th - Commerce",
-    "12th - Non-Medical (PCM)",
-    "12th - Medical (PCB)",
-    "12th - Arts / Humanities",
-  ],
-  tenth: [
-    "10th - CBSE Board",
-    "10th - State / PSEB Board",
-    "10th - ICSE Board",
-  ],
-  doctorate: [
-    "Ph.D. in Computer Science",
-    "Ph.D. in Commerce / Management",
-    "Ph.D. in Engineering",
-    "Ph.D. in Sciences",
-  ],
-  vocational: [
-    "ITI - Electrician",
-    "ITI - Fitter",
-    "ITI - Welder",
-    "ITI - COPA",
-  ],
-  other: [
-    "Certified Financial Analyst",
-    "Digital Marketing Certification",
-    "Full Stack Certification",
-    "Data Analytics Certification",
-  ],
-};
-
-export const POPULAR_SPECIALIZATIONS = [
-  "Accounting & Taxation",
-  "GST & Accounts",
-  "Finance & Banking",
-  "Computer Science",
-  "Information Technology",
-  "Sales & Marketing",
+const POPULAR_SKILLS = [
+  "React.js",
+  "Node.js",
+  "TypeScript",
+  "Next.js",
+  "JavaScript",
+  "Python",
+  "Java",
+  "SQL",
+  "MongoDB",
+  "AWS",
+  "Docker",
+  "Git",
+  "Tally Prime",
+  "GST Filing",
+  "Accounting",
+  "Financial Analysis",
+  "B2B Sales",
+  "Business Development",
+  "Digital Marketing",
+  "SEO",
+  "Content Writing",
+  "Customer Support",
   "Human Resources",
-  "Mechanical",
-  "Civil",
-  "Electrical",
-  "General",
-  "Commerce",
-  "Arts",
-  "Medical Sciences",
-  "Non-Medical / Maths",
-  "Operations & Logistics",
+  "Talent Acquisition",
+  "Graphic Design",
+  "UI/UX Design",
+  "Data Entry",
+  "Office Administration",
 ];
 
-// All passing years from 2030 down to 1970
-export const ALL_PASSING_YEARS = Array.from(
-  { length: 2030 - 1970 + 1 },
-  (_, i) => String(2030 - i)
-);
-
-export const POPULAR_DESIGNATIONS = [
-  "Accountant",
-  "Senior Accountant",
-  "Tally / GST Operator",
-  "Accounts Executive",
-  "Sales Executive",
-  "Business Development Executive",
-  "Business Development Manager",
-  "Field Sales Officer",
-  "Telecaller",
-  "Customer Support Executive",
-  "Office Administrator",
-  "Back Office Executive",
-  "Data Entry Operator",
-  "HR Executive / Recruiter",
-  "HR Manager",
-  "Frontend Developer",
-  "Full Stack Developer",
-  "Backend Developer",
-  "Graphic Designer",
-  "Digital Marketing Executive",
-  "Store Manager",
-  "Billing Executive",
-  "Receptionist",
+const POPULAR_LOCATIONS = [
+  "Bengaluru",
+  "Delhi / NCR",
+  "Mumbai",
+  "Pune",
+  "Hyderabad",
+  "Chennai",
+  "Kolkata",
+  "Ahmedabad",
+  "Chandigarh",
+  "Jaipur",
+  "Noida",
+  "Gurugram",
+  "Remote",
 ];
 
-export const SKILL_CATEGORIES: Record<string, string[]> = {
-  "Accounts": [
-    "Tally Prime",
-    "Tally ERP 9",
-    "GST Filing",
-    "TDS & Income Tax",
-    "Bookkeeping",
-    "Bank Reconciliation",
-    "Balance Sheet",
-    "Busy Software",
-    "Billing",
-  ],
-  "Sales & Marketing": [
-    "Field Sales",
-    "B2B Sales",
-    "B2C Sales",
-    "Lead Generation",
-    "Telecalling",
-    "Digital Marketing",
-    "SEO",
-    "Social Media",
-  ],
-  "Office & Admin": [
-    "Advanced Excel",
-    "MIS Reporting",
-    "Office Admin",
-    "Back Office",
-    "Data Entry",
-    "Email Drafting",
-  ],
-  "IT & Software": [
-    "React.js",
-    "Node.js",
-    "JavaScript",
-    "TypeScript",
-    "Python",
-    "Java",
-    "SQL",
-    "HTML/CSS",
-  ],
-  "HR & Operations": [
-    "Recruitment",
-    "Payroll",
-    "Logistics",
-    "Customer Support",
-    "Graphic Design",
-  ],
-};
+const POPULAR_DEGREES = [
+  "B.Tech / B.E. (Computer Science)",
+  "B.Tech / B.E. (Information Technology)",
+  "B.Tech / B.E. (Mechanical)",
+  "B.Tech / B.E. (Civil)",
+  "B.Tech / B.E. (Electrical)",
+  "B.Com / B.Com (Hons)",
+  "BBA / BBM",
+  "BCA",
+  "B.Sc (IT / Computer Science)",
+  "B.Sc (General)",
+  "BA",
+  "MBA / PGDM (Finance)",
+  "MBA / PGDM (Marketing)",
+  "MBA / PGDM (HR)",
+  "MCA",
+  "M.Tech",
+  "M.Com",
+  "Diploma / Polytechnic",
+  "12th Pass",
+  "Other Graduate",
+];
 
-// ==========================================
-// SEARCHABLE COMBOBOX COMPONENT
-// ==========================================
-
-interface SearchableComboboxProps {
-  label: string;
-  required?: boolean;
-  value: string;
-  onChange: (val: string) => void;
-  options: string[];
-  placeholder?: string;
-  icon?: React.ReactNode;
-  allowCustom?: boolean;
-  asyncSearch?: boolean;
-  onSearchChange?: (q: string) => void;
-  isLoading?: boolean;
-}
-
-function SearchableCombobox({
-  label,
-  required,
-  value,
-  onChange,
-  options,
-  placeholder,
-  icon,
-  allowCustom = true,
-  asyncSearch = false,
-  onSearchChange,
-  isLoading = false,
-}: SearchableComboboxProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [query, setQuery] = useState(value);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setQuery(value);
-  }, [value]);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const filtered = asyncSearch
-    ? options
-    : options.filter((opt) =>
-        opt.toLowerCase().includes((query || "").toLowerCase())
-      );
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setQuery(val);
-    if (allowCustom) {
-      onChange(val);
-    }
-    if (onSearchChange) {
-      onSearchChange(val);
-    }
-    setIsOpen(true);
-  };
-
-  const handleSelectOption = (opt: string) => {
-    setQuery(opt);
-    onChange(opt);
-    setIsOpen(false);
-  };
-
-  const handleClear = () => {
-    setQuery("");
-    onChange("");
-    if (onSearchChange) onSearchChange("");
-    setIsOpen(false);
-  };
-
-  return (
-    <div className="relative space-y-1" ref={wrapperRef}>
-      <div className="flex items-center justify-between">
-        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
-          <span>{label}</span>
-          {required && <span className="text-orange-600 font-black">*</span>}
-        </label>
-        {isLoading && (
-          <span className="text-[10px] text-orange-600 font-semibold animate-pulse flex items-center gap-1">
-            <Loader2 className="w-2.5 h-2.5 animate-spin" /> Searching API...
-          </span>
-        )}
-      </div>
-
-      <div className="relative">
-        {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-            {icon}
-          </div>
-        )}
-        <input
-          type="text"
-          value={query}
-          required={required}
-          onChange={handleInputChange}
-          onFocus={() => setIsOpen(true)}
-          placeholder={placeholder}
-          className={`w-full pr-14 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold transition-all ${
-            icon ? "pl-9" : "pl-3"
-          }`}
-        />
-
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-          {query && (
-            <button
-              type="button"
-              onClick={handleClear}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-700 cursor-pointer"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setIsOpen((prev) => !prev)}
-            className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
-          >
-            <ChevronDown
-              className={`w-3.5 h-3.5 transition-transform ${
-                isOpen ? "rotate-180 text-orange-600" : ""
-              }`}
-            />
-          </button>
-        </div>
-
-        {isOpen && (
-          <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto p-1.5 animate-in fade-in duration-100">
-            {filtered.length > 0 ? (
-              filtered.map((opt, idx) => {
-                const isSelected = opt.toLowerCase() === (query || "").toLowerCase();
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleSelectOption(opt)}
-                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
-                      isSelected
-                        ? "bg-orange-50 text-orange-700 font-bold"
-                        : "text-slate-700 hover:bg-slate-100"
-                    }`}
-                  >
-                    <span className="truncate">{opt}</span>
-                    {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-orange-600 shrink-0 ml-2" />}
-                  </button>
-                );
-              })
-            ) : query.trim() ? (
-              <div className="p-2 text-center">
-                <button
-                  type="button"
-                  onClick={() => handleSelectOption(query)}
-                  className="px-3 py-1 rounded-lg bg-orange-600 text-white text-[11px] font-bold hover:bg-orange-700"
-                >
-                  Use &ldquo;{query}&rdquo;
-                </button>
-              </div>
-            ) : (
-              <div className="p-2.5 text-xs text-slate-400 text-center font-medium">
-                No suggestions. Type custom value above.
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ==========================================
-// MAIN NAUKRI ONBOARDING MODAL COMPONENT
-// ==========================================
+const PASSING_YEARS = Array.from({ length: 2030 - 1985 + 1 }, (_, i) => String(2030 - i));
 
 export function NaukriOnboardingModal({
   isOpen,
   onClose,
   onCompleted,
 }: NaukriOnboardingModalProps) {
-  const { user, login, updateUser } = useAuth();
+  const { user, updateUser, login } = useAuth();
 
-  // Step Tracker (1 to 4)
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  // Selected primary role: seeker (employee) or employer
+  const [role, setRole] = useState<"seeker" | "employer">("seeker");
+  // If seeker: fresher or experienced
+  const [workStatus, setWorkStatus] = useState<"fresher" | "experienced">("fresher");
 
-  // Form State - COMPLETELY BLANK / UNSELECTED BY DEFAULT
-  const [workStatus, setWorkStatus] = useState<"experienced" | "fresher" | null>(null);
-  const [fullName, setFullName] = useState(user?.name || "");
+  // Step state
+  const [currentStep, setCurrentStep] = useState(0);
+
+  // Common Profile Fields
+  const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [phone, setPhone] = useState(user?.phone || "");
-  const [location, setLocation] = useState("");
+  const [city, setCity] = useState(user?.location || "");
 
-  // Live Location API Search
-  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
-  const [loadingLocations, setLoadingLocations] = useState(false);
-
-  useEffect(() => {
-    if (!location.trim() || location.length < 2) {
-      setLocationSuggestions([]);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      try {
-        setLoadingLocations(true);
-        const res = await fetch(`/api/locations?q=${encodeURIComponent(location)}`);
-        const data = await res.json();
-        if (data.success && Array.isArray(data.suggestions)) {
-          setLocationSuggestions(
-            data.suggestions.filter((s: string) => s !== "All Locations")
-          );
-        }
-      } catch {
-        // ignore
-      } finally {
-        setLoadingLocations(false);
-      }
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [location]);
-
-  // Step 2: Education - COMPLETELY BLANK BY DEFAULT
-  const [qualificationLevel, setQualificationLevel] = useState("");
-  const [degreeName, setDegreeName] = useState("");
+  // Seeker - Fresher / Experienced Shared Fields
+  const [highestDegree, setHighestDegree] = useState("");
   const [specialization, setSpecialization] = useState("");
-  const [collegeName, setCollegeName] = useState("");
-  const [passingYear, setPassingYear] = useState("");
-  const [courseType, setCourseType] = useState<"Full Time" | "Part Time" | "Distance">("Full Time");
-  const [percentageOrCgpa, setPercentageOrCgpa] = useState("");
+  const [college, setCollege] = useState("");
+  const [passingYear, setPassingYear] = useState("2024");
+  const [courseType, setCourseType] = useState("Full Time");
+  const [cgpaOrPercent, setCgpaOrPercent] = useState("");
 
-  // Live College Search API
-  const [collegeSuggestions, setCollegeSuggestions] = useState<string[]>([]);
-  const [loadingColleges, setLoadingColleges] = useState(false);
-
-  useEffect(() => {
-    if (!collegeName.trim() || collegeName.length < 2) {
-      setCollegeSuggestions([]);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      try {
-        setLoadingColleges(true);
-        const res = await fetch(`/api/colleges?q=${encodeURIComponent(collegeName)}`);
-        const data = await res.json();
-        if (data.success && Array.isArray(data.colleges)) {
-          setCollegeSuggestions(data.colleges);
-        }
-      } catch {
-        // ignore
-      } finally {
-        setLoadingColleges(false);
-      }
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [collegeName]);
-
-  // Step 3: Experienced Specific - COMPLETELY BLANK BY DEFAULT
+  // Experienced Specific Fields
   const [currentCompany, setCurrentCompany] = useState("");
   const [currentDesignation, setCurrentDesignation] = useState("");
-  const [experienceYears, setExperienceYears] = useState("");
-  const [experienceMonths, setExperienceMonths] = useState("");
-  const [currentCtc, setCurrentCtc] = useState("");
+  const [totalExpYears, setTotalExpYears] = useState("2");
+  const [totalExpMonths, setTotalExpMonths] = useState("0");
+  const [currentCtc, setCurrentCtc] = useState("12");
+  const [noticePeriod, setNoticePeriod] = useState("30 Days");
 
-  // Step 4: Skills & Salary - COMPLETELY BLANK BY DEFAULT
-  const [skills, setSkills] = useState<string[]>([]);
-  const [customSkillInput, setCustomSkillInput] = useState("");
-  const [expectedCtc, setExpectedCtc] = useState("");
-  const [noticePeriod, setNoticePeriod] = useState("");
+  // Skills & Preferences
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([
+    "React.js",
+    "JavaScript",
+    "Node.js",
+  ]);
+  const [customSkill, setCustomSkill] = useState("");
+  const [desiredRole, setDesiredRole] = useState("");
+  const [preferredLocations, setPreferredLocations] = useState<string[]>(["Bengaluru", "Remote"]);
+  const [expectedCtc, setExpectedCtc] = useState("18");
+  const [headline, setHeadline] = useState("");
 
   // Resume Upload
-  const [resumeFileName, setResumeFileName] = useState(user?.resumeFileName || "");
   const [resumeUrl, setResumeUrl] = useState(user?.resumeUrl || "");
+  const [resumeFileName, setResumeFileName] = useState(user?.resumeFileName || "");
   const [uploadingResume, setUploadingResume] = useState(false);
 
-  // Status
+  // Employer Specific Fields
+  const [companyName, setCompanyName] = useState(user?.companyName || "");
+  const [companyType, setCompanyType] = useState("Corporate");
+  const [industry, setIndustry] = useState("IT & Software Services");
+  const [companySize, setCompanySize] = useState("51-200 Employees");
+  const [companyWebsite, setCompanyWebsite] = useState("");
+  const [officeAddress, setOfficeAddress] = useState("");
+  const [gstin, setGstin] = useState("");
+  const [recruiterDesignation, setRecruiterDesignation] = useState("HR Manager");
+  const [hiringRoles, setHiringRoles] = useState<string[]>([
+    "Frontend Developer",
+    "Backend Developer",
+  ]);
+  const [customHiringRole, setCustomHiringRole] = useState("");
+
+  // Submission & Loading state
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLevelChange = (levelId: string) => {
-    setQualificationLevel(levelId);
+  // Dynamic API Datasets for Location, Industry, and Company Type
+  const [cityOptions, setCityOptions] = useState<{ label: string; value: string }[]>([]);
+  const [loadingCities, setLoadingCities] = useState(false);
+
+  const [industryOptions, setIndustryOptions] = useState<{ label: string; value: string }[]>([]);
+  const [loadingIndustries, setLoadingIndustries] = useState(false);
+
+  const [companyTypeOptions, setCompanyTypeOptions] = useState<{ label: string; value: string }[]>([]);
+  const [loadingCompanyTypes, setLoadingCompanyTypes] = useState(false);
+
+  const searchCities = async (q: string = "") => {
+    try {
+      setLoadingCities(true);
+      const res = await fetch(`/api/locations?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (data.success && data.suggestions) {
+        setCityOptions(data.suggestions.map((c: string) => ({ label: c, value: c })));
+      }
+    } catch {
+      // fallback
+    } finally {
+      setLoadingCities(false);
+    }
   };
+
+  const searchIndustries = async (q: string = "") => {
+    try {
+      setLoadingIndustries(true);
+      const res = await fetch(`/api/industries?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setIndustryOptions(
+          data.data.map((item: any) => ({
+            label: `${item.name} (${item.category})`,
+            value: item.name,
+          }))
+        );
+      }
+    } catch {
+      // fallback
+    } finally {
+      setLoadingIndustries(false);
+    }
+  };
+
+  const searchCompanyTypes = async (q: string = "") => {
+    try {
+      setLoadingCompanyTypes(true);
+      const res = await fetch(`/api/company-types?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setCompanyTypeOptions(
+          data.data.map((item: any) => ({
+            label: `${item.shortLabel} — ${item.description}`,
+            value: item.shortLabel,
+          }))
+        );
+      }
+    } catch {
+      // fallback
+    } finally {
+      setLoadingCompanyTypes(false);
+    }
+  };
+
+  // Preload initial datasets when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      searchCities("");
+      searchIndustries("");
+      searchCompanyTypes("");
+    }
+  }, [isOpen]);
+
+  // Sync initial user details when opening
+  useEffect(() => {
+    if (user) {
+      if (user.name) setName(user.name);
+      if (user.email) setEmail(user.email);
+      if (user.phone) setPhone(user.phone);
+      if (user.location) setCity(user.location);
+      if (user.role) setRole(user.role === "employer" ? "employer" : "seeker");
+      if (user.companyName) setCompanyName(user.companyName);
+      if (user.resumeUrl) setResumeUrl(user.resumeUrl);
+      if (user.resumeFileName) setResumeFileName(user.resumeFileName);
+      if (user.headline) setHeadline(user.headline);
+      if (user.skills && user.skills.length > 0) setSelectedSkills(user.skills);
+    }
+  }, [user, isOpen]);
+
+  // Auto-generate resume headline recommendation
+  useEffect(() => {
+    if (!headline || headline === "") {
+      if (role === "seeker") {
+        if (workStatus === "fresher") {
+          const deg = highestDegree ? highestDegree.split("(")[0].trim() : "Recent Graduate";
+          const skl = selectedSkills.slice(0, 3).join(", ");
+          setHeadline(
+            `${deg} skilled in ${skl || "modern tools"} seeking Entry-Level / Junior Opportunities.`
+          );
+        } else {
+          const des = currentDesignation || "Software Professional";
+          const comp = currentCompany ? ` at ${currentCompany}` : "";
+          const skl = selectedSkills.slice(0, 3).join(", ");
+          setHeadline(
+            `${des}${comp} with ${totalExpYears}+ years experience in ${skl || "core technologies"}.`
+          );
+        }
+      }
+    }
+  }, [role, workStatus, highestDegree, currentDesignation, currentCompany, selectedSkills, totalExpYears, headline]);
 
   const toggleSkill = (skill: string) => {
-    if (skills.includes(skill)) {
-      setSkills(skills.filter((s) => s !== skill));
+    if (selectedSkills.includes(skill)) {
+      setSelectedSkills(selectedSkills.filter((s) => s !== skill));
     } else {
-      if (skills.length < 15) {
-        setSkills([...skills, skill]);
+      if (selectedSkills.length < 20) {
+        setSelectedSkills([...selectedSkills, skill]);
       }
     }
   };
 
-  const handleAddCustomSkill = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && customSkillInput.trim()) {
-      e.preventDefault();
-      const val = customSkillInput.trim();
-      if (!skills.includes(val) && skills.length < 15) {
-        setSkills([...skills, val]);
-      }
-      setCustomSkillInput("");
+  const handleAddCustomSkill = () => {
+    if (customSkill.trim() && !selectedSkills.includes(customSkill.trim())) {
+      setSelectedSkills([...selectedSkills, customSkill.trim()]);
+      setCustomSkill("");
     }
   };
 
-  const handleAddCustomSkillClick = () => {
-    if (customSkillInput.trim()) {
-      const val = customSkillInput.trim();
-      if (!skills.includes(val) && skills.length < 15) {
-        setSkills([...skills, val]);
-      }
-      setCustomSkillInput("");
+  const handleAddHiringRole = () => {
+    if (customHiringRole.trim() && !hiringRoles.includes(customHiringRole.trim())) {
+      setHiringRoles([...hiringRoles, customHiringRole.trim()]);
+      setCustomHiringRole("");
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 10 * 1024 * 1024) {
-      setError("File size must be under 10MB");
-      return;
-    }
-
+  const handleResumeUpload = async (file: File) => {
     setUploadingResume(true);
     setError("");
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
       const data = await res.json();
       if (data.success && data.url) {
         setResumeUrl(data.url);
-        setResumeFileName(data.fileName || data.name || file.name);
+        setResumeFileName(data.fileName || file.name);
       } else {
-        setResumeUrl(`/uploads/${file.name}`);
-        setResumeFileName(file.name);
+        setError(data.error || "Resume upload failed");
       }
     } catch {
-      setResumeUrl(`/uploads/${file.name}`);
-      setResumeFileName(file.name);
+      setError("Error uploading resume");
     } finally {
       setUploadingResume(false);
     }
+    return false; // prevent AntD default upload
   };
 
-  // Step Validation
-  const validateCurrentStep = (): boolean => {
-    setError("");
-    if (step === 1) {
-      if (!workStatus) {
-        setError("Please select whether you are Experienced or a Fresher.");
-        return false;
-      }
-      if (!fullName.trim()) {
-        setError("Please enter your Full Name.");
-        return false;
-      }
-      if (!email.trim() || !email.includes("@")) {
-        setError("Please enter a valid Email.");
-        return false;
-      }
-      if (!phone.trim()) {
-        setError("Please enter your Mobile number.");
-        return false;
-      }
-      if (!location.trim()) {
-        setError("Please select or enter your City.");
-        return false;
-      }
-    } else if (step === 2) {
-      if (!degreeName.trim()) {
-        setError("Please enter your Degree / Course name.");
-        return false;
-      }
-      if (!passingYear.trim()) {
-        setError("Please select or enter your Passing Year.");
-        return false;
-      }
-    } else if (step === 3 && workStatus === "experienced") {
-      if (!currentCompany.trim()) {
-        setError("Please enter your Company name.");
-        return false;
-      }
-      if (!currentDesignation.trim()) {
-        setError("Please enter your Job Title / Designation.");
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const handleNextStep = () => {
-    if (!validateCurrentStep()) return;
-
-    if (step === 2 && workStatus === "fresher") {
-      setStep(4);
-    } else {
-      setStep((prev) => Math.min(prev + 1, 4) as any);
-    }
-  };
-
-  const handlePrevStep = () => {
-    if (step === 4 && workStatus === "fresher") {
-      setStep(2);
-    } else {
-      setStep((prev) => Math.max(prev - 1, 1) as any);
-    }
-  };
-
-  const handleSubmitOnboarding = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateCurrentStep()) return;
-
+  const handleSubmit = async () => {
     setSubmitting(true);
     setError("");
 
-    const formattedExp =
-      workStatus === "experienced"
-        ? `${experienceYears || "0"} Yrs ${experienceMonths ? `${experienceMonths} Mo` : ""}`.trim()
-        : "Fresher";
+    try {
+      let profilePayload: any = {
+        name,
+        email,
+        phone,
+        location: city,
+        role,
+        profileCompleted: true,
+      };
 
-    const headline =
-      workStatus === "experienced"
-        ? `${currentDesignation || "Executive"} at ${currentCompany || "Company"} (${formattedExp} Exp)`
-        : `${degreeName.split("(")[0].trim()} • Entry-Level Candidate`;
-
-    const fullDegreeTitle = specialization
-      ? `${degreeName} in ${specialization}`
-      : degreeName;
-
-    const profilePayload = {
-      name: fullName || user?.name || "Candidate",
-      email: email || user?.email || "candidate@gmail.com",
-      role: "seeker" as const,
-      avatar: user?.avatar || undefined,
-      phone,
-      location,
-      headline,
-      skills,
-      noticePeriod: noticePeriod || "Immediate",
-      expectedCtc: parseFloat(expectedCtc) || 0,
-      currentCtc: workStatus === "experienced" ? parseFloat(currentCtc) || 0 : 0,
-      resumeUrl: resumeUrl || undefined,
-      resumeFileName: resumeFileName || undefined,
-      education: [
-        {
-          degree: fullDegreeTitle,
-          institution: collegeName || "Affiliated Institution",
-          year: passingYear,
-          courseType,
-          score: percentageOrCgpa || undefined,
-        },
-      ],
-      experienceHistory:
-        workStatus === "experienced"
+      if (role === "seeker") {
+        const educationRecord = highestDegree
           ? [
               {
-                role: currentDesignation || "Executive",
-                company: currentCompany || "Current Organization",
-                duration: formattedExp,
-                description: `Experience in ${skills.slice(0, 3).join(", ") || "functional responsibilities"}.`,
+                qualification: highestDegree,
+                course: specialization || highestDegree,
+                institute: college || "University",
+                passingYear,
+                courseType,
+                percentageOrCgpa: cgpaOrPercent,
+                degree: highestDegree,
+                institution: college || "University",
+                year: passingYear,
               },
             ]
-          : [],
-    };
+          : [];
 
-    try {
+        const experienceRecord =
+          workStatus === "experienced" && currentDesignation
+            ? [
+                {
+                  role: currentDesignation,
+                  company: currentCompany || "Current Organization",
+                  duration: `${totalExpYears} yrs ${totalExpMonths} mos`,
+                  description: `Working as ${currentDesignation} specializing in ${selectedSkills.slice(0, 4).join(", ")}.`,
+                  isCurrent: true,
+                },
+              ]
+            : [];
+
+        profilePayload = {
+          ...profilePayload,
+          workStatus,
+          candidateType: workStatus,
+          headline:
+            headline ||
+            (workStatus === "fresher"
+              ? `${highestDegree || "Graduate"} seeking entry level roles`
+              : `${currentDesignation || "Professional"} with ${totalExpYears} years experience`),
+          skills: selectedSkills,
+          education: educationRecord,
+          experienceHistory: experienceRecord,
+          currentCtc: workStatus === "experienced" ? Number(currentCtc) || 0 : 0,
+          expectedCtc: Number(expectedCtc) || 0,
+          noticePeriod: workStatus === "experienced" ? noticePeriod : "Immediate",
+          resumeUrl,
+          resumeFileName,
+          careerPreferences: {
+            desiredRole: desiredRole || currentDesignation || "Software Professional",
+            preferredLocations,
+            expectedSalary: Number(expectedCtc) || 0,
+            desiredJobType: "Permanent",
+            desiredEmploymentType: "Full Time",
+            preferredShift: "Day Shift",
+          },
+          personalDetails: {
+            hometown: city,
+            languages: [
+              { language: "English", read: true, write: true, speak: true },
+              { language: "Hindi", read: true, write: true, speak: true },
+            ],
+          },
+        };
+      } else {
+        // Employer payload
+        profilePayload = {
+          ...profilePayload,
+          companyName,
+          headline: `${recruiterDesignation} at ${companyName}`,
+          employerDetails: {
+            companyName,
+            companyType,
+            industry,
+            recruiterDesignation,
+            website: companyWebsite,
+            gstin,
+            companySize,
+            officeAddress,
+            city,
+            hiringRoles,
+          },
+        };
+      }
+
       const res = await fetch("/api/users/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profilePayload),
+        body: JSON.stringify({
+          userId: user?._id || user?.id,
+          email: user?.email || email,
+          profileData: profilePayload,
+        }),
       });
 
-      let data: any = null;
-      try {
-        data = await res.json();
-      } catch {
-        // Fallback
+      const data = await res.json();
+      if (data.success) {
+        updateUser(data.user || profilePayload);
+        confetti({
+          particleCount: 70,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#ea580c", "#fb923c", "#16a34a", "#2563eb"],
+        });
+
+        setTimeout(() => {
+          setSubmitting(false);
+          if (onCompleted) onCompleted();
+          onClose();
+        }, 800);
+      } else {
+        setError(data.error || "Profile could not be saved.");
+        setSubmitting(false);
       }
-
-      if (!res.ok || (data && data.success === false)) {
-        throw new Error((data && data.error) || `Update failed (${res.status})`);
-      }
-
-      updateUser(profilePayload);
-      await login(profilePayload.email);
-
-      confetti({
-        particleCount: 100,
-        spread: 80,
-        origin: { y: 0.6 },
-        colors: ["#c2410c", "#ea580c", "#10b981", "#f59e0b"],
-      });
-
-      if (onCompleted) onCompleted();
-      onClose();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error saving profile";
-      setError(msg);
-    } finally {
+    } catch {
+      setError("An unexpected error occurred while saving profile.");
       setSubmitting(false);
     }
   };
 
-  if (!isOpen) return null;
+  // Steps definition for Seeker vs Employer
+  const seekerStepItems = [
+    { title: "Account Type" },
+    { title: "Basic Info" },
+    { title: workStatus === "experienced" ? "Experience & Edu" : "Education" },
+    { title: "Skills & Goals" },
+  ];
+
+  const employerStepItems = [
+    { title: "Account Type" },
+    { title: "Company Info" },
+    { title: "Recruiter & Hiring" },
+  ];
+
+  const stepItems = role === "seeker" ? seekerStepItems : employerStepItems;
+  const maxSteps = stepItems.length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div
-        className="relative w-full max-w-4xl rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[94vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-xl bg-white/90 hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors shadow-xs cursor-pointer"
-          title="Close"
+    <Modal
+      open={isOpen}
+      onCancel={onClose}
+      footer={null}
+      width={720}
+      centered
+      maskClosable={false}
+      styles={{
+        body: { padding: "28px 32px" },
+      }}
+    >
+      {/* Modal Header */}
+      <div style={{ textAlign: "center", marginBottom: 20 }}>
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 48,
+            height: 48,
+            borderRadius: 14,
+            backgroundColor: "#ea580c",
+            color: "#ffffff",
+            fontSize: 22,
+            marginBottom: 8,
+          }}
         >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Left Side: Concise Value Prop (Desktop Only for fast mobile UX) */}
-        <div className="hidden md:flex md:w-5/12 bg-gradient-to-b from-orange-50/70 via-orange-50/30 to-white p-6 sm:p-7 border-r border-slate-200 flex-col justify-between shrink-0">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-orange-200 text-xs font-semibold text-orange-800 mb-3.5 shadow-2xs">
-              <ShieldCheck className="w-3.5 h-3.5 text-orange-600" />
-              <span>Direct Placement Portal</span>
-            </div>
-
-            <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-              Candidate Profile Registration
-            </h3>
-
-            <div className="mt-4 space-y-2 text-xs font-medium text-slate-700">
-              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/80 border border-orange-100">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>100% Free Registration</span>
-              </div>
-              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/80 border border-orange-100">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Custom Course &amp; Passing Year</span>
-              </div>
-              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/80 border border-orange-100">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Direct HR Interview Invites</span>
-              </div>
-            </div>
-          </div>
+          {role === "seeker" ? <UserOutlined /> : <BankOutlined />}
         </div>
+        <Title level={3} style={{ margin: "4px 0 2px 0", color: "#0f172a" }}>
+          Complete Your Profile Details
+        </Title>
+        <Text type="secondary" style={{ fontSize: 13 }}>
+          Naukri 360° Profile setup ensures accurate job recommendations and verified recruiter outreach.
+        </Text>
+      </div>
 
-        {/* Right Side: Clean Form Wizard (Full width on mobile) */}
-        <div className="w-full md:w-7/12 p-4 sm:p-7 overflow-y-auto flex flex-col justify-between">
-          <div>
-            {/* Step Indicators */}
-            <div className="mb-5">
-              <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 mb-1.5">
-                <span className="text-orange-600 font-black">
-                  Step {step} of {workStatus === "fresher" ? 3 : 4}
-                </span>
-                <span>
-                  {step === 1 && "Basic Info"}
-                  {step === 2 && "Education"}
-                  {step === 3 && (workStatus === "experienced" ? "Experience" : "Skills")}
-                  {step === 4 && "Skills & Resume"}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                {[1, 2, 3, 4].map((s) => {
-                  if (workStatus === "fresher" && s === 3) return null;
-                  const isActive = s <= step;
-                  return (
-                    <div
-                      key={s}
-                      className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${
-                        isActive ? "bg-orange-600" : "bg-slate-100"
-                      }`}
-                    />
-                  );
-                })}
-              </div>
-            </div>
+      {/* Steps Header */}
+      <Steps
+        current={currentStep}
+        items={stepItems}
+        size="small"
+        style={{ marginBottom: 24 }}
+      />
 
-            {error && (
-              <div className="mb-4 p-2.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-bold flex items-center justify-between animate-in fade-in">
-                <span>{error}</span>
-                <button
-                  type="button"
-                  onClick={() => setError("")}
-                  className="p-1 text-rose-500 hover:text-rose-800"
+      {error && (
+        <Alert
+          message={error}
+          type="error"
+          showIcon
+          style={{ marginBottom: 16, borderRadius: 10 }}
+        />
+      )}
+
+      {/* ============================================================== */}
+      {/* STEP 0: SELECT ROLE (EMPLOYEE VS EMPLOYER) & FRESHER/EXP      */}
+      {/* ============================================================== */}
+      {currentStep === 0 && (
+        <div>
+          <Title level={5} style={{ color: "#334155", marginBottom: 12 }}>
+            Tell us who you are:
+          </Title>
+
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={12}>
+              <div
+                onClick={() => setRole("seeker")}
+                style={{
+                  border: role === "seeker" ? "2px solid #ea580c" : "1px solid #e2e8f0",
+                  backgroundColor: role === "seeker" ? "#fff7ed" : "#ffffff",
+                  borderRadius: 14,
+                  padding: "18px 16px",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 28,
+                    color: role === "seeker" ? "#ea580c" : "#64748b",
+                    marginBottom: 6,
+                  }}
                 >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                  <UserOutlined />
+                </div>
+                <Text strong style={{ fontSize: 15, display: "block", color: "#0f172a" }}>
+                  I am a Job Seeker (Employee)
+                </Text>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  Looking for internships, fresher jobs, or corporate career opportunities.
+                </Text>
               </div>
-            )}
+            </Col>
 
-            {/* STEP 1: Basic Info & Work Status */}
-            {step === 1 && (
-              <div className="space-y-4 animate-in fade-in duration-150">
-                <div>
-                  <h4 className="text-base font-black text-slate-900 tracking-tight">
-                    Personal Details &amp; Status
-                  </h4>
+            <Col xs={24} sm={12}>
+              <div
+                onClick={() => setRole("employer")}
+                style={{
+                  border: role === "employer" ? "2px solid #ea580c" : "1px solid #e2e8f0",
+                  backgroundColor: role === "employer" ? "#fff7ed" : "#ffffff",
+                  borderRadius: 14,
+                  padding: "18px 16px",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 28,
+                    color: role === "employer" ? "#ea580c" : "#64748b",
+                    marginBottom: 6,
+                  }}
+                >
+                  <BankOutlined />
                 </div>
-
-                {/* Work Status Toggle (No auto-selection) */}
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                    Work Status <span className="text-orange-600">*</span>
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div
-                      onClick={() => setWorkStatus("experienced")}
-                      className={`p-3 rounded-2xl border-2 transition-all cursor-pointer flex items-center gap-2.5 ${
-                        workStatus === "experienced"
-                          ? "bg-orange-50/60 border-orange-600 shadow-xs"
-                          : "bg-white border-slate-200 hover:border-slate-300"
-                      }`}
-                    >
-                      <div className="w-8 h-8 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
-                        <Briefcase className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-slate-900">Experienced</div>
-                        <div className="text-[10px] text-slate-400">Prior work experience</div>
-                      </div>
-                    </div>
-
-                    <div
-                      onClick={() => setWorkStatus("fresher")}
-                      className={`p-3 rounded-2xl border-2 transition-all cursor-pointer flex items-center gap-2.5 ${
-                        workStatus === "fresher"
-                          ? "bg-emerald-50/60 border-emerald-600 shadow-xs"
-                          : "bg-white border-slate-200 hover:border-slate-300"
-                      }`}
-                    >
-                      <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                        <GraduationCap className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-slate-900">Fresher</div>
-                        <div className="text-[10px] text-slate-400">New graduate</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Name & Email */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">
-                      Full Name <span className="text-orange-600">*</span>
-                    </label>
-                    <div className="relative">
-                      <User className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                      <input
-                        type="text"
-                        required
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">
-                      Email Address <span className="text-orange-600">*</span>
-                    </label>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Mobile & Live Location API Search */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">
-                      Mobile Number <span className="text-orange-600">*</span>
-                    </label>
-                    <div className="relative">
-                      <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                      <input
-                        type="tel"
-                        required
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
-                      />
-                    </div>
-                  </div>
-
-                  {/* LIVE API POWERED LOCATION */}
-                  <SearchableCombobox
-                    label="Current City / Location"
-                    required={true}
-                    value={location}
-                    onChange={(val) => setLocation(val)}
-                    options={locationSuggestions}
-                    asyncSearch={true}
-                    isLoading={loadingLocations}
-                    icon={<MapPin className="w-4 h-4" />}
-                    placeholder="Search city (live API)..."
-                  />
-                </div>
+                <Text strong style={{ fontSize: 15, display: "block", color: "#0f172a" }}>
+                  I am a Recruiter / Company (Employer)
+                </Text>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  Looking to post job vacancies and hire candidates for our organization.
+                </Text>
               </div>
-            )}
+            </Col>
+          </Row>
 
-            {/* STEP 2: Education Details (All blank by default) */}
-            {step === 2 && (
-              <div className="space-y-4 animate-in fade-in duration-150">
-                <div>
-                  <h4 className="text-base font-black text-slate-900 tracking-tight">
-                    Education Details
-                  </h4>
-                </div>
-
-                {/* Qualification Level (No default auto-selection) */}
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                    Qualification Level
-                  </label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {QUALIFICATION_LEVELS.map((lvl) => {
-                      const isSelected = qualificationLevel === lvl.id;
-                      return (
-                        <button
-                          key={lvl.id}
-                          type="button"
-                          onClick={() => handleLevelChange(lvl.id)}
-                          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                            isSelected
-                              ? "bg-orange-600 text-white shadow-xs"
-                              : "bg-slate-100 hover:bg-orange-50 text-slate-700 border border-slate-200"
-                          }`}
-                        >
-                          {lvl.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Degree / Course Combobox */}
-                <SearchableCombobox
-                  label="Degree / Course Name"
-                  required={true}
-                  value={degreeName}
-                  onChange={(val) => setDegreeName(val)}
-                  options={
-                    qualificationLevel && DEGREE_CATALOG[qualificationLevel]
-                      ? DEGREE_CATALOG[qualificationLevel]
-                      : Object.values(DEGREE_CATALOG).flat().slice(0, 25)
-                  }
-                  icon={<GraduationCap className="w-4 h-4" />}
-                  placeholder="e.g. B.Com, B.Tech, BCA"
-                />
-
-                {/* Stream & Passing Year */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <SearchableCombobox
-                    label="Specialization / Stream"
-                    value={specialization}
-                    onChange={(val) => setSpecialization(val)}
-                    options={POPULAR_SPECIALIZATIONS}
-                    icon={<Layers className="w-4 h-4" />}
-                    placeholder="e.g. Accounts, Computer Science"
-                  />
-
-                  <SearchableCombobox
-                    label="Passing Year"
-                    required={true}
-                    value={passingYear}
-                    onChange={(val) => setPassingYear(val)}
-                    options={ALL_PASSING_YEARS}
-                    icon={<Calendar className="w-4 h-4" />}
-                    placeholder="Passing year"
-                  />
-                </div>
-
-                {/* College / University Name (Live API) */}
-                <SearchableCombobox
-                  label="College / University Name"
-                  value={collegeName}
-                  onChange={(val) => setCollegeName(val)}
-                  options={collegeSuggestions}
-                  asyncSearch={true}
-                  isLoading={loadingColleges}
-                  icon={<Building2 className="w-4 h-4" />}
-                  placeholder="Search university (live API)..."
-                />
-
-                {/* Course Type & Score */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">
-                      Course Type
-                    </label>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {(["Full Time", "Part Time", "Distance"] as const).map((type) => (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => setCourseType(type)}
-                          className={`py-1.5 px-2 rounded-xl text-xs font-bold border text-center transition-all cursor-pointer ${
-                            courseType === type
-                              ? "bg-orange-600 text-white border-orange-600"
-                              : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                          }`}
-                        >
-                          {type}
-                        </button>
-                      ))}
+          {/* Sub-Selection for Seekers: Fresher vs Experienced */}
+          {role === "seeker" && (
+            <div style={{ marginTop: 24, paddingTop: 18, borderTop: "1px dashed #e2e8f0" }}>
+              <Title level={5} style={{ color: "#334155", marginBottom: 12 }}>
+                What is your current work status?
+              </Title>
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12}>
+                  <div
+                    onClick={() => setWorkStatus("fresher")}
+                    style={{
+                      border: workStatus === "fresher" ? "2px solid #ea580c" : "1px solid #e2e8f0",
+                      backgroundColor: workStatus === "fresher" ? "#fff7ed" : "#ffffff",
+                      borderRadius: 12,
+                      padding: "14px 16px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                    }}
+                  >
+                    <BookOutlined style={{ fontSize: 22, color: workStatus === "fresher" ? "#ea580c" : "#64748b" }} />
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>
+                        I am a Fresher
+                      </div>
+                      <div style={{ fontSize: 12, color: "#64748b" }}>
+                        Student or recently graduated with 0 years experience
+                      </div>
                     </div>
                   </div>
+                </Col>
 
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">
-                      Score (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={percentageOrCgpa}
-                      onChange={(e) => setPercentageOrCgpa(e.target.value)}
-                      placeholder="e.g. 75% or 8.0 CGPA"
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
-                    />
+                <Col xs={24} sm={12}>
+                  <div
+                    onClick={() => setWorkStatus("experienced")}
+                    style={{
+                      border: workStatus === "experienced" ? "2px solid #ea580c" : "1px solid #e2e8f0",
+                      backgroundColor: workStatus === "experienced" ? "#fff7ed" : "#ffffff",
+                      borderRadius: 12,
+                      padding: "14px 16px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                    }}
+                  >
+                    <SolutionOutlined style={{ fontSize: 22, color: workStatus === "experienced" ? "#ea580c" : "#64748b" }} />
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>
+                        I am Experienced
+                      </div>
+                      <div style={{ fontSize: 12, color: "#64748b" }}>
+                        Have worked previously or currently working in a company
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
+                </Col>
+              </Row>
+            </div>
+          )}
+        </div>
+      )}
 
-            {/* STEP 3: Work History (Only for Experienced, all blank) */}
-            {step === 3 && workStatus === "experienced" && (
-              <div className="space-y-4 animate-in fade-in duration-150">
-                <div>
-                  <h4 className="text-base font-black text-slate-900 tracking-tight">
-                    Employment Details
-                  </h4>
-                </div>
+      {/* ============================================================== */}
+      {/* SEEKER STEP 1: BASIC INFO                                      */}
+      {/* ============================================================== */}
+      {role === "seeker" && currentStep === 1 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Full Name <span style={{ color: "#ea580c" }}>*</span>
+              </label>
+              <Input
+                size="large"
+                prefix={<UserOutlined style={{ color: "#94a3b8" }} />}
+                placeholder="e.g. Rahul Sharma"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 10 }}
+              />
+            </Col>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Mobile Number <span style={{ color: "#ea580c" }}>*</span>
+              </label>
+              <Input
+                size="large"
+                prefix={<PhoneOutlined style={{ color: "#94a3b8" }} />}
+                placeholder="e.g. 9876543210"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 10 }}
+              />
+            </Col>
+          </Row>
 
-                {/* Designation */}
-                <SearchableCombobox
-                  label="Current / Last Job Title"
-                  required={true}
-                  value={currentDesignation}
-                  onChange={(val) => setCurrentDesignation(val)}
-                  options={POPULAR_DESIGNATIONS}
-                  placeholder="e.g. Accountant, Sales Executive"
-                />
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Email Address <span style={{ color: "#ea580c" }}>*</span>
+              </label>
+              <Input
+                size="large"
+                prefix={<MailOutlined style={{ color: "#94a3b8" }} />}
+                placeholder="e.g. rahul@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 10 }}
+              />
+            </Col>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Current City <span style={{ color: "#ea580c" }}>*</span>
+              </label>
+              <Select
+                showSearch
+                size="large"
+                placeholder="Search or type your city across India..."
+                value={city || undefined}
+                onChange={(val) => setCity(val)}
+                onSearch={searchCities}
+                filterOption={false}
+                loading={loadingCities}
+                options={cityOptions}
+                style={{ width: "100%", marginTop: 4 }}
+              />
+            </Col>
+          </Row>
+        </div>
+      )}
 
-                {/* Company Name */}
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Company Name <span className="text-orange-600">*</span>
+      {/* ============================================================== */}
+      {/* SEEKER STEP 2: EDUCATION (FRESHER) / EXP & EDU (EXPERIENCED)   */}
+      {/* ============================================================== */}
+      {role === "seeker" && currentStep === 2 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {workStatus === "experienced" && (
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 12,
+                backgroundColor: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+              }}
+            >
+              <Text strong style={{ fontSize: 14, color: "#0f172a" }}>
+                Current / Most Recent Employment Details
+              </Text>
+
+              <Row gutter={[12, 12]}>
+                <Col xs={24} sm={12}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                    Current Designation / Role
                   </label>
-                  <input
-                    type="text"
-                    required
+                  <Input
+                    placeholder="e.g. Senior Frontend Developer"
+                    value={currentDesignation}
+                    onChange={(e) => setCurrentDesignation(e.target.value)}
+                    style={{ marginTop: 4, borderRadius: 8 }}
+                  />
+                </Col>
+                <Col xs={24} sm={12}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                    Current Company Name
+                  </label>
+                  <Input
+                    placeholder="e.g. Infosys, Wipro, Startup Ltd"
                     value={currentCompany}
                     onChange={(e) => setCurrentCompany(e.target.value)}
-                    placeholder="Company name"
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
+                    style={{ marginTop: 4, borderRadius: 8 }}
                   />
-                </div>
+                </Col>
+              </Row>
 
-                {/* Experience Years & Months */}
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Total Experience
+              <Row gutter={[12, 12]}>
+                <Col xs={24} sm={8}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                    Total Experience (Years)
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <input
-                      type="number"
-                      min="0"
-                      value={experienceYears}
-                      onChange={(e) => setExperienceYears(e.target.value)}
-                      placeholder="Years"
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-bold focus:outline-none focus:border-orange-600"
-                    />
-                    <select
-                      value={experienceMonths}
-                      onChange={(e) => setExperienceMonths(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-bold focus:outline-none focus:border-orange-600"
-                    >
-                      <option value="">Months</option>
-                      {Array.from({ length: 12 }, (_, i) => (
-                        <option key={i} value={String(i)}>
-                          {i} Months
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Current CTC */}
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Current CTC (₹ LPA)
-                  </label>
-                  <div className="relative">
-                    <IndianRupee className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      value={currentCtc}
-                      onChange={(e) => setCurrentCtc(e.target.value)}
-                      placeholder="₹ LPA"
-                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-bold"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 4: Skills, Salary & Resume (All blank by default) */}
-            {step === 4 && (
-              <div className="space-y-4 animate-in fade-in duration-150">
-                <div>
-                  <h4 className="text-base font-black text-slate-900 tracking-tight">
-                    Skills &amp; Resume
-                  </h4>
-                </div>
-
-                {/* Selected Skills Chips */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-slate-700">
-                      Selected Skills ({skills.length})
-                    </label>
-                    {skills.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setSkills([])}
-                        className="text-[10px] text-rose-600 font-bold hover:underline"
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="min-h-[40px] p-2 rounded-2xl bg-slate-50 border border-slate-200 flex flex-wrap gap-1.5 items-center">
-                    {skills.length > 0 ? (
-                      skills.map((sk) => (
-                        <span
-                          key={sk}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-orange-600 text-white"
-                        >
-                          <span>{sk}</span>
-                          <button
-                            type="button"
-                            onClick={() => toggleSkill(sk)}
-                            className="p-0.5 hover:bg-orange-700 rounded-full cursor-pointer"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-slate-400 font-medium pl-1">
-                        No skills added yet
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Add Custom Skill Input */}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={customSkillInput}
-                    onChange={(e) => setCustomSkillInput(e.target.value)}
-                    onKeyDown={handleAddCustomSkill}
-                    placeholder="Type skill and press Enter"
-                    className="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-medium"
+                  <Select
+                    value={totalExpYears}
+                    onChange={(val) => setTotalExpYears(val)}
+                    options={Array.from({ length: 30 }, (_, i) => ({
+                      label: `${i} Years`,
+                      value: String(i),
+                    }))}
+                    style={{ width: "100%", marginTop: 4 }}
                   />
-                  <button
-                    type="button"
-                    onClick={handleAddCustomSkillClick}
-                    className="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add</span>
-                  </button>
-                </div>
-
-                {/* Category Skill Chips */}
-                <div className="space-y-1.5 pt-1">
-                  {Object.entries(SKILL_CATEGORIES).map(([catName, catSkills]) => (
-                    <div key={catName} className="flex flex-wrap items-center gap-1">
-                      <span className="text-[10px] font-bold text-slate-400 mr-1">
-                        {catName}:
-                      </span>
-                      {catSkills.slice(0, 6).map((sk) => {
-                        const isSelected = skills.includes(sk);
-                        return (
-                          <button
-                            key={sk}
-                            type="button"
-                            onClick={() => toggleSkill(sk)}
-                            className={`px-2 py-0.5 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
-                              isSelected
-                                ? "bg-orange-600 text-white font-bold"
-                                : "bg-slate-100 hover:bg-orange-50 text-slate-700 border border-slate-200"
-                            }`}
-                          >
-                            {isSelected ? (
-                              <Check className="w-3 h-3 inline mr-1" />
-                            ) : (
-                              <Plus className="w-3 h-3 inline mr-1" />
-                            )}
-                            {sk}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Expected CTC & Notice Period */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">
-                      Expected Annual CTC (₹ LPA)
-                    </label>
-                    <div className="relative">
-                      <IndianRupee className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={expectedCtc}
-                        onChange={(e) => setExpectedCtc(e.target.value)}
-                        placeholder="₹ LPA"
-                        className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-bold"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">
-                      Notice Period
-                    </label>
-                    <select
-                      value={noticePeriod}
-                      onChange={(e) => setNoticePeriod(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-bold"
-                    >
-                      <option value="">Select notice period</option>
-                      <option value="Immediate">Immediate (0-7 Days)</option>
-                      <option value="15 Days">15 Days</option>
-                      <option value="30 Days">30 Days (1 Month)</option>
-                      <option value="60 Days">60 Days (2 Months)</option>
-                      <option value="90 Days">90 Days (3 Months)</option>
-                      <option value="Serving Notice">Serving Notice</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Resume Upload */}
-                <div className="pt-1">
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Attach Resume (Optional - PDF or Word)
+                </Col>
+                <Col xs={24} sm={8}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                    Current Annual CTC (₹ LPA)
                   </label>
-                  <div className="p-3 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-orange-600 flex items-center justify-center shrink-0">
-                        <FileText className="w-4 h-4" />
-                      </div>
-                      <div className="text-xs font-bold text-slate-900 truncate max-w-[200px]">
-                        {resumeFileName || "No file attached"}
-                      </div>
-                    </div>
+                  <Input
+                    prefix="₹"
+                    suffix="LPA"
+                    value={currentCtc}
+                    onChange={(e) => setCurrentCtc(e.target.value.replace(/[^0-9.]/g, ""))}
+                    style={{ marginTop: 4, borderRadius: 8 }}
+                  />
+                </Col>
+                <Col xs={24} sm={8}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                    Notice Period
+                  </label>
+                  <Select
+                    value={noticePeriod}
+                    onChange={(val) => setNoticePeriod(val)}
+                    options={[
+                      { label: "Immediate Joiner", value: "Immediate" },
+                      { label: "15 Days or less", value: "15 Days" },
+                      { label: "1 Month (30 Days)", value: "30 Days" },
+                      { label: "2 Months (60 Days)", value: "60 Days" },
+                      { label: "3 Months (90 Days)", value: "90 Days" },
+                    ]}
+                    style={{ width: "100%", marginTop: 4 }}
+                  />
+                </Col>
+              </Row>
+            </div>
+          )}
 
-                    <label className="cursor-pointer px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all shrink-0">
-                      {uploadingResume ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-orange-600" />
-                          <span>Uploading...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-3.5 h-3.5 text-slate-600" />
-                          <span>Browse</span>
-                        </>
-                      )}
-                      <input
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Education Block */}
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 12,
+              backgroundColor: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+            }}
+          >
+            <Text strong style={{ fontSize: 14, color: "#0f172a" }}>
+              Highest Educational Qualification
+            </Text>
 
-          {/* Footer Controls */}
-          <div className="pt-4 mt-5 border-t border-slate-100 flex items-center justify-between gap-3">
-            {step > 1 ? (
-              <button
-                type="button"
-                onClick={handlePrevStep}
-                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Back</span>
-              </button>
-            ) : (
-              <div />
-            )}
+            <Row gutter={[12, 12]}>
+              <Col xs={24} sm={12}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                  Degree / Qualification
+                </label>
+                <Select
+                  showSearch
+                  placeholder="Select Degree"
+                  value={highestDegree || undefined}
+                  onChange={(val) => setHighestDegree(val)}
+                  options={POPULAR_DEGREES.map((d) => ({ label: d, value: d }))}
+                  style={{ width: "100%", marginTop: 4 }}
+                />
+              </Col>
+              <Col xs={24} sm={12}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                  College / Institute Name
+                </label>
+                <Input
+                  placeholder="e.g. Delhi University / IIT / NIT"
+                  value={college}
+                  onChange={(e) => setCollege(e.target.value)}
+                  style={{ marginTop: 4, borderRadius: 8 }}
+                />
+              </Col>
+            </Row>
 
-            {step < 4 ? (
-              <button
-                type="button"
-                onClick={handleNextStep}
-                className="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
-              >
-                <span>Continue</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSubmitOnboarding}
-                disabled={submitting}
-                className="px-6 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Creating Profile...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Complete &amp; Register</span>
-                    <Sparkles className="w-3.5 h-3.5" />
-                  </>
-                )}
-              </button>
-            )}
+            <Row gutter={[12, 12]}>
+              <Col xs={24} sm={8}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                  Passing Year
+                </label>
+                <Select
+                  value={passingYear}
+                  onChange={(val) => setPassingYear(val)}
+                  options={PASSING_YEARS.map((yr) => ({ label: yr, value: yr }))}
+                  style={{ width: "100%", marginTop: 4 }}
+                />
+              </Col>
+              <Col xs={24} sm={8}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                  Course Type
+                </label>
+                <Select
+                  value={courseType}
+                  onChange={(val) => setCourseType(val)}
+                  options={[
+                    { label: "Full Time", value: "Full Time" },
+                    { label: "Part Time", value: "Part Time" },
+                    { label: "Correspondence / Distance", value: "Distance" },
+                  ]}
+                  style={{ width: "100%", marginTop: 4 }}
+                />
+              </Col>
+              <Col xs={24} sm={8}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                  Grading (% or CGPA)
+                </label>
+                <Input
+                  placeholder="e.g. 8.5 CGPA or 78%"
+                  value={cgpaOrPercent}
+                  onChange={(e) => setCgpaOrPercent(e.target.value)}
+                  style={{ marginTop: 4, borderRadius: 8 }}
+                />
+              </Col>
+            </Row>
           </div>
         </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* SEEKER STEP 3: SKILLS, SALARY, RESUME & PREFERENCES             */}
+      {/* ============================================================== */}
+      {role === "seeker" && currentStep === 3 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Skills Picker */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#475569", display: "block", marginBottom: 6 }}>
+              Key Skills (Select or add skills for recruiter keyword matching)
+            </label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 110, overflowY: "auto", marginBottom: 8 }}>
+              {POPULAR_SKILLS.map((skl) => {
+                const isSelected = selectedSkills.includes(skl);
+                return (
+                  <Tag.CheckableTag
+                    key={skl}
+                    checked={isSelected}
+                    onChange={() => toggleSkill(skl)}
+                    style={{
+                      borderRadius: 16,
+                      padding: "3px 10px",
+                      fontSize: 11,
+                      border: isSelected ? "1px solid #ea580c" : "1px solid #e2e8f0",
+                    }}
+                  >
+                    {skl}
+                  </Tag.CheckableTag>
+                );
+              })}
+            </div>
+
+            <Space.Compact style={{ width: "100%" }}>
+              <Input
+                size="small"
+                placeholder="Add other skill (e.g. Tailwind, Redux, Spring Boot)"
+                value={customSkill}
+                onChange={(e) => setCustomSkill(e.target.value)}
+                onPressEnter={handleAddCustomSkill}
+              />
+              <Button
+                size="small"
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleAddCustomSkill}
+                style={{ fontWeight: 600 }}
+              >
+                Add Skill
+              </Button>
+            </Space.Compact>
+          </div>
+
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Target / Desired Job Role
+              </label>
+              <Input
+                placeholder="e.g. Full Stack Engineer, Accountant"
+                value={desiredRole}
+                onChange={(e) => setDesiredRole(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 8 }}
+              />
+            </Col>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Expected Annual CTC (₹ LPA)
+              </label>
+              <Input
+                prefix="₹"
+                suffix="LPA"
+                value={expectedCtc}
+                onChange={(e) => setExpectedCtc(e.target.value.replace(/[^0-9.]/g, ""))}
+                style={{ marginTop: 4, borderRadius: 8 }}
+              />
+            </Col>
+          </Row>
+
+          {/* Resume Upload Box */}
+          <div
+            style={{
+              padding: 12,
+              borderRadius: 12,
+              backgroundColor: "#f8fafc",
+              border: "1px dashed #cbd5e1",
+              textAlign: "center",
+            }}
+          >
+            <Upload
+              beforeUpload={handleResumeUpload}
+              showUploadList={false}
+              accept=".pdf,.doc,.docx"
+            >
+              <Button
+                icon={<UploadOutlined />}
+                loading={uploadingResume}
+                style={{ borderRadius: 8 }}
+              >
+                {resumeFileName ? "Replace Resume Document" : "Upload Resume (PDF, DOCX)"}
+              </Button>
+            </Upload>
+            {resumeFileName && (
+              <div style={{ marginTop: 6, fontSize: 12, color: "#16a34a", fontWeight: 600 }}>
+                <CheckCircleFilled /> Attached: {resumeFileName}
+              </div>
+            )}
+            <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>
+              DOC, DOCX, PDF | Max size: 5 MB
+            </div>
+          </div>
+
+          {/* Resume Headline */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+              Naukri Resume Headline
+            </label>
+            <Input.TextArea
+              rows={2}
+              value={headline}
+              onChange={(e) => setHeadline(e.target.value)}
+              placeholder="Summary headline shown prominently to corporate recruiters"
+              style={{ marginTop: 4, borderRadius: 8 }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* EMPLOYER STEP 1: COMPANY INFO                                   */}
+      {/* ============================================================== */}
+      {role === "employer" && currentStep === 1 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Company / Organization Name <span style={{ color: "#ea580c" }}>*</span>
+              </label>
+              <Input
+                size="large"
+                prefix={<BankOutlined style={{ color: "#94a3b8" }} />}
+                placeholder="e.g. Acme Tech Solutions Ltd"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 10 }}
+              />
+            </Col>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Company Type
+              </label>
+              <Select
+                showSearch
+                size="large"
+                placeholder="Search company type (e.g. MNC, Startup, Pvt Ltd)..."
+                value={companyType}
+                onChange={(val) => setCompanyType(val)}
+                onSearch={searchCompanyTypes}
+                filterOption={false}
+                loading={loadingCompanyTypes}
+                options={companyTypeOptions}
+                style={{ width: "100%", marginTop: 4 }}
+              />
+            </Col>
+          </Row>
+
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Industry Domain
+              </label>
+              <Select
+                showSearch
+                size="large"
+                placeholder="Search industry domain (e.g. IT, BFSI, Healthcare)..."
+                value={industry}
+                onChange={(val) => setIndustry(val)}
+                onSearch={searchIndustries}
+                filterOption={false}
+                loading={loadingIndustries}
+                options={industryOptions}
+                style={{ width: "100%", marginTop: 4 }}
+              />
+            </Col>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Company Size
+              </label>
+              <Select
+                size="large"
+                value={companySize}
+                onChange={(val) => setCompanySize(val)}
+                options={[
+                  { label: "1-10 Employees", value: "1-10 Employees" },
+                  { label: "11-50 Employees", value: "11-50 Employees" },
+                  { label: "51-200 Employees", value: "51-200 Employees" },
+                  { label: "201-500 Employees", value: "201-500 Employees" },
+                  { label: "500+ Employees", value: "500+ Employees" },
+                ]}
+                style={{ width: "100%", marginTop: 4 }}
+              />
+            </Col>
+          </Row>
+
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Company Website
+              </label>
+              <Input
+                prefix={<GlobalOutlined style={{ color: "#94a3b8" }} />}
+                placeholder="https://example.com"
+                value={companyWebsite}
+                onChange={(e) => setCompanyWebsite(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 8 }}
+              />
+            </Col>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Headquarter City
+              </label>
+              <Select
+                showSearch
+                size="large"
+                placeholder="Search Headquarter City across India..."
+                value={city || undefined}
+                onChange={(val) => setCity(val)}
+                onSearch={searchCities}
+                filterOption={false}
+                loading={loadingCities}
+                options={cityOptions}
+                style={{ width: "100%", marginTop: 4 }}
+              />
+            </Col>
+          </Row>
+
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+              Corporate Office Address &amp; GSTIN / CIN (Optional)
+            </label>
+            <Input
+              placeholder="e.g. 5th Floor, Cyber City, Gurugram • GSTIN: 07AAAAA0000A1Z5"
+              value={officeAddress}
+              onChange={(e) => setOfficeAddress(e.target.value)}
+              style={{ marginTop: 4, borderRadius: 8 }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* EMPLOYER STEP 2: RECRUITER & HIRING NEEDS                      */}
+      {/* ============================================================== */}
+      {role === "employer" && currentStep === 2 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Recruiter / Contact Person Name <span style={{ color: "#ea580c" }}>*</span>
+              </label>
+              <Input
+                size="large"
+                prefix={<UserOutlined style={{ color: "#94a3b8" }} />}
+                placeholder="e.g. Priya Verma"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 10 }}
+              />
+            </Col>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Your Official Designation <span style={{ color: "#ea580c" }}>*</span>
+              </label>
+              <Input
+                size="large"
+                prefix={<SolutionOutlined style={{ color: "#94a3b8" }} />}
+                placeholder="e.g. Head of Talent Acquisition"
+                value={recruiterDesignation}
+                onChange={(e) => setRecruiterDesignation(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 10 }}
+              />
+            </Col>
+          </Row>
+
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Official Work Email <span style={{ color: "#ea580c" }}>*</span>
+              </label>
+              <Input
+                size="large"
+                prefix={<MailOutlined style={{ color: "#94a3b8" }} />}
+                placeholder="priya@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 10 }}
+              />
+            </Col>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Contact Mobile Number <span style={{ color: "#ea580c" }}>*</span>
+              </label>
+              <Input
+                size="large"
+                prefix={<PhoneOutlined style={{ color: "#94a3b8" }} />}
+                placeholder="+91 9876543210"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 10 }}
+              />
+            </Col>
+          </Row>
+
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#475569", display: "block", marginBottom: 6 }}>
+              Roles Currently Hiring For (Candidates will be matched with these openings)
+            </label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+              {hiringRoles.map((r, i) => (
+                <Tag
+                  key={i}
+                  closable
+                  onClose={() => setHiringRoles(hiringRoles.filter((_, idx) => idx !== i))}
+                  style={{ borderRadius: 12, padding: "2px 8px", backgroundColor: "#fff7ed", borderColor: "#fed7aa" }}
+                >
+                  {r}
+                </Tag>
+              ))}
+            </div>
+            <Space.Compact style={{ width: "100%" }}>
+              <Input
+                placeholder="Add hiring role (e.g. Senior Backend Engineer, Sales Executive)"
+                value={customHiringRole}
+                onChange={(e) => setCustomHiringRole(e.target.value)}
+                onPressEnter={handleAddHiringRole}
+              />
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleAddHiringRole}
+                style={{ fontWeight: 600 }}
+              >
+                Add Role
+              </Button>
+            </Space.Compact>
+          </div>
+        </div>
+      )}
+
+      {/* Footer Navigation Buttons */}
+      <div
+        style={{
+          marginTop: 24,
+          paddingTop: 16,
+          borderTop: "1px solid #f1f5f9",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        {currentStep > 0 ? (
+          <Button
+            size="large"
+            icon={<ArrowLeftOutlined />}
+            onClick={() => setCurrentStep((prev) => prev - 1)}
+          >
+            Previous
+          </Button>
+        ) : (
+          <Button size="large" onClick={onClose}>
+            Cancel
+          </Button>
+        )}
+
+        <Space size={10}>
+          {currentStep > 0 && (
+            <Button size="large" onClick={onClose}>
+              Cancel
+            </Button>
+          )}
+
+          {currentStep < maxSteps - 1 ? (
+            <Button
+              type="primary"
+              size="large"
+              style={{ fontWeight: 600, borderRadius: 8 }}
+              onClick={() => {
+                if (currentStep === 1 && role === "seeker" && (!name || !email)) {
+                  setError("Please provide your name and email.");
+                  return;
+                }
+                if (currentStep === 1 && role === "employer" && !companyName) {
+                  setError("Please provide your company name.");
+                  return;
+                }
+                setError("");
+                setCurrentStep((prev) => prev + 1);
+              }}
+            >
+              <span>Next Step</span>
+              <ArrowRightOutlined />
+            </Button>
+          ) : (
+            <Button
+              type="primary"
+              size="large"
+              loading={submitting}
+              icon={<CheckCircleFilled />}
+              onClick={handleSubmit}
+              style={{ fontWeight: 700, borderRadius: 8 }}
+            >
+              Complete Profile &amp; Start
+            </Button>
+          )}
+        </Space>
       </div>
-    </div>
+    </Modal>
   );
 }

@@ -83,6 +83,7 @@ export async function GET(request: Request) {
           companyLogo: googleProfile.picture || "",
           savedJobs: [],
           skills: [],
+          profileCompleted: false,
         });
       } else if (!dbUser.avatar && googleProfile.picture) {
         dbUser.avatar = googleProfile.picture;
@@ -98,11 +99,12 @@ export async function GET(request: Request) {
           avatar: googleProfile.picture || "",
           companyName: role === "employer" ? "My Hiring Organization" : "",
           headline: role === "employer" ? "Recruiter" : "Job Seeker",
-          bio: "Member of JobNexus India ecosystem.",
+          bio: "Member of Manpower Master ecosystem.",
           phone: "+91 98000 00000",
           location: "India",
           skills: [],
           resumeUrl: "",
+          profileCompleted: false,
         });
       }
     }
@@ -131,6 +133,7 @@ export async function GET(request: Request) {
       experienceHistory: dbUser.experienceHistory || [],
       resumeUrl: dbUser.resumeUrl || "",
       resumeFileName: dbUser.resumeFileName || "",
+      profileCompleted: dbUser.profileCompleted ?? false,
     });
 
     const html = `<!DOCTYPE html>

@@ -1,29 +1,56 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import {
-  X,
-  Upload,
-  FileText,
-  CheckCircle,
-  Plus,
-  Trash2,
-  Briefcase,
-  GraduationCap,
-  Sparkles,
-  Loader2,
-  Camera,
-  ImageIcon,
-} from "lucide-react";
 import confetti from "canvas-confetti";
+import {
+  Modal,
+  Tabs,
+  Form,
+  Input,
+  Select,
+  Button,
+  Tag,
+  Space,
+  Row,
+  Col,
+  Upload,
+  Typography,
+  Divider,
+  Alert,
+  Tooltip,
+  Card,
+  Table,
+  AutoComplete,
+} from "antd";
+import {
+  UserOutlined,
+  EditOutlined,
+  PlusOutlined,
+  DeleteOutlined,
+  UploadOutlined,
+  CheckCircleFilled,
+  PhoneOutlined,
+  MailOutlined,
+  EnvironmentOutlined,
+  BankOutlined,
+  BookOutlined,
+  RocketOutlined,
+  GlobalOutlined,
+  GithubOutlined,
+  LinkedinOutlined,
+  FilePdfOutlined,
+  CheckOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
 import { compressImageToWebP, formatBytes } from "@/lib/image-compressor";
-import { ResumeBuilderModal } from "@/components/ResumeBuilderModal";
+
+const { Text, Title } = Typography;
 
 interface ProfileBuilderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onProfileUpdated: () => void;
+  onProfileUpdated?: () => void;
 }
 
 export function ProfileBuilderModal({
@@ -32,59 +59,127 @@ export function ProfileBuilderModal({
   onProfileUpdated,
 }: ProfileBuilderModalProps) {
   const { user, updateUser } = useAuth();
+  const [activeTab, setActiveTab] = useState("basic");
 
+  // Tab 1: Basic & Headline
   const [name, setName] = useState(user?.name || "");
   const [headline, setHeadline] = useState(user?.headline || "");
   const [bio, setBio] = useState(user?.bio || "");
   const [phone, setPhone] = useState(user?.phone || "");
-  const [location, setLocation] = useState(user?.location || "Bengaluru, Karnataka");
+  const [location, setLocation] = useState(user?.location || "");
   const [noticePeriod, setNoticePeriod] = useState(user?.noticePeriod || "Immediate");
-  const [currentCtc, setCurrentCtc] = useState(user?.currentCtc?.toString() || "24");
-  const [expectedCtc, setExpectedCtc] = useState(user?.expectedCtc?.toString() || "36");
-  const [skills, setSkills] = useState(user?.skills?.join(", ") || "");
-  const [portfolioUrl, setPortfolioUrl] = useState(user?.portfolioUrl || "");
-  const [githubUrl, setGithubUrl] = useState(user?.githubUrl || "");
-  const [linkedinUrl, setLinkedinUrl] = useState(user?.linkedinUrl || "");
-
-  // Avatar Image & Lightweight WebP Compression state
+  const [currentCtc, setCurrentCtc] = useState(user?.currentCtc ? String(user.currentCtc) : "0");
+  const [expectedCtc, setExpectedCtc] = useState(user?.expectedCtc ? String(user.expectedCtc) : "0");
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar || "");
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [avatarSavings, setAvatarSavings] = useState("");
 
-  // Resume state
-  const [resumeUrl, setResumeUrl] = useState(user?.resumeUrl || "");
-  const [resumeFileName, setResumeFileName] = useState(user?.resumeFileName || "");
-  const [uploadingResume, setUploadingResume] = useState(false);
-  const [uploadMessage, setUploadMessage] = useState("");
-  const [isResumeBuilderOpen, setIsResumeBuilderOpen] = useState(false);
-
-  // Education state
-  const [education, setEducation] = useState(
-    user?.education && user.education.length > 0
-      ? user.education
-      : [{ degree: "B.Tech in Computer Science", institution: "College of Engineering", year: "2021" }]
+  // Tab 2: Skills & IT Skills
+  const [skillsList, setSkillsList] = useState<string[]>(user?.skills || []);
+  const [newSkillInput, setNewSkillInput] = useState("");
+  const [itSkills, setItSkills] = useState<any[]>(
+    user?.itSkills || [
+      { skill: "React.js", version: "18.x", lastUsed: "2024", expYears: 3, expMonths: 6 },
+      { skill: "Next.js", version: "14.x", lastUsed: "2024", expYears: 2, expMonths: 0 },
+      { skill: "TypeScript", version: "5.x", lastUsed: "2024", expYears: 3, expMonths: 0 },
+    ]
   );
+  const [newItSkill, setNewItSkill] = useState({
+    skill: "",
+    version: "",
+    lastUsed: "2024",
+    expYears: 1,
+    expMonths: 0,
+  });
 
-  // Work experience state
-  const [experienceHistory, setExperienceHistory] = useState(
+  // Tab 3: Employment History
+  const [experienceHistory, setExperienceHistory] = useState<any[]>(
     user?.experienceHistory && user.experienceHistory.length > 0
       ? user.experienceHistory
       : [
           {
-            role: "Software Development Engineer",
-            company: "Tech Systems Ltd",
-            duration: "2021 - Present",
-            description: "Built scalable frontend and backend payment services.",
+            role: "Software Engineer",
+            company: "Tech Systems",
+            duration: "2022 - Present",
+            description: "Developed modern web apps and REST APIs.",
           },
         ]
   );
 
+  // Tab 4: Education
+  const [education, setEducation] = useState<any[]>(
+    user?.education && user.education.length > 0
+      ? user.education
+      : [
+          {
+            degree: "B.Tech in Computer Science",
+            institution: "College of Engineering",
+            year: "2022",
+            courseType: "Full Time",
+            percentageOrCgpa: "8.2 CGPA",
+          },
+        ]
+  );
+
+  // Tab 5: Projects & Online Links
+  const [projects, setProjects] = useState<any[]>(
+    user?.projects && user.projects.length > 0
+      ? user.projects
+      : [
+          {
+            title: "Talent Acquisition Job Portal",
+            client: "Academic / Corporate",
+            duration: "6 Months",
+            role: "Full Stack Lead",
+            details: "Built an intelligent job board with split-screen discovery and ATS screening.",
+          },
+        ]
+  );
+  const [portfolioUrl, setPortfolioUrl] = useState(user?.portfolioUrl || "");
+  const [githubUrl, setGithubUrl] = useState(user?.githubUrl || "");
+  const [linkedinUrl, setLinkedinUrl] = useState(user?.linkedinUrl || "");
+
+  // Tab 6: Career & Personal
+  const [desiredRole, setDesiredRole] = useState(
+    user?.careerPreferences?.desiredRole || "Software Developer"
+  );
+  const [preferredLocations, setPreferredLocations] = useState<string[]>(
+    user?.careerPreferences?.preferredLocations || ["Bengaluru", "Remote"]
+  );
+  const [gender, setGender] = useState(user?.personalDetails?.gender || "Male");
+  const [maritalStatus, setMaritalStatus] = useState(user?.personalDetails?.maritalStatus || "Single");
+  const [dob, setDob] = useState(user?.personalDetails?.dob || "1998-05-15");
+  const [hometown, setHometown] = useState(user?.personalDetails?.hometown || user?.location || "");
+  const [languages, setLanguages] = useState<string>(
+    user?.personalDetails?.languages
+      ? user.personalDetails.languages.map((l: any) => (typeof l === "string" ? l : l.language)).join(", ")
+      : "English, Hindi"
+  );
+
+  // Status
   const [saving, setSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  // Sync state when user changes
-  React.useEffect(() => {
+  // Dynamic City Options via Locations API
+  const [cityOptions, setCityOptions] = useState<{ value: string }[]>([]);
+  const fetchCities = async (q: string = "") => {
+    try {
+      const res = await fetch(`/api/locations?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (data.success && data.suggestions) {
+        setCityOptions(data.suggestions.map((c: string) => ({ value: c })));
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchCities("");
+    }
+  }, [isOpen]);
+
+  // Sync state on user change
+  useEffect(() => {
     if (user) {
       if (user.name) setName(user.name);
       if (user.headline) setHeadline(user.headline);
@@ -92,111 +187,68 @@ export function ProfileBuilderModal({
       if (user.phone) setPhone(user.phone);
       if (user.location) setLocation(user.location);
       if (user.noticePeriod) setNoticePeriod(user.noticePeriod);
-      if (user.currentCtc) setCurrentCtc(user.currentCtc.toString());
-      if (user.expectedCtc) setExpectedCtc(user.expectedCtc.toString());
-      if (user.skills) setSkills(user.skills.join(", "));
+      if (user.currentCtc) setCurrentCtc(String(user.currentCtc));
+      if (user.expectedCtc) setExpectedCtc(String(user.expectedCtc));
       if (user.avatar) setAvatarUrl(user.avatar);
-      if (user.resumeUrl) setResumeUrl(user.resumeUrl);
-      if (user.resumeFileName) setResumeFileName(user.resumeFileName);
-      if (user.education && user.education.length > 0) setEducation(user.education);
-      if (user.experienceHistory && user.experienceHistory.length > 0) setExperienceHistory(user.experienceHistory);
+      if (user.skills) setSkillsList(user.skills);
+      if (user.itSkills) setItSkills(user.itSkills);
+      if (user.experienceHistory) setExperienceHistory(user.experienceHistory);
+      if (user.education) setEducation(user.education);
+      if (user.projects) setProjects(user.projects);
+      if (user.portfolioUrl) setPortfolioUrl(user.portfolioUrl);
+      if (user.githubUrl) setGithubUrl(user.githubUrl);
+      if (user.linkedinUrl) setLinkedinUrl(user.linkedinUrl);
+      if (user.careerPreferences?.desiredRole) setDesiredRole(user.careerPreferences.desiredRole);
+      if (user.careerPreferences?.preferredLocations) setPreferredLocations(user.careerPreferences.preferredLocations);
+      if (user.personalDetails?.gender) setGender(user.personalDetails.gender);
+      if (user.personalDetails?.maritalStatus) setMaritalStatus(user.personalDetails.maritalStatus);
+      if (user.personalDetails?.dob) setDob(user.personalDetails.dob);
+      if (user.personalDetails?.hometown) setHometown(user.personalDetails.hometown);
     }
-  }, [user]);
+  }, [user, isOpen]);
 
-  if (!isOpen) return null;
-
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingAvatar(true);
-    setAvatarSavings("");
-
+  const handleAvatarUpload = async (file: File) => {
     try {
-      // Auto-compress heavy camera image to ultra-lightweight WebP format
-      const compressed = await compressImageToWebP(file, 500, 0.82);
-
+      const compressed = await compressImageToWebP(file, 400, 0.85);
       const formData = new FormData();
       formData.append("file", compressed.file);
-
-      const res = await fetch("/api/upload/image", {
-        method: "POST",
-        body: formData,
-      });
-
+      const res = await fetch("/api/upload/image", { method: "POST", body: formData });
       const data = await res.json();
       if (data.success && data.url) {
         setAvatarUrl(data.url);
-        setAvatarSavings(
-          `WebP optimized: ${formatBytes(compressed.originalSize)} to ${formatBytes(compressed.compressedSize)} (${compressed.savingsPercent}% lighter)`
-        );
-      } else {
-        setAvatarSavings("Failed to upload image");
       }
     } catch {
-      setAvatarSavings("Image compression error");
-    } finally {
-      setUploadingAvatar(false);
+      // ignore
+    }
+    return false;
+  };
+
+  const handleAddSkill = () => {
+    if (newSkillInput.trim() && !skillsList.includes(newSkillInput.trim())) {
+      setSkillsList([...skillsList, newSkillInput.trim()]);
+      setNewSkillInput("");
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingResume(true);
-    setUploadMessage("");
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (data.success && data.url) {
-        setResumeUrl(data.url);
-        setResumeFileName(data.fileName);
-        setUploadMessage("Resume uploaded successfully.");
-      } else {
-        setUploadMessage("Failed to upload resume file.");
-      }
-    } catch {
-      setUploadMessage("Upload error occurred.");
-    } finally {
-      setUploadingResume(false);
+  const handleAddItSkill = () => {
+    if (newItSkill.skill.trim()) {
+      setItSkills([...itSkills, { ...newItSkill }]);
+      setNewItSkill({ skill: "", version: "", lastUsed: "2024", expYears: 1, expMonths: 0 });
     }
   };
 
-  const addEducation = () => {
-    setEducation([...education, { degree: "", institution: "", year: "" }]);
-  };
-
-  const removeEducation = (index: number) => {
-    setEducation(education.filter((_, i) => i !== index));
-  };
-
-  const addExperience = () => {
-    setExperienceHistory([
-      ...experienceHistory,
-      { role: "", company: "", duration: "", description: "" },
-    ]);
-  };
-
-  const removeExperience = (index: number) => {
-    setExperienceHistory(experienceHistory.filter((_, i) => i !== index));
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveAll = async () => {
     setSaving(true);
     setError("");
 
     try {
-      const profileData = {
+      const parsedLanguages = languages
+        .split(",")
+        .map((l) => l.trim())
+        .filter(Boolean)
+        .map((lang) => ({ language: lang, read: true, write: true, speak: true }));
+
+      const profilePayload = {
         name,
         avatar: avatarUrl,
         headline,
@@ -206,14 +258,29 @@ export function ProfileBuilderModal({
         noticePeriod,
         currentCtc: Number(currentCtc) || 0,
         expectedCtc: Number(expectedCtc) || 0,
-        skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
-        resumeUrl,
-        resumeFileName,
+        skills: skillsList,
+        itSkills,
+        experienceHistory,
+        education,
+        projects,
         portfolioUrl,
         githubUrl,
         linkedinUrl,
-        education,
-        experienceHistory,
+        careerPreferences: {
+          desiredRole,
+          preferredLocations,
+          expectedSalary: Number(expectedCtc) || 0,
+          desiredJobType: "Permanent",
+          desiredEmploymentType: "Full Time",
+        },
+        personalDetails: {
+          dob,
+          gender,
+          maritalStatus,
+          hometown,
+          languages: parsedLanguages,
+        },
+        profileCompleted: true,
       };
 
       const res = await fetch("/api/users/profile", {
@@ -222,507 +289,709 @@ export function ProfileBuilderModal({
         body: JSON.stringify({
           userId: user?._id || user?.id,
           email: user?.email,
-          profileData,
+          profileData: profilePayload,
         }),
       });
 
       const data = await res.json();
       if (data.success) {
-        setSaveSuccess(true);
-        updateUser(profileData);
+        updateUser(data.user || profilePayload);
         confetti({
-          particleCount: 50,
+          particleCount: 60,
           spread: 60,
-          origin: { y: 0.7 },
-          colors: ["#f97316", "#fb923c", "#10b981"],
+          origin: { y: 0.6 },
+          colors: ["#ea580c", "#fb923c", "#16a34a"],
         });
-
+        if (onProfileUpdated) onProfileUpdated();
         setTimeout(() => {
-          setSaveSuccess(false);
-          onProfileUpdated();
+          setSaving(false);
           onClose();
-        }, 1200);
+        }, 500);
       } else {
-        setError(data.error || "Failed to save profile");
+        setError(data.error || "Failed to update profile");
+        setSaving(false);
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error saving profile";
-      setError(msg);
-    } finally {
+    } catch {
+      setError("An unexpected network error occurred.");
       setSaving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-150">
-      <div
-        className="relative w-full max-w-3xl rounded-3xl bg-white border-2 border-slate-200 shadow-2xl p-5 sm:p-8 text-slate-900 max-h-[92vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {saveSuccess ? (
-          <div className="py-12 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300 flex items-center justify-center mx-auto animate-bounce">
-              <CheckCircle className="w-8 h-8" />
-            </div>
-            <h3 className="text-2xl font-black text-slate-900">Profile Updated!</h3>
-            <p className="text-xs text-slate-500">
-              Your resume, credentials, and notice period are updated for recruiters.
-            </p>
-          </div>
-        ) : (
-          <div>
-            <div className="mb-6">
-              <span className="text-[11px] font-black uppercase tracking-wider text-orange-600">
-                Candidate Profile &amp; Resume Builder
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 mt-1">
-                Your Job Profile
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Complete your details to increase recruiter callbacks by 3.5x.
-              </p>
-            </div>
-
-            {error && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-bold">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSave} className="space-y-6">
-              {/* Profile Photo / Avatar with Lightweight WebP Compressor */}
-              <div className="p-4 rounded-2xl bg-white border-2 border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3 text-left w-full sm:w-auto">
-                  <div className="relative">
-                    {avatarUrl ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={avatarUrl}
-                        alt={name || "Profile"}
-                        className="w-14 h-14 rounded-2xl object-cover border-2 border-orange-400 shadow-sm"
-                      />
-                    ) : (
-                      <div className="w-14 h-14 rounded-2xl bg-orange-600 text-white flex items-center justify-center font-black text-xl border-2 border-orange-400 shadow-sm">
-                        {name ? name.charAt(0).toUpperCase() : "U"}
-                      </div>
-                    )}
-                    <div className="absolute -bottom-1 -right-1 p-1 rounded-full bg-orange-600 text-white shadow-xs">
-                      <Camera className="w-3 h-3" />
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-900">
-                      Profile Photo (Lightweight WebP Format)
-                    </h4>
-                    <p className="text-[11px] text-slate-500">
-                      Images are automatically converted to WebP for instant phone loading.
-                    </p>
-                    {avatarSavings && (
-                      <span className="inline-block mt-1 text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                        {avatarSavings}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="w-full sm:w-auto">
-                  <label className="cursor-pointer px-3.5 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
-                    {uploadingAvatar ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-orange-600" />
-                        <span>Optimizing WebP...</span>
-                      </>
-                    ) : (
-                      <>
-                        <ImageIcon className="w-3.5 h-3.5 text-orange-600" />
-                        <span>Upload Photo</span>
-                      </>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      disabled={uploadingAvatar}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-              </div>
-
-              {/* Resume File Upload Block */}
-              <div className="p-4 rounded-2xl bg-orange-50 border-2 border-dashed border-orange-300">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 text-left w-full sm:w-auto">
-                    <div className="w-10 h-10 rounded-xl bg-orange-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                      <FileText className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-900">
-                        {resumeFileName || "Upload Candidate Resume (PDF / Word)"}
-                      </h4>
-                      <p className="text-[11px] text-slate-500">
-                        {resumeUrl
-                          ? "Resume attached &amp; active for 1-Click Applications"
-                          : "Upload your latest CV to store permanently"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="w-full sm:w-auto flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsResumeBuilderOpen(true)}
-                      className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-orange-600" />
-                      <span>Create with Resume Builder</span>
-                    </button>
-
-                    <label className="flex-1 sm:flex-initial cursor-pointer px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition-all whitespace-nowrap">
-                      {uploadingResume ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span>Uploading...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-3.5 h-3.5" />
-                          <span>{resumeUrl ? "Change Resume" : "Upload File"}</span>
-                        </>
-                      )}
-                      <input
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                      />
-                    </label>
-
-                    {resumeUrl && (
-                      <a
-                        href={resumeUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-orange-50"
-                      >
-                        Preview
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                {uploadMessage && (
-                  <p className="text-xs text-emerald-700 font-bold mt-2">
-                    {uploadMessage}
-                  </p>
-                )}
-              </div>
-
-              {/* Personal Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Phone / WhatsApp Number *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Current Location / City *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Notice Period *
-                  </label>
-                  <select
-                    value={noticePeriod}
-                    onChange={(e) => setNoticePeriod(e.target.value as any)}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
-                  >
-                    <option value="Immediate">Immediate Joiner (0-7 Days)</option>
-                    <option value="15 Days">15 Days</option>
-                    <option value="30 Days">30 Days (1 Month)</option>
-                    <option value="60 Days">60 Days (2 Months)</option>
-                    <option value="Serving Notice">Serving Notice Period</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Current CTC (₹ LPA)
-                  </label>
-                  <input
-                    type="number"
-                    value={currentCtc}
-                    onChange={(e) => setCurrentCtc(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Expected CTC (₹ LPA) *
-                  </label>
-                  <input
-                    type="number"
-                    value={expectedCtc}
-                    onChange={(e) => setExpectedCtc(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
-                  />
-                </div>
-              </div>
-
-              {/* Headline & Skills */}
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Professional Headline *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Senior Software Engineer"
-                  value={headline}
-                  onChange={(e) => setHeadline(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Skills (comma separated)
-                </label>
-                <input
-                  type="text"
-                  value={skills}
-                  onChange={(e) => setSkills(e.target.value)}
-                  placeholder="React, Node.js, SQL, Java, Problem Solving"
-                  className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
-                />
-              </div>
-
-              {/* Education Section */}
-              <div className="pt-2">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                    <GraduationCap className="w-4 h-4 text-orange-600" />
-                    <span>Education Qualifications</span>
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={addEducation}
-                    className="flex items-center gap-1 text-[11px] font-bold text-orange-600 hover:underline cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Add Degree
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  {education.map((edu, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center gap-2"
-                    >
-                      <input
-                        type="text"
-                        placeholder="Degree (e.g. B.Tech / BCA / MBA)"
-                        value={edu.degree}
-                        onChange={(e) => {
-                          const copy = [...education];
-                          copy[idx].degree = e.target.value;
-                          setEducation(copy);
-                        }}
-                        className="w-full sm:flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-white border border-slate-200 font-semibold text-slate-900"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Institution / University"
-                        value={edu.institution}
-                        onChange={(e) => {
-                          const copy = [...education];
-                          copy[idx].institution = e.target.value;
-                          setEducation(copy);
-                        }}
-                        className="w-full sm:flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-white border border-slate-200 font-semibold text-slate-900"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Year"
-                        value={edu.year}
-                        onChange={(e) => {
-                          const copy = [...education];
-                          copy[idx].year = e.target.value;
-                          setEducation(copy);
-                        }}
-                        className="w-20 px-2.5 py-1.5 text-xs rounded-lg bg-white border border-slate-200 text-center font-bold text-slate-900"
-                      />
-                      {education.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeEducation(idx)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Work Experience Section */}
-              <div className="pt-2">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                    <Briefcase className="w-4 h-4 text-orange-600" />
-                    <span>Work History</span>
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={addExperience}
-                    className="flex items-center gap-1 text-[11px] font-bold text-orange-600 hover:underline cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Add Role
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {experienceHistory.map((exp, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2"
-                    >
-                      <div className="flex flex-col sm:flex-row items-center gap-2">
-                        <input
-                          type="text"
-                          placeholder="Job Title / Role"
-                          value={exp.role}
-                          onChange={(e) => {
-                            const copy = [...experienceHistory];
-                            copy[idx].role = e.target.value;
-                            setExperienceHistory(copy);
-                          }}
-                          className="w-full sm:flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-white border border-slate-200 font-bold text-slate-900"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Company Name"
-                          value={exp.company}
-                          onChange={(e) => {
-                            const copy = [...experienceHistory];
-                            copy[idx].company = e.target.value;
-                            setExperienceHistory(copy);
-                          }}
-                          className="w-full sm:flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-white border border-slate-200 font-semibold text-slate-900"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Duration (e.g. 2022 - 2024)"
-                          value={exp.duration}
-                          onChange={(e) => {
-                            const copy = [...experienceHistory];
-                            copy[idx].duration = e.target.value;
-                            setExperienceHistory(copy);
-                          }}
-                          className="w-full sm:w-36 px-2.5 py-1.5 text-xs rounded-lg bg-white border border-slate-200 text-center font-bold text-slate-900"
-                        />
-                        {experienceHistory.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeExperience(idx)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                      <textarea
-                        rows={2}
-                        placeholder="Key responsibilities and achievements..."
-                        value={exp.description}
-                        onChange={(e) => {
-                          const copy = [...experienceHistory];
-                          copy[idx].description = e.target.value;
-                          setExperienceHistory(copy);
-                        }}
-                        className="w-full p-2.5 text-xs rounded-lg bg-white border border-slate-200 leading-relaxed font-normal text-slate-800"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Save Button */}
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Saving Profile...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Save &amp; Complete Profile</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+    <Modal
+      open={isOpen}
+      onCancel={onClose}
+      footer={
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, paddingTop: 12 }}>
+          <Button onClick={onClose} icon={<CloseOutlined />}>
+            Cancel
+          </Button>
+          <Button
+            type="primary"
+            icon={<CheckOutlined />}
+            loading={saving}
+            onClick={handleSaveAll}
+            style={{ fontWeight: 600, borderRadius: 8 }}
+          >
+            Save Profile Details
+          </Button>
+        </div>
+      }
+      width={780}
+      centered
+      styles={{ body: { padding: "20px 24px" } }}
+    >
+      {/* Header */}
+      <div style={{ marginBottom: 16 }}>
+        <Title level={4} style={{ margin: 0, color: "#0f172a" }}>
+          Edit Naukri 360° Profile Details
+        </Title>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          Keep all professional, educational, and identity details synced for recruiter searches.
+        </Text>
       </div>
 
-      {/* Embedded ATS Resume Builder Modal */}
-      <ResumeBuilderModal
-        isOpen={isResumeBuilderOpen}
-        onClose={() => setIsResumeBuilderOpen(false)}
-        onSaved={() => {
-          if (user?.resumeUrl) setResumeUrl(user.resumeUrl);
-          if (user?.resumeFileName) setResumeFileName(user.resumeFileName);
-          onProfileUpdated();
-        }}
+      {error && (
+        <Alert message={error} type="error" showIcon style={{ marginBottom: 14, borderRadius: 8 }} />
+      )}
+
+      {/* Main Tabs */}
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={[
+          {
+            key: "basic",
+            label: "Basic & Headline",
+            children: (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <Row gutter={[12, 12]}>
+                  <Col xs={24} sm={12}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Full Name</label>
+                    <Input
+                      prefix={<UserOutlined style={{ color: "#94a3b8" }} />}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      style={{ marginTop: 4, borderRadius: 8 }}
+                    />
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Mobile Number</label>
+                    <Input
+                      prefix={<PhoneOutlined style={{ color: "#94a3b8" }} />}
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      style={{ marginTop: 4, borderRadius: 8 }}
+                    />
+                  </Col>
+                </Row>
+
+                <Row gutter={[12, 12]}>
+                  <Col xs={24} sm={12}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Current City</label>
+                    <AutoComplete
+                      options={cityOptions}
+                      onSearch={fetchCities}
+                      value={location}
+                      onChange={(val) => setLocation(val)}
+                      style={{ width: "100%", marginTop: 4 }}
+                    >
+                      <Input
+                        prefix={<EnvironmentOutlined style={{ color: "#94a3b8" }} />}
+                        placeholder="Search city across India..."
+                        style={{ borderRadius: 8 }}
+                      />
+                    </AutoComplete>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Notice Period</label>
+                    <Select
+                      value={noticePeriod}
+                      onChange={(val) => setNoticePeriod(val)}
+                      options={[
+                        { label: "Immediate Joiner", value: "Immediate" },
+                        { label: "15 Days", value: "15 Days" },
+                        { label: "30 Days (1 Month)", value: "30 Days" },
+                        { label: "60 Days (2 Months)", value: "60 Days" },
+                        { label: "90 Days (3 Months)", value: "90 Days" },
+                      ]}
+                      style={{ width: "100%", marginTop: 4 }}
+                    />
+                  </Col>
+                </Row>
+
+                <Row gutter={[12, 12]}>
+                  <Col xs={24} sm={12}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Current Annual CTC (₹ LPA)</label>
+                    <Input
+                      prefix="₹"
+                      suffix="LPA"
+                      value={currentCtc}
+                      onChange={(e) => setCurrentCtc(e.target.value.replace(/[^0-9.]/g, ""))}
+                      style={{ marginTop: 4, borderRadius: 8 }}
+                    />
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Expected Annual CTC (₹ LPA)</label>
+                    <Input
+                      prefix="₹"
+                      suffix="LPA"
+                      value={expectedCtc}
+                      onChange={(e) => setExpectedCtc(e.target.value.replace(/[^0-9.]/g, ""))}
+                      style={{ marginTop: 4, borderRadius: 8 }}
+                    />
+                  </Col>
+                </Row>
+
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Resume Headline</label>
+                  <Input.TextArea
+                    rows={2}
+                    value={headline}
+                    onChange={(e) => setHeadline(e.target.value)}
+                    style={{ marginTop: 4, borderRadius: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Profile Summary (Bio)</label>
+                  <Input.TextArea
+                    rows={3}
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    style={{ marginTop: 4, borderRadius: 8 }}
+                  />
+                </div>
+              </div>
+            ),
+          },
+          {
+            key: "skills",
+            label: "Key & IT Skills",
+            children: (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {/* Key Skills */}
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Key Skills</label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "6px 0" }}>
+                    {skillsList.map((skill, i) => (
+                      <Tag
+                        key={i}
+                        closable
+                        onClose={() => setSkillsList(skillsList.filter((_, idx) => idx !== i))}
+                        style={{ borderRadius: 12, padding: "2px 8px" }}
+                      >
+                        {skill}
+                      </Tag>
+                    ))}
+                  </div>
+                  <Space.Compact style={{ width: "100%" }}>
+                    <Input
+                      placeholder="Add technical or functional skill"
+                      value={newSkillInput}
+                      onChange={(e) => setNewSkillInput(e.target.value)}
+                      onPressEnter={handleAddSkill}
+                    />
+                    <Tooltip title="Add Skill">
+                      <Button type="primary" icon={<PlusOutlined />} onClick={handleAddSkill} />
+                    </Tooltip>
+                  </Space.Compact>
+                </div>
+
+                <Divider style={{ margin: "10px 0" }} />
+
+                {/* IT Skills Table */}
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <Text strong style={{ fontSize: 13, color: "#0f172a" }}>
+                      IT Skills (Tools, Versions, Experience)
+                    </Text>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+                    {itSkills.map((it, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "8px 12px",
+                          backgroundColor: "#f8fafc",
+                          borderRadius: 8,
+                          border: "1px solid #e2e8f0",
+                          fontSize: 12,
+                        }}
+                      >
+                        <div>
+                          <span style={{ fontWeight: 700, color: "#0f172a" }}>{it.skill}</span>
+                          <span style={{ color: "#64748b", marginLeft: 8 }}>
+                            Ver: {it.version || "N/A"} • Exp: {it.expYears}y {it.expMonths}m • Last used: {it.lastUsed}
+                          </span>
+                        </div>
+                        <Button
+                          type="text"
+                          danger
+                          size="small"
+                          icon={<DeleteOutlined />}
+                          onClick={() => setItSkills(itSkills.filter((_, i) => i !== idx))}
+                          style={{ fontWeight: 600 }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add IT Skill Form */}
+                  <Row gutter={[8, 8]} align="middle">
+                    <Col xs={24} sm={8}>
+                      <Input
+                        placeholder="Skill (e.g. Docker)"
+                        value={newItSkill.skill}
+                        onChange={(e) => setNewItSkill({ ...newItSkill, skill: e.target.value })}
+                        size="small"
+                      />
+                    </Col>
+                    <Col xs={12} sm={4}>
+                      <Input
+                        placeholder="Ver (e.g. 24)"
+                        value={newItSkill.version}
+                        onChange={(e) => setNewItSkill({ ...newItSkill, version: e.target.value })}
+                        size="small"
+                      />
+                    </Col>
+                    <Col xs={12} sm={4}>
+                      <Input
+                        placeholder="Last Used (2024)"
+                        value={newItSkill.lastUsed}
+                        onChange={(e) => setNewItSkill({ ...newItSkill, lastUsed: e.target.value })}
+                        size="small"
+                      />
+                    </Col>
+                    <Col xs={16} sm={5}>
+                      <Input
+                        placeholder="Exp Years"
+                        type="number"
+                        value={newItSkill.expYears}
+                        onChange={(e) => setNewItSkill({ ...newItSkill, expYears: Number(e.target.value) || 0 })}
+                        size="small"
+                      />
+                    </Col>
+                    <Col xs={8} sm={3}>
+                      <Button
+                        type="primary"
+                        size="small"
+                        icon={<PlusOutlined />}
+                        onClick={handleAddItSkill}
+                        style={{ fontWeight: 600, borderRadius: 6 }}
+                      >
+                        Add
+                      </Button>
+                    </Col>
+                  </Row>
+                </div>
+              </div>
+            ),
+          },
+          {
+            key: "employment",
+            label: "Employment History",
+            children: (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Text strong style={{ fontSize: 13, color: "#0f172a" }}>Work Experience Entries</Text>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<PlusOutlined />}
+                    onClick={() =>
+                      setExperienceHistory([
+                        ...experienceHistory,
+                        { role: "", company: "", duration: "", description: "" },
+                      ])
+                    }
+                    style={{ fontWeight: 600, borderRadius: 6 }}
+                  >
+                    Add Experience
+                  </Button>
+                </div>
+
+                {experienceHistory.map((exp, idx) => (
+                  <Card
+                    key={idx}
+                    size="small"
+                    style={{ backgroundColor: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0" }}
+                  >
+                    <Row gutter={[8, 8]}>
+                      <Col xs={24} sm={11}>
+                        <Input
+                          placeholder="Designation / Role"
+                          value={exp.role}
+                          onChange={(e) => {
+                            const updated = [...experienceHistory];
+                            updated[idx].role = e.target.value;
+                            setExperienceHistory(updated);
+                          }}
+                        />
+                      </Col>
+                      <Col xs={20} sm={11}>
+                        <Input
+                          placeholder="Company / Organization Name"
+                          value={exp.company}
+                          onChange={(e) => {
+                            const updated = [...experienceHistory];
+                            updated[idx].company = e.target.value;
+                            setExperienceHistory(updated);
+                          }}
+                        />
+                      </Col>
+                      <Col xs={4} sm={2} style={{ textAlign: "right" }}>
+                        <Button
+                          type="text"
+                          danger
+                          size="small"
+                          icon={<DeleteOutlined />}
+                          onClick={() =>
+                            setExperienceHistory(experienceHistory.filter((_, i) => i !== idx))
+                          }
+                          style={{ fontWeight: 600 }}
+                        >
+                          Delete
+                        </Button>
+                      </Col>
+                      <Col xs={24} sm={12}>
+                        <Input
+                          placeholder="Duration (e.g. 2021 - Present or 2 Years)"
+                          value={exp.duration}
+                          onChange={(e) => {
+                            const updated = [...experienceHistory];
+                            updated[idx].duration = e.target.value;
+                            setExperienceHistory(updated);
+                          }}
+                        />
+                      </Col>
+                      <Col xs={24} sm={12}>
+                        <Input
+                          placeholder="Key Responsibilities summary"
+                          value={exp.description}
+                          onChange={(e) => {
+                            const updated = [...experienceHistory];
+                            updated[idx].description = e.target.value;
+                            setExperienceHistory(updated);
+                          }}
+                        />
+                      </Col>
+                    </Row>
+                  </Card>
+                ))}
+              </div>
+            ),
+          },
+          {
+            key: "education",
+            label: "Education",
+            children: (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Text strong style={{ fontSize: 13, color: "#0f172a" }}>Academic Qualifications</Text>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<PlusOutlined />}
+                    onClick={() =>
+                      setEducation([
+                        ...education,
+                        { degree: "", institution: "", year: "2024", courseType: "Full Time", percentageOrCgpa: "" },
+                      ])
+                    }
+                    style={{ fontWeight: 600, borderRadius: 6 }}
+                  >
+                    Add Education
+                  </Button>
+                </div>
+
+                {education.map((edu, idx) => (
+                  <Card
+                    key={idx}
+                    size="small"
+                    style={{ backgroundColor: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0" }}
+                  >
+                    <Row gutter={[8, 8]}>
+                      <Col xs={24} sm={11}>
+                        <Input
+                          placeholder="Degree / Course (e.g. B.Tech CS, MBA, B.Com)"
+                          value={edu.degree}
+                          onChange={(e) => {
+                            const updated = [...education];
+                            updated[idx].degree = e.target.value;
+                            setEducation(updated);
+                          }}
+                        />
+                      </Col>
+                      <Col xs={20} sm={11}>
+                        <Input
+                          placeholder="College / Institute Name"
+                          value={edu.institution}
+                          onChange={(e) => {
+                            const updated = [...education];
+                            updated[idx].institution = e.target.value;
+                            setEducation(updated);
+                          }}
+                        />
+                      </Col>
+                      <Col xs={4} sm={2} style={{ textAlign: "right" }}>
+                        <Button
+                          type="text"
+                          danger
+                          size="small"
+                          icon={<DeleteOutlined />}
+                          onClick={() => setEducation(education.filter((_, i) => i !== idx))}
+                          style={{ fontWeight: 600 }}
+                        >
+                          Delete
+                        </Button>
+                      </Col>
+                      <Col xs={12} sm={8}>
+                        <Input
+                          placeholder="Year (e.g. 2023)"
+                          value={edu.year}
+                          onChange={(e) => {
+                            const updated = [...education];
+                            updated[idx].year = e.target.value;
+                            setEducation(updated);
+                          }}
+                        />
+                      </Col>
+                      <Col xs={12} sm={8}>
+                        <Input
+                          placeholder="Grade (% or CGPA)"
+                          value={edu.percentageOrCgpa}
+                          onChange={(e) => {
+                            const updated = [...education];
+                            updated[idx].percentageOrCgpa = e.target.value;
+                            setEducation(updated);
+                          }}
+                        />
+                      </Col>
+                      <Col xs={24} sm={8}>
+                        <Input
+                          placeholder="Course Type (Full Time / Distance)"
+                          value={edu.courseType}
+                          onChange={(e) => {
+                            const updated = [...education];
+                            updated[idx].courseType = e.target.value;
+                            setEducation(updated);
+                          }}
+                        />
+                      </Col>
+                    </Row>
+                  </Card>
+                ))}
+              </div>
+            ),
+          },
+          {
+            key: "projects",
+            label: "Projects & Portfolios",
+            children: (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <Row gutter={[12, 12]}>
+                  <Col xs={24} sm={8}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Portfolio Website</label>
+                    <Input
+                      prefix={<GlobalOutlined style={{ color: "#94a3b8" }} />}
+                      placeholder="https://myportfolio.com"
+                      value={portfolioUrl}
+                      onChange={(e) => setPortfolioUrl(e.target.value)}
+                      style={{ marginTop: 4, borderRadius: 8 }}
+                    />
+                  </Col>
+                  <Col xs={24} sm={8}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>GitHub Profile</label>
+                    <Input
+                      prefix={<GithubOutlined style={{ color: "#94a3b8" }} />}
+                      placeholder="https://github.com/username"
+                      value={githubUrl}
+                      onChange={(e) => setGithubUrl(e.target.value)}
+                      style={{ marginTop: 4, borderRadius: 8 }}
+                    />
+                  </Col>
+                  <Col xs={24} sm={8}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>LinkedIn Profile</label>
+                    <Input
+                      prefix={<LinkedinOutlined style={{ color: "#94a3b8" }} />}
+                      placeholder="https://linkedin.com/in/username"
+                      value={linkedinUrl}
+                      onChange={(e) => setLinkedinUrl(e.target.value)}
+                      style={{ marginTop: 4, borderRadius: 8 }}
+                    />
+                  </Col>
+                </Row>
+
+                <Divider style={{ margin: "8px 0" }} />
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Text strong style={{ fontSize: 13, color: "#0f172a" }}>Highlighted Projects</Text>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<PlusOutlined />}
+                    onClick={() =>
+                      setProjects([
+                        ...projects,
+                        { title: "", client: "", duration: "", role: "", details: "" },
+                      ])
+                    }
+                    style={{ fontWeight: 600, borderRadius: 6 }}
+                  >
+                    Add Project
+                  </Button>
+                </div>
+
+                {projects.map((proj, idx) => (
+                  <Card
+                    key={idx}
+                    size="small"
+                    style={{ backgroundColor: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0" }}
+                  >
+                    <Row gutter={[8, 8]}>
+                      <Col xs={24} sm={11}>
+                        <Input
+                          placeholder="Project Title"
+                          value={proj.title}
+                          onChange={(e) => {
+                            const updated = [...projects];
+                            updated[idx].title = e.target.value;
+                            setProjects(updated);
+                          }}
+                        />
+                      </Col>
+                      <Col xs={20} sm={11}>
+                        <Input
+                          placeholder="Role (e.g. Lead Developer)"
+                          value={proj.role}
+                          onChange={(e) => {
+                            const updated = [...projects];
+                            updated[idx].role = e.target.value;
+                            setProjects(updated);
+                          }}
+                        />
+                      </Col>
+                      <Col xs={4} sm={2} style={{ textAlign: "right" }}>
+                        <Button
+                          type="text"
+                          danger
+                          size="small"
+                          icon={<DeleteOutlined />}
+                          onClick={() => setProjects(projects.filter((_, i) => i !== idx))}
+                          style={{ fontWeight: 600 }}
+                        >
+                          Delete
+                        </Button>
+                      </Col>
+                      <Col xs={24}>
+                        <Input.TextArea
+                          rows={2}
+                          placeholder="Description & Technologies used"
+                          value={proj.details}
+                          onChange={(e) => {
+                            const updated = [...projects];
+                            updated[idx].details = e.target.value;
+                            setProjects(updated);
+                          }}
+                        />
+                      </Col>
+                    </Row>
+                  </Card>
+                ))}
+              </div>
+            ),
+          },
+          {
+            key: "personal",
+            label: "Career & Personal",
+            children: (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <Row gutter={[12, 12]}>
+                  <Col xs={24} sm={12}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Desired Role</label>
+                    <Input
+                      value={desiredRole}
+                      onChange={(e) => setDesiredRole(e.target.value)}
+                      style={{ marginTop: 4, borderRadius: 8 }}
+                    />
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Hometown</label>
+                    <AutoComplete
+                      options={cityOptions}
+                      onSearch={fetchCities}
+                      value={hometown}
+                      onChange={(val) => setHometown(val)}
+                      style={{ width: "100%", marginTop: 4 }}
+                    >
+                      <Input
+                        prefix={<EnvironmentOutlined style={{ color: "#94a3b8" }} />}
+                        placeholder="Search hometown city..."
+                        style={{ borderRadius: 8 }}
+                      />
+                    </AutoComplete>
+                  </Col>
+                </Row>
+
+                <Row gutter={[12, 12]}>
+                  <Col xs={24} sm={8}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Gender</label>
+                    <Select
+                      value={gender}
+                      onChange={(val) => setGender(val)}
+                      options={[
+                        { label: "Male", value: "Male" },
+                        { label: "Female", value: "Female" },
+                        { label: "Other", value: "Other" },
+                      ]}
+                      style={{ width: "100%", marginTop: 4 }}
+                    />
+                  </Col>
+                  <Col xs={24} sm={8}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Marital Status</label>
+                    <Select
+                      value={maritalStatus}
+                      onChange={(val) => setMaritalStatus(val)}
+                      options={[
+                        { label: "Single / Unmarried", value: "Single" },
+                        { label: "Married", value: "Married" },
+                      ]}
+                      style={{ width: "100%", marginTop: 4 }}
+                    />
+                  </Col>
+                  <Col xs={24} sm={8}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Date of Birth</label>
+                    <Input
+                      type="date"
+                      value={dob}
+                      onChange={(e) => setDob(e.target.value)}
+                      style={{ marginTop: 4, borderRadius: 8 }}
+                    />
+                  </Col>
+                </Row>
+
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                    Languages Known (Comma separated)
+                  </label>
+                  <Input
+                    placeholder="e.g. English, Hindi, Punjabi, Bengali"
+                    value={languages}
+                    onChange={(e) => setLanguages(e.target.value)}
+                    style={{ marginTop: 4, borderRadius: 8 }}
+                  />
+                </div>
+              </div>
+            ),
+          },
+        ]}
       />
-    </div>
+    </Modal>
   );
 }

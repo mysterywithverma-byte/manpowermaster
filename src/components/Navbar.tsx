@@ -1,20 +1,31 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
-  User,
-  Building2,
-  ShieldCheck,
-  LogOut,
-  PlusCircle,
-  ChevronDown,
-  Briefcase,
-  Sparkles,
-} from "lucide-react";
+  Button,
+  Dropdown,
+  Avatar,
+  Badge,
+  Space,
+  Tag,
+  Divider,
+} from "antd";
+import type { MenuProps } from "antd";
+import {
+  UserOutlined,
+  BankOutlined,
+  LogoutOutlined,
+  PlusOutlined,
+  DownOutlined,
+  AppstoreOutlined,
+  CheckCircleFilled,
+  SwapOutlined,
+  LoginOutlined,
+  UserAddOutlined,
+} from "@ant-design/icons";
 import { TextLogo } from "@/components/TextLogo";
 import { NotificationBell } from "@/components/NotificationBell";
-import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 interface NavbarProps {
   onOpenAuth: () => void;
@@ -32,277 +43,258 @@ export function Navbar({
   onSelectJobId,
 }: NavbarProps) {
   const { user, role, activeView, setActiveView, logout, savedJobs, updateUser } = useAuth();
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setProfileMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const handleSwitchRole = (newRole: "seeker" | "employer") => {
     updateUser({ role: newRole });
     if (newRole === "employer") setActiveView("employer-dashboard");
     else setActiveView("seeker-dashboard");
-    setProfileMenuOpen(false);
   };
 
+  // Ant Design Dropdown items
+  const menuItems: MenuProps["items"] = [
+    {
+      key: "user-header",
+      disabled: true,
+      label: (
+        <div style={{ padding: "4px 0", cursor: "default" }}>
+          <Space align="center" size={10}>
+            <Avatar
+              size={38}
+              src={user?.avatar}
+              style={{
+                backgroundColor: "#ea580c",
+                fontWeight: 700,
+                fontSize: 14,
+              }}
+            >
+              {user?.name?.charAt(0).toUpperCase()}
+            </Avatar>
+            <div style={{ lineHeight: 1.3 }}>
+              <div style={{ fontWeight: 700, color: "#0f172a", fontSize: 13, display: "flex", alignItems: "center", gap: 4 }}>
+                {user?.name}
+                {user?.isVerified && <CheckCircleFilled style={{ color: "#16a34a", fontSize: 12 }} />}
+              </div>
+              <div style={{ fontSize: 11, color: "#64748b" }}>{user?.email}</div>
+              <Tag color="orange" bordered={false} style={{ marginTop: 4, textTransform: "uppercase", fontSize: 10, fontWeight: 700 }}>
+                {user?.role}
+              </Tag>
+            </div>
+          </Space>
+        </div>
+      ),
+    },
+    { type: "divider" },
+    {
+      key: "explore",
+      icon: <AppstoreOutlined />,
+      label: "Explore Job Board",
+      onClick: () => setActiveView("explore"),
+    },
+    {
+      key: "seeker-dash",
+      icon: <UserOutlined />,
+      label: "Candidate Dashboard",
+      onClick: () => setActiveView("seeker-dashboard"),
+    },
+    {
+      key: "employer-dash",
+      icon: <BankOutlined />,
+      label: "Employer Talent Console",
+      onClick: () => setActiveView("employer-dashboard"),
+    },
+    { type: "divider" },
+    {
+      key: "switch-role",
+      icon: <SwapOutlined />,
+      label: role === "seeker" ? "Switch to Employer Mode" : "Switch to Candidate Mode",
+      onClick: () => handleSwitchRole(role === "seeker" ? "employer" : "seeker"),
+    },
+    { type: "divider" },
+    {
+      key: "logout",
+      icon: <LogoutOutlined />,
+      danger: true,
+      label: "Sign Out",
+      onClick: logout,
+    },
+  ];
+
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-md border-b border-slate-200/90 bg-white/95 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-15 sm:h-16 flex items-center justify-between gap-3">
+    <header
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 40,
+        width: "100%",
+        backgroundColor: "rgba(255, 255, 255, 0.96)",
+        backdropFilter: "blur(12px)",
+        borderBottom: "1px solid #e2e8f0",
+        boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.03)",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1280,
+          margin: "0 auto",
+          padding: "0 16px",
+          height: 60,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+        }}
+      >
         {/* Brand Text Logo */}
         <div
           onClick={() => setActiveView("explore")}
-          className="cursor-pointer group select-none shrink-0"
+          style={{ cursor: "pointer", userSelect: "none", flexShrink: 0 }}
         >
           <TextLogo size="md" showEmblem={true} />
         </div>
 
-        {/* View Navigation Tabs (Desktop) */}
-        <nav className="hidden md:flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/70 border border-slate-200/80">
-          <button
+        {/* View Navigation Tabs */}
+        <nav className="hidden md:flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 border border-slate-200">
+          <Button
+            type={activeView === "explore" ? "primary" : "text"}
+            size="small"
+            icon={<AppstoreOutlined />}
             onClick={() => setActiveView("explore")}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              activeView === "explore"
-                ? "bg-white text-slate-900 shadow-2xs"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
-            }`}
+            style={{
+              fontWeight: 600,
+              boxShadow: activeView === "explore" ? "0 2px 4px rgba(234, 88, 12, 0.2)" : "none",
+            }}
           >
-            <Briefcase className="w-3.5 h-3.5 text-slate-500" />
-            <span>Jobs</span>
-          </button>
+            Jobs
+          </Button>
 
           {role === "seeker" && (
-            <button
-              onClick={() => setActiveView("seeker-dashboard")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                activeView === "seeker-dashboard"
-                  ? "bg-white text-slate-900 shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
-              }`}
-            >
-              <User className="w-3.5 h-3.5 text-slate-500" />
-              <span>My Applications</span>
-              {savedJobs.length > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 text-[10px] bg-slate-200 text-slate-700 rounded-full font-bold">
-                  {savedJobs.length}
-                </span>
-              )}
-            </button>
+            <Badge count={savedJobs.length} size="small" offset={[-4, 4]}>
+              <Button
+                type={activeView === "seeker-dashboard" ? "primary" : "text"}
+                size="small"
+                icon={<UserOutlined />}
+                onClick={() => setActiveView("seeker-dashboard")}
+                style={{
+                  fontWeight: 600,
+                  boxShadow: activeView === "seeker-dashboard" ? "0 2px 4px rgba(234, 88, 12, 0.2)" : "none",
+                }}
+              >
+                My Applications
+              </Button>
+            </Badge>
           )}
 
-          {/* Recruiter Console tab for employers */}
           {user && role === "employer" && (
-            <button
+            <Button
+              type={activeView === "employer-dashboard" ? "primary" : "text"}
+              size="small"
+              icon={<BankOutlined />}
               onClick={() => setActiveView("employer-dashboard")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                activeView === "employer-dashboard"
-                  ? "bg-white text-slate-900 shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
-              }`}
+              style={{
+                fontWeight: 600,
+                boxShadow: activeView === "employer-dashboard" ? "0 2px 4px rgba(234, 88, 12, 0.2)" : "none",
+              }}
             >
-              <Building2 className="w-3.5 h-3.5 text-slate-500" />
-              <span>Recruiter Console</span>
-            </button>
+              Recruiter Console
+            </Button>
           )}
         </nav>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        <Space size={10} align="center">
           {/* Post Job Button / Employer Access */}
           {user && role === "employer" ? (
-            <button
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
               onClick={onOpenPostJob}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-orange-600 text-white shadow-xs hover:bg-orange-700 transition-all cursor-pointer whitespace-nowrap"
+              style={{ fontWeight: 600, borderRadius: 8 }}
             >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>Post Job</span>
-            </button>
+              Post a Job
+            </Button>
           ) : user && role === "seeker" ? (
-            <button
+            <Button
+              icon={<BankOutlined style={{ color: "#ea580c" }} />}
               onClick={onOpenPostJob}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-orange-200 bg-orange-50/70 text-orange-700 hover:bg-orange-100 transition-all cursor-pointer whitespace-nowrap"
-              title="Post a job opening or hire talent"
+              style={{ borderColor: "#fed7aa", backgroundColor: "#fff7ed", fontWeight: 600, borderRadius: 8 }}
             >
-              <Building2 className="w-3.5 h-3.5 text-orange-600" />
-              <span>Hire / Post Job</span>
-            </button>
+              Post a Job
+            </Button>
           ) : !user ? (
-            <button
+            <Button
+              icon={<BankOutlined style={{ color: "#ea580c" }} />}
               onClick={onOpenEmployerAuth || onOpenPostJob}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-orange-700 bg-orange-50 border border-orange-200 hover:bg-orange-100 transition-all cursor-pointer whitespace-nowrap"
+              style={{ borderColor: "#fed7aa", backgroundColor: "#fff7ed", fontWeight: 600, borderRadius: 8 }}
             >
-              <Building2 className="w-3.5 h-3.5 text-orange-600" />
-              <span>Employer / Post Job</span>
-            </button>
+              Post a Job
+            </Button>
           ) : null}
 
           {/* User Profile or Sign In */}
           {user ? (
-            <div className="relative flex items-center gap-1.5 sm:gap-2" ref={menuRef}>
+            <Space size={8} align="center">
               <NotificationBell onSelectJobId={onSelectJobId} />
-              
-              {/* Profile Trigger */}
-              <button
-                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                className="flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-xl hover:bg-orange-50 border border-transparent hover:border-orange-200 cursor-pointer shrink-0 transition-all"
+
+              <Dropdown
+                menu={{ items: menuItems }}
+                trigger={["click"]}
+                placement="bottomRight"
+                arrow={{ pointAtCenter: true }}
               >
-                {user.avatar ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "4px 8px 4px 4px",
+                    borderRadius: 20,
+                    cursor: "pointer",
+                    border: "1px solid #e2e8f0",
+                    backgroundColor: "#ffffff",
+                    transition: "all 0.2s",
+                  }}
+                  className="hover:border-orange-400 hover:shadow-xs"
+                >
+                  <Avatar
+                    size={30}
                     src={user.avatar}
-                    alt={user.name}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-orange-300 shadow-xs"
-                  />
-                ) : (
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-orange-600 flex items-center justify-center text-xs font-black text-white shadow-xs">
-                    {user.name.charAt(0)}
+                    style={{ backgroundColor: "#ea580c", fontWeight: 700, fontSize: 12 }}
+                  >
+                    {user.name.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <div className="hidden lg:block text-left" style={{ lineHeight: 1.15 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", display: "flex", alignItems: "center", gap: 3 }}>
+                      <span className="truncate max-w-[90px]">{user.name.split(" ")[0]}</span>
+                      {user.isVerified && <CheckCircleFilled style={{ color: "#16a34a", fontSize: 11 }} />}
+                    </div>
+                    <div style={{ fontSize: 10, color: "#ea580c", fontWeight: 600, textTransform: "capitalize" }}>
+                      {user.role}
+                    </div>
                   </div>
-                )}
-                <div className="hidden lg:block text-left">
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[100px]">
-                      {user.name.split(" ")[0]}
-                    </span>
-                    {user.isVerified && <VerifiedBadge size="xs" />}
-                  </div>
-                  <div className="text-[10px] text-orange-700 font-semibold leading-none capitalize">
-                    {user.role}
-                  </div>
+                  <DownOutlined style={{ fontSize: 10, color: "#94a3b8" }} />
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden lg:block" />
-              </button>
-
-              {/* Profile Dropdown Menu */}
-              {profileMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-white border-2 border-slate-200 shadow-xl p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                  <div className="pb-3 border-b border-slate-100 flex items-center gap-2.5">
-                    {user.avatar ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={user.avatar}
-                        alt={user.name}
-                        className="w-10 h-10 rounded-xl object-cover border border-orange-200"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-xl bg-orange-600 text-white font-black flex items-center justify-center text-sm shadow-xs">
-                        {user.name.charAt(0)}
-                      </div>
-                    )}
-                    <div className="overflow-hidden">
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs font-bold text-slate-900 truncate">
-                          {user.name}
-                        </span>
-                        {user.isVerified && <VerifiedBadge size="xs" />}
-                      </div>
-                      <div className="text-[11px] text-slate-500 truncate">{user.email}</div>
-                      <span className="inline-block mt-0.5 px-2 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-orange-100 text-orange-800">
-                        {user.role}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Navigation Links inside dropdown */}
-                  <div className="py-2 space-y-1">
-                    <button
-                      onClick={() => {
-                        setActiveView("explore");
-                        setProfileMenuOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:bg-orange-50 hover:text-orange-700 transition-colors flex items-center gap-2 cursor-pointer"
-                    >
-                      <Briefcase className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Explore Job Board</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveView("seeker-dashboard");
-                        setProfileMenuOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:bg-orange-50 hover:text-orange-700 transition-colors flex items-center gap-2 cursor-pointer"
-                    >
-                      <User className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Candidate Dashboard</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveView("employer-dashboard");
-                        setProfileMenuOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:bg-orange-50 hover:text-orange-700 transition-colors flex items-center gap-2 cursor-pointer"
-                    >
-                      <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Employer Talent Console</span>
-                    </button>
-
-                    </div>
-
-                  {/* Switch Role Quick Actions */}
-                  <div className="pt-2 border-t border-slate-100 pb-1">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 px-3 mb-1">
-                      Quick Mode Switch
-                    </div>
-                    {role !== "employer" && (
-                      <button
-                        onClick={() => handleSwitchRole("employer")}
-                        className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold text-orange-700 hover:bg-orange-50 transition-colors flex items-center justify-between cursor-pointer"
-                      >
-                        <span>Switch to Employer</span>
-                        <Building2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                    {role !== "seeker" && (
-                      <button
-                        onClick={() => handleSwitchRole("seeker")}
-                        className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors flex items-center justify-between cursor-pointer"
-                      >
-                        <span>Switch to Candidate</span>
-                        <User className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Sign Out */}
-                  <div className="pt-2 border-t border-slate-100">
-                    <button
-                      onClick={() => {
-                        logout();
-                        setProfileMenuOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-between cursor-pointer"
-                    >
-                      <span>Sign Out</span>
-                      <LogOut className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+              </Dropdown>
+            </Space>
           ) : (
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <button
+            <Space size={8}>
+              <Button
+                icon={<LoginOutlined />}
                 onClick={onOpenAuth}
-                className="px-2.5 sm:px-3.5 py-1.5 text-xs font-bold rounded-xl border border-orange-600 text-orange-700 hover:bg-orange-50 transition-all cursor-pointer whitespace-nowrap"
+                style={{ fontWeight: 600, borderRadius: 8 }}
               >
                 Sign In
-              </button>
-              <button
+              </Button>
+              <Button
+                type="primary"
+                icon={<UserAddOutlined />}
                 onClick={onOpenRegister || onOpenAuth}
-                className="px-2.5 sm:px-4 py-1.5 text-xs font-bold rounded-xl bg-orange-600 hover:bg-orange-700 text-white shadow-xs transition-all cursor-pointer whitespace-nowrap"
+                style={{ fontWeight: 600, borderRadius: 8 }}
               >
                 Register
-              </button>
-            </div>
+              </Button>
+            </Space>
           )}
-        </div>
+        </Space>
       </div>
     </header>
   );

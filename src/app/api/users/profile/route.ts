@@ -41,28 +41,15 @@ async function handleProfileUpdate(request: NextRequest) {
     }
 
     if (updatedUser) {
+      const userObj = updatedUser.toObject ? updatedUser.toObject() : updatedUser;
+      delete userObj.password;
       return NextResponse.json({
         success: true,
         source: "mongodb",
         user: {
+          ...userObj,
           _id: updatedUser._id.toString(),
           id: updatedUser._id.toString(),
-          name: updatedUser.name,
-          email: updatedUser.email,
-          role: updatedUser.role,
-          avatar: updatedUser.avatar || updatedUser.companyLogo || "",
-          phone: updatedUser.phone || "",
-          location: updatedUser.location || "",
-          headline: updatedUser.headline || "",
-          bio: updatedUser.bio || "",
-          skills: updatedUser.skills || [],
-          noticePeriod: updatedUser.noticePeriod || "Immediate",
-          expectedCtc: updatedUser.expectedCtc || 0,
-          currentCtc: updatedUser.currentCtc || 0,
-          resumeUrl: updatedUser.resumeUrl || "",
-          resumeFileName: updatedUser.resumeFileName || "",
-          education: updatedUser.education || [],
-          experienceHistory: updatedUser.experienceHistory || [],
         },
       });
     }

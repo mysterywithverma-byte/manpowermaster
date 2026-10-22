@@ -162,33 +162,33 @@ export function JobDetailsModal({ job, onClose, onApply }: JobDetailsModalProps)
             )}
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <button
               onClick={() => toggleSaveJob(job._id)}
-              className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+              className={`px-3 py-2 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 saved
                   ? "bg-white text-orange-700 border-orange-300 shadow-xs"
-                  : "bg-white text-slate-600 border-slate-200 hover:text-orange-600"
+                  : "bg-white text-slate-700 border-slate-200 hover:text-orange-600"
               }`}
-              title="Save Job"
             >
-              <Bookmark className={`w-4 h-4 ${saved ? "fill-orange-600 text-orange-600" : ""}`} />
+              <Bookmark className={`w-3.5 h-3.5 ${saved ? "fill-orange-600 text-orange-600" : ""}`} />
+              <span>{saved ? "Saved" : "Save Job"}</span>
             </button>
 
             <button
               onClick={handleWhatsApp}
-              className="p-2.5 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors shadow-xs cursor-pointer"
-              title="Direct WhatsApp with HR"
+              className="px-3 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
-              <MessageCircle className="w-4 h-4" />
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>WhatsApp HR</span>
             </button>
 
             <button
               onClick={handleShare}
-              className="p-2.5 rounded-xl bg-white text-slate-600 hover:text-orange-600 border border-slate-200 transition-colors cursor-pointer"
-              title="Share"
+              className="px-3 py-2 rounded-xl bg-white text-slate-700 hover:text-orange-600 border border-slate-200 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
             >
-              <Share2 className="w-4 h-4" />
+              <Share2 className="w-3.5 h-3.5" />
+              <span>Share</span>
             </button>
 
             <button
@@ -196,7 +196,7 @@ export function JobDetailsModal({ job, onClose, onApply }: JobDetailsModalProps)
                 onClose();
                 onApply(job);
               }}
-              className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               <span>1-Click Apply</span>
               <ArrowUpRight className="w-3.5 h-3.5" />

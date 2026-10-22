@@ -4,28 +4,44 @@ import React, { useState, useEffect } from "react";
 import { MockJob } from "@/lib/mock-data";
 import { useAuth } from "@/context/AuthContext";
 import { formatSalary, timeAgo } from "@/lib/utils";
+import { JobCard } from "@/components/JobCard";
 import {
-  MapPin,
-  Bookmark,
-  Sparkles,
-  ArrowUpRight,
-  Users,
-  MessageCircle,
-  X,
-  Share2,
-  Briefcase,
-  Clock,
-  Eye,
-  IndianRupee,
-  ChevronRight,
-  Zap,
-  Star,
-  CheckCircle,
-  FileText,
-  Building2,
-  ShieldCheck,
-} from "lucide-react";
+  Card,
+  Tag,
+  Button,
+  Avatar,
+  Space,
+  Typography,
+  Tooltip,
+  Skeleton,
+  Empty,
+  Progress,
+  Divider,
+  Drawer,
+  Badge,
+} from "antd";
+import {
+  BookOutlined,
+  BookFilled,
+  ShareAltOutlined,
+  WhatsAppOutlined,
+  ArrowRightOutlined,
+  CheckCircleFilled,
+  EnvironmentOutlined,
+  DollarOutlined,
+  ClockCircleOutlined,
+  EyeOutlined,
+  FireFilled,
+  StarFilled,
+  BankOutlined,
+  CheckOutlined,
+  ReloadOutlined,
+  ThunderboltFilled,
+  SafetyCertificateFilled,
+} from "@ant-design/icons";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+
+const { Text, Title, Paragraph } = Typography;
 
 interface JobSplitViewProps {
   jobs: MockJob[];
@@ -37,8 +53,8 @@ interface JobSplitViewProps {
 function getRecruiterActivity(job: MockJob) {
   const seed = (job._id.charCodeAt(job._id.length - 1) || 5) % 10;
   const hoursAgo = (seed % 47) + 1;
-  const viewedCount = (seed * 3 % 200) + 20;
-  const matchPct = (seed * 7 % 30) + 65;
+  const viewedCount = ((seed * 3) % 200) + 20;
+  const matchPct = ((seed * 7) % 30) + 65;
   const rating = (4.0 + (seed / 10) * 0.9).toFixed(1);
   return {
     hoursAgo,
@@ -51,19 +67,27 @@ function getRecruiterActivity(job: MockJob) {
   };
 }
 
-export function JobSplitView({ jobs, loading, onApplyJob, onResetFilters }: JobSplitViewProps) {
+export function JobSplitView({
+  jobs,
+  loading,
+  onApplyJob,
+  onResetFilters,
+}: JobSplitViewProps) {
   const { isJobSaved, toggleSaveJob } = useAuth();
   const [selectedJob, setSelectedJob] = useState<MockJob | null>(null);
-  const [atsResult, setAtsResult] = useState<{ score: number; matched: string[]; missing: string[] } | null>(null);
+  const [atsResult, setAtsResult] = useState<{
+    score: number;
+    matched: string[];
+    missing: string[];
+  } | null>(null);
   const [atsLoading, setAtsLoading] = useState(false);
   const [inHandSalary, setInHandSalary] = useState("");
   const [copied, setCopied] = useState(false);
-  const [mobileDetail, setMobileDetail] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   useEffect(() => {
     if (jobs.length > 0 && !selectedJob) setSelectedJob(jobs[0]);
     if (jobs.length === 0) setSelectedJob(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobs]);
 
   useEffect(() => {
@@ -91,7 +115,8 @@ export function JobSplitView({ jobs, loading, onApplyJob, onResetFilters }: JobS
           jobId: selectedJob._id,
           jobSkills: selectedJob.skills,
           userSkills: ["React", "TypeScript", "Node.js", "Next.js", "SQL"],
-          userResumeText: "Full Stack Engineer experienced in React, Next.js, and TypeScript.",
+          userResumeText:
+            "Full Stack Engineer experienced in React, Next.js, and TypeScript.",
         }),
       });
       const data = await res.json();
@@ -104,7 +129,10 @@ export function JobSplitView({ jobs, loading, onApplyJob, onResetFilters }: JobS
   };
 
   const handleShare = (job: MockJob) => {
-    const slug = job.title.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, "-");
+    const slug = job.title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, "")
+      .replace(/\s+/g, "-");
     const url = `${typeof window !== "undefined" ? window.location.origin : ""}/jobs/${slug}-${job._id.slice(-6)}`;
     navigator.clipboard?.writeText(url);
     setCopied(true);
@@ -120,201 +148,323 @@ export function JobSplitView({ jobs, loading, onApplyJob, onResetFilters }: JobS
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96 bg-white rounded-2xl border border-slate-200">
-        <div className="text-center space-y-3">
-          <div className="w-8 h-8 rounded-full border-2 border-orange-600 border-t-transparent animate-spin mx-auto" />
-          <p className="text-xs text-slate-500 font-medium">Loading verified openings...</p>
-        </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card
+            key={i}
+            style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+            styles={{ body: { padding: 18 } }}
+          >
+            <Skeleton avatar active paragraph={{ rows: 2 }} />
+          </Card>
+        ))}
       </div>
     );
   }
 
   if (jobs.length === 0) {
     return (
-      <div className="p-10 sm:p-14 rounded-3xl bg-white border border-slate-200/90 text-center shadow-xs max-w-xl mx-auto my-6">
-        <div className="w-14 h-14 rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-center mx-auto mb-4">
-          <Briefcase className="w-7 h-7 text-orange-600" />
-        </div>
-        <h3 className="text-lg font-bold text-slate-900 mb-1.5">No Job Vacancies Active</h3>
-        <p className="text-xs text-slate-500 max-w-md mx-auto mb-5 leading-relaxed">
-          All mock data has been purged. Only genuine corporate &amp; local job postings by verified employers will appear here.
-        </p>
-        <div className="flex items-center justify-center gap-2.5 flex-wrap">
-          <button
+      <Card
+        style={{
+          borderRadius: 16,
+          border: "1px solid #e2e8f0",
+          textAlign: "center",
+          padding: "36px 20px",
+          maxWidth: 540,
+          margin: "24px auto",
+        }}
+      >
+        <Empty
+          description={
+            <div>
+              <Title level={4} style={{ margin: "12px 0 6px", color: "#0f172a" }}>
+                No Job Vacancies Found
+              </Title>
+              <Text type="secondary" style={{ fontSize: 13 }}>
+                Try adjusting your search criteria or resetting filters to see more verified openings.
+              </Text>
+            </div>
+          }
+        >
+          <Button
+            type="primary"
+            icon={<ReloadOutlined />}
             onClick={onResetFilters}
-            className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-xs font-bold text-white cursor-pointer shadow-xs transition-all"
+            style={{ fontWeight: 600, marginTop: 12 }}
           >
-            Refresh Board
-          </button>
-        </div>
-      </div>
+            Reset Filters
+          </Button>
+        </Empty>
+      </Card>
     );
   }
 
   const recruiterInfo = selectedJob ? getRecruiterActivity(selectedJob) : null;
 
-  const DetailPanel = ({ job }: { job: MockJob }) => (
-    <div className="flex-1">
-      {/* Sticky Top Header of Detail Panel */}
-      <div className="sticky top-0 z-10 bg-white border-b border-slate-200/90 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div className="flex items-start gap-3.5 min-w-0">
-            {job.companyLogo ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={job.companyLogo}
-                alt={job.company}
-                className="w-14 h-14 rounded-xl object-contain border border-slate-200 p-1 bg-white shadow-2xs shrink-0"
-              />
-            ) : (
-              <div className="w-14 h-14 rounded-xl bg-slate-900 text-white font-black flex items-center justify-center text-xl shadow-2xs shrink-0">
-                {job.company.charAt(0)}
-              </div>
-            )}
-            <div className="min-w-0">
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
+  // Detail Panel Component reused for desktop side card and mobile drawer
+  const DetailPanelContent = ({ job }: { job: MockJob }) => (
+    <div>
+      {/* Top Header Card */}
+      <div
+        style={{
+          padding: "18px 20px",
+          borderBottom: "1px solid #f1f5f9",
+          backgroundColor: "#ffffff",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 14,
+            marginBottom: 14,
+          }}
+        >
+          <Space align="start" size={14} style={{ flex: 1, minWidth: 0 }}>
+            <Avatar
+              shape="square"
+              size={54}
+              src={job.companyLogo}
+              style={{
+                backgroundColor: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                color: "#ea580c",
+                fontWeight: 800,
+                fontSize: 20,
+                borderRadius: 12,
+                flexShrink: 0,
+              }}
+            >
+              {job.company.charAt(0)}
+            </Avatar>
+            <div style={{ minWidth: 0 }}>
+              <Title level={3} style={{ fontSize: 18, margin: 0, color: "#0f172a" }}>
                 {job.title}
-              </h2>
-              <div className="flex flex-wrap items-center gap-2 mt-1 text-xs">
-                <span className="font-semibold text-slate-700">{job.company}</span>
+              </Title>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  flexWrap: "wrap",
+                  marginTop: 4,
+                  fontSize: 13,
+                }}
+              >
+                <Text strong style={{ color: "#475569" }}>
+                  {job.company}
+                </Text>
                 <VerifiedBadge size="xs" />
-                <span className="text-slate-300">•</span>
-                <div className="flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
-                  <Star className="w-2.8 h-2.8 fill-amber-500 text-amber-500" />
+                <span style={{ color: "#cbd5e1" }}>•</span>
+                <span style={{ fontSize: 12, color: "#94a3b8", display: "inline-flex", alignItems: "center", gap: 3 }}>
+                  <StarFilled style={{ color: "#eab308", fontSize: 11 }} />
                   <span>{recruiterInfo?.rating || "4.2"}</span>
-                </div>
-                <span className="text-[11px] text-slate-400">({recruiterInfo?.reviewsCount} Reviews)</span>
+                  <span>({recruiterInfo?.reviewsCount} reviews)</span>
+                </span>
               </div>
             </div>
-          </div>
+          </Space>
 
-          {/* Quick Icons */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              onClick={() => toggleSaveJob(job._id)}
-              className={`p-2 rounded-xl border cursor-pointer transition-all ${
-                isJobSaved(job._id)
-                  ? "bg-orange-50 text-orange-600 border-orange-200"
-                  : "bg-slate-50 text-slate-400 border-slate-200 hover:text-slate-700"
-              }`}
-              title={isJobSaved(job._id) ? "Saved" : "Save Job"}
-            >
-              <Bookmark className={`w-4 h-4 ${isJobSaved(job._id) ? "fill-orange-500 text-orange-500" : ""}`} />
-            </button>
-            <button
-              onClick={() => handleShare(job)}
-              className="p-2 rounded-xl border bg-slate-50 text-slate-500 border-slate-200 hover:text-slate-800 cursor-pointer transition-all"
-              title={copied ? "Copied Link!" : "Share Job"}
-            >
-              {copied ? <CheckCircle className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4" />}
-            </button>
-          </div>
+          <Space size={6}>
+            <Tooltip title={isJobSaved(job._id) ? "Saved" : "Save Job"}>
+              <Button
+                icon={
+                  isJobSaved(job._id) ? (
+                    <BookFilled style={{ color: "#ea580c" }} />
+                  ) : (
+                    <BookOutlined />
+                  )
+                }
+                onClick={() => toggleSaveJob(job._id)}
+              />
+            </Tooltip>
+            <Tooltip title={copied ? "Link Copied!" : "Share Job"}>
+              <Button
+                icon={copied ? <CheckOutlined style={{ color: "#16a34a" }} /> : <ShareAltOutlined />}
+                onClick={() => handleShare(job)}
+              />
+            </Tooltip>
+          </Space>
         </div>
 
         {/* 3-Pillar Metadata Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-xl bg-slate-50/80 border border-slate-200/80 text-xs text-slate-700 mb-4">
-          <div className="flex items-center gap-2">
-            <Briefcase className="w-4 h-4 text-slate-400 shrink-0" />
-            <div>
-              <div className="text-[10px] uppercase font-bold text-slate-400">Experience</div>
-              <div className="font-semibold text-slate-800">{job.experienceLevel} Level</div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+            gap: 10,
+            padding: "10px 14px",
+            borderRadius: 10,
+            backgroundColor: "#f8fafc",
+            border: "1px solid #e2e8f0",
+            marginBottom: 14,
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>
+              Experience
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>
+              {job.experienceLevel || "Mid-Level"}
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <IndianRupee className="w-4 h-4 text-slate-400 shrink-0" />
-            <div>
-              <div className="text-[10px] uppercase font-bold text-slate-400">Annual CTC</div>
-              <div className="font-bold text-slate-900">{formatSalary(job.salaryMin, job.salaryMax)}</div>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>
+              Annual CTC
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#16a34a" }}>
+              {formatSalary(job.salaryMin, job.salaryMax)}
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-            <div>
-              <div className="text-[10px] uppercase font-bold text-slate-400">Location</div>
-              <div className="font-semibold text-slate-800">{job.location.split(",")[0]} ({job.workplaceType})</div>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>
+              Location
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>
+              {job.location} ({job.workplaceType})
             </div>
           </div>
         </div>
 
-        {/* Recruiter Activity SLA Bar */}
-        {recruiterInfo && (
-          <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-emerald-50/60 border border-emerald-200/70 text-xs mb-4">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-emerald-900 font-medium">
-                <strong>{recruiterInfo.recruiterName}</strong> was active {recruiterInfo.hoursAgo}h ago
-              </span>
-            </div>
-            <div className="flex items-center gap-3 text-slate-500 text-[11px]">
-              <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{recruiterInfo.viewedCount} views</span>
-              <span>•</span>
-              <span className="text-emerald-700 font-bold">{recruiterInfo.matchPct}% Profile Match</span>
-            </div>
-          </div>
-        )}
-
-        {/* Compact Enterprise Action Bar */}
-        <div className="flex items-center gap-2">
-          <button
+        {/* Action Buttons */}
+        <Space size={10} style={{ width: "100%" }}>
+          <Button
+            type="primary"
+            size="large"
+            icon={<ArrowRightOutlined />}
             onClick={() => onApplyJob(job)}
-            className="px-5 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+            style={{ fontWeight: 700, borderRadius: 10, flex: 1 }}
           >
-            <span>Apply</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </button>
-          <button
+            Apply Now
+          </Button>
+
+          <Button
+            size="large"
+            icon={<WhatsAppOutlined style={{ color: "#16a34a", fontSize: 18 }} />}
             onClick={() => handleWhatsApp(job)}
-            title="Chat with Recruiter on WhatsApp"
-            className="p-2 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer flex items-center justify-center"
+            style={{
+              borderColor: "#bbf7d0",
+              backgroundColor: "#f0fdf4",
+              fontWeight: 600,
+              borderRadius: 10,
+            }}
           >
-            <MessageCircle className="w-4 h-4 text-emerald-600" />
-          </button>
-        </div>
+            WhatsApp HR
+          </Button>
+        </Space>
       </div>
 
       {/* Detail Content Sections */}
-      <div className="p-5 sm:p-6 space-y-6">
+      <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* ATS Resume Scanner Section */}
+        <Card
+          size="small"
+          style={{
+            borderRadius: 12,
+            border: "1px solid #fed7aa",
+            backgroundColor: "#fff7ed",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <Space align="center" size={6}>
+              <ThunderboltFilled style={{ color: "#ea580c" }} />
+              <Text strong style={{ fontSize: 13, color: "#9a3412" }}>
+                AI Match &amp; ATS Score
+              </Text>
+            </Space>
+            <Button
+              size="small"
+              type="primary"
+              icon={<ThunderboltFilled />}
+              loading={atsLoading}
+              onClick={handleRunAts}
+              style={{
+                backgroundColor: "#ea580c",
+                fontWeight: 600,
+                borderRadius: 6,
+              }}
+            >
+              Analyze Match
+            </Button>
+          </div>
+
+          {atsResult ? (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+                <Progress
+                  percent={atsResult.score}
+                  size="small"
+                  strokeColor="#ea580c"
+                  style={{ flex: 1, margin: 0 }}
+                />
+                <Text strong style={{ fontSize: 13, color: "#c2410c" }}>
+                  {atsResult.score}%
+                </Text>
+              </div>
+              <div style={{ fontSize: 11, color: "#64748b" }}>
+                Matched {atsResult.matched.length} key skills required for this role.
+              </div>
+            </div>
+          ) : (
+            <div style={{ fontSize: 11, color: "#78350f" }}>
+              Click Scan Profile to see how well your resume matches this job before applying.
+            </div>
+          )}
+        </Card>
+
         {/* Required Skills */}
         <div>
-          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+          <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#64748b", marginBottom: 8 }}>
             Key Skills &amp; Competencies
-          </h4>
-          <div className="flex flex-wrap gap-1.5">
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {job.skills.map((skill) => (
-              <span
+              <Tag
                 key={skill}
-                className="px-3 py-1 rounded-lg bg-slate-100 text-xs font-medium text-slate-700 hover:bg-slate-200 transition-colors"
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  backgroundColor: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  color: "#334155",
+                }}
               >
                 {skill}
-              </span>
+              </Tag>
             ))}
           </div>
         </div>
 
-        {/* Job Description */}
-        <div className="pt-5 border-t border-slate-100">
-          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+        {/* Job Overview */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#64748b", marginBottom: 8 }}>
             Role Overview &amp; Responsibilities
-          </h4>
-          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+          </div>
+          <Paragraph
+            style={{
+              fontSize: 13,
+              color: "#334155",
+              lineHeight: 1.7,
+              whiteSpace: "pre-line",
+              margin: 0,
+            }}
+          >
             {job.description}
-          </p>
+          </Paragraph>
         </div>
 
         {/* Requirements */}
         {job.requirements && job.requirements.length > 0 && (
-          <div className="pt-5 border-t border-slate-100">
-            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#64748b", marginBottom: 8 }}>
               Candidate Qualifications
-            </h4>
-            <ul className="space-y-2">
+            </div>
+            <ul style={{ paddingLeft: 18, margin: 0, fontSize: 13, color: "#334155", lineHeight: 1.8 }}>
               {job.requirements.map((req, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-slate-700 leading-relaxed">
-                  <ChevronRight className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
-                  <span>{req}</span>
-                </li>
+                <li key={i}>{req}</li>
               ))}
             </ul>
           </div>
@@ -322,210 +472,106 @@ export function JobSplitView({ jobs, loading, onApplyJob, onResetFilters }: JobS
 
         {/* Perks & Benefits */}
         {job.benefits && job.benefits.length > 0 && (
-          <div className="pt-5 border-t border-slate-100">
-            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-              Perks &amp; Corporate Benefits
-            </h4>
-            <div className="flex flex-wrap gap-2">
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#64748b", marginBottom: 8 }}>
+              Perks &amp; Benefits
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {job.benefits.map((b, i) => (
-                <span
-                  key={i}
-                  className="px-3 py-1 rounded-lg bg-emerald-50 text-xs font-medium text-emerald-800 border border-emerald-200/80"
-                >
+                <Tag key={i} color="success" style={{ borderRadius: 6, fontWeight: 500, fontSize: 11 }}>
                   {b}
-                </span>
+                </Tag>
               ))}
             </div>
           </div>
         )}
 
-        {/* Integrated ATS Match Score Tool */}
-        <div className="pt-5 border-t border-slate-100">
-          <div className="rounded-2xl bg-gradient-to-r from-orange-50/50 via-white to-amber-50/50 border border-orange-200/90 p-4 sm:p-5">
-            <div className="flex items-center justify-between gap-3 mb-2">
-              <div>
-                <h4 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-orange-600" />
-                  <span>Resume &amp; Skill Match Diagnostic</span>
-                </h4>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  Compare your saved candidate profile skills against this job&apos;s ATS criteria.
-                </p>
+        {/* In-Hand Monthly Take-Home Salary Calculator */}
+        {inHandSalary && (
+          <div
+            style={{
+              padding: "12px 14px",
+              borderRadius: 10,
+              backgroundColor: "#f0fdf4",
+              border: "1px solid #bbf7d0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#166534" }}>
+                Estimated In-Hand Monthly
               </div>
-              {atsResult && (
-                <div
-                  className={`text-xl font-black px-2.5 py-1 rounded-xl border ${
-                    atsResult.score >= 70
-                      ? "text-emerald-700 bg-emerald-50 border-emerald-200"
-                      : "text-amber-700 bg-amber-50 border-amber-200"
-                  }`}
-                >
-                  {atsResult.score}%
-                </div>
-              )}
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#15803d" }}>
+                {inHandSalary}
+              </div>
             </div>
-
-            {atsResult ? (
-              <div className="space-y-1.5 text-xs mt-3 pt-3 border-t border-orange-100">
-                {atsResult.matched?.length > 0 && (
-                  <div>
-                    <span className="font-bold text-emerald-700">Matched Skills: </span>
-                    <span className="text-slate-700">{atsResult.matched.join(", ")}</span>
-                  </div>
-                )}
-                {atsResult.missing?.length > 0 && (
-                  <div>
-                    <span className="font-bold text-rose-600">Recommended Skills to Add: </span>
-                    <span className="text-slate-700">{atsResult.missing.join(", ")}</span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <button
-                onClick={handleRunAts}
-                disabled={atsLoading}
-                className="mt-3 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold cursor-pointer disabled:opacity-60 transition-all shadow-xs"
-              >
-                {atsLoading ? "Scanning Skills..." : "Analyze ATS Match"}
-              </button>
-            )}
+            <Tag color="green" style={{ margin: 0, fontWeight: 600 }}>
+              After Standard Deductions
+            </Tag>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 
   return (
-    <>
-      <div className="flex gap-0 h-[calc(100vh-200px)] min-h-[620px] rounded-2xl border border-slate-200 overflow-hidden shadow-xs bg-white">
-        {/* Left Column: Job Feed List */}
-        <div className="w-full md:w-[42%] lg:w-[38%] flex-shrink-0 overflow-y-auto border-r border-slate-200 bg-slate-50/40">
-          <div className="p-3 space-y-2.5">
-            {jobs.map((job, idx) => {
-              const isSelected = selectedJob?._id === job._id;
-              const saved = isJobSaved(job._id);
-
-              return (
-                <div
-                  key={`${job._id}-${idx}`}
-                  onClick={() => {
-                    setSelectedJob(job);
-                    setMobileDetail(true);
-                  }}
-                  className={`relative p-4 rounded-xl cursor-pointer border transition-all duration-150 ${
-                    isSelected
-                      ? "bg-white border-blue-500 shadow-md shadow-blue-500/5 ring-1 ring-blue-500/20 border-l-4 border-l-blue-600"
-                      : "bg-white border-slate-200/90 hover:border-slate-300 hover:shadow-xs"
-                  }`}
-                >
-                  {/* Top: Title & Bookmark */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <h3
-                        className={`font-bold text-sm leading-snug line-clamp-1 ${
-                          isSelected ? "text-blue-700" : "text-slate-900"
-                        }`}
-                      >
-                        {job.title}
-                      </h3>
-                      <div className="flex items-center gap-1.5 mt-0.5 text-xs text-slate-600">
-                        <span className="font-semibold truncate max-w-[140px]">{job.company}</span>
-                        <VerifiedBadge size="xs" />
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleSaveJob(job._id);
-                      }}
-                      className={`p-1.5 rounded-lg border shrink-0 cursor-pointer transition-all ${
-                        saved
-                          ? "bg-orange-50 text-orange-600 border-orange-200"
-                          : "bg-slate-50 text-slate-300 border-slate-200 hover:text-slate-600"
-                      }`}
-                      title={saved ? "Saved" : "Save Job"}
-                    >
-                      <Bookmark className={`w-3.5 h-3.5 ${saved ? "fill-orange-500 text-orange-500" : ""}`} />
-                    </button>
-                  </div>
-
-                  {/* 3-Point Micro Meta */}
-                  <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-600">
-                    <span className="flex items-center gap-1">
-                      <Briefcase className="w-3 h-3 text-slate-400" />
-                      {job.experienceLevel === "Fresher" ? "0-1 Yrs" : "2-5 Yrs"}
-                    </span>
-                    <span className="text-slate-300">•</span>
-                    <span className="flex items-center gap-1 font-bold text-slate-900">
-                      <IndianRupee className="w-3 h-3 text-slate-400" />
-                      {formatSalary(job.salaryMin, job.salaryMax)}
-                    </span>
-                    <span className="text-slate-300">•</span>
-                    <span className="flex items-center gap-1 text-slate-600">
-                      <MapPin className="w-3 h-3 text-slate-400" />
-                      {job.location.split(",")[0]}
-                    </span>
-                  </div>
-
-                  {/* Skills tags preview */}
-                  <div className="flex flex-wrap items-center gap-1 mt-2.5">
-                    {job.skills.slice(0, 3).map((s) => (
-                      <span key={s} className="px-2 py-0.5 rounded bg-slate-100 text-[10px] text-slate-600 font-medium">
-                        {s}
-                      </span>
-                    ))}
-                    {job.skills.length > 3 && (
-                      <span className="text-[10px] text-slate-400">+{job.skills.length - 3}</span>
-                    )}
-                  </div>
-
-                  {/* Bottom: Posted Date & Applicants */}
-                  <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100 text-[11px] text-slate-400">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {timeAgo(job.createdAt)}
-                    </span>
-                    <span className="font-semibold text-slate-500">
-                      {job.applicantsCount} applied
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Right Column: Active Job Detail Canvas */}
-        <div className="hidden md:flex flex-col flex-1 overflow-y-auto bg-white">
-          {selectedJob ? (
-            <DetailPanel job={selectedJob} />
-          ) : (
-            <div className="flex-1 flex items-center justify-center p-8">
-              <div className="text-center text-slate-400">
-                <Briefcase className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p className="text-sm font-medium">Select an opening to review complete specifications</p>
-              </div>
-            </div>
-          )}
-        </div>
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
+      {/* Left List of Jobs */}
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+        {jobs.map((job) => (
+          <JobCard
+            key={job._id}
+            job={job}
+            isSelected={selectedJob?._id === job._id}
+            onSelectJob={(j) => {
+              setSelectedJob(j);
+              if (window.innerWidth < 1024) {
+                setMobileDrawerOpen(true);
+              }
+            }}
+            onApplyJob={onApplyJob}
+          />
+        ))}
       </div>
 
-      {/* Mobile Drawer Detail View */}
-      {mobileDetail && selectedJob && (
-        <div className="md:hidden fixed inset-0 z-50 bg-white overflow-y-auto">
-          <div className="sticky top-0 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between z-10 shadow-xs">
-            <h2 className="font-bold text-slate-900 text-sm truncate pr-2">{selectedJob.title}</h2>
-            <button
-              onClick={() => setMobileDetail(false)}
-              className="p-1.5 rounded-xl bg-slate-100 text-slate-600 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <DetailPanel job={selectedJob} />
-        </div>
-      )}
-    </>
+      {/* Right Desktop Detail Panel (Sticky) */}
+      <div
+        className="hidden lg:block"
+        style={{
+          width: "52%",
+          position: "sticky",
+          top: 76,
+          maxHeight: "calc(100vh - 96px)",
+          overflowY: "auto",
+        }}
+      >
+        {selectedJob && (
+          <Card
+            styles={{ body: { padding: 0 } }}
+            style={{
+              borderRadius: 16,
+              border: "1px solid #e2e8f0",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)",
+              overflow: "hidden",
+            }}
+          >
+            <DetailPanelContent job={selectedJob} />
+          </Card>
+        )}
+      </div>
+
+      {/* Mobile Drawer for Job Details */}
+      <Drawer
+        open={mobileDrawerOpen}
+        onClose={() => setMobileDrawerOpen(false)}
+        placement="bottom"
+        height="85%"
+        styles={{ body: { padding: 0 } }}
+      >
+        {selectedJob && <DetailPanelContent job={selectedJob} />}
+      </Drawer>
+    </div>
   );
 }

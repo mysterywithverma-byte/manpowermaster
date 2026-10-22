@@ -221,7 +221,7 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
             endDate: "Present",
             current: true,
             bullets: exp.description
-              ? exp.description.split(".").filter((b) => b.trim().length > 5)
+              ? exp.description.split(".").filter((b: string) => b.trim().length > 5)
               : [
                   "Architected core web services with Next.js and TypeScript serving 100K+ monthly active users.",
                   "Reduced API latency by 35% through Redis caching and optimized database query execution.",

@@ -1,21 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
+import { Input, Button, Tag, Space, Select, AutoComplete, Tooltip } from "antd";
 import {
-  Search,
-  MapPin,
-  Sparkles,
-  TrendingUp,
-  ShieldCheck,
-  Zap,
-  Navigation,
-  Globe,
-  ChevronDown,
-  X,
-  Briefcase,
-  Building2,
-  CheckCircle2,
-} from "lucide-react";
+  SearchOutlined,
+  EnvironmentOutlined,
+  GlobalOutlined,
+  FireOutlined,
+  CheckCircleFilled,
+  ThunderboltFilled,
+} from "@ant-design/icons";
 
 interface HeroSectionProps {
   searchQuery: string;
@@ -27,7 +21,7 @@ interface HeroSectionProps {
   totalJobsCount: number;
 }
 
-const DEFAULT_POPULAR_CITIES = [
+const POPULAR_CITIES = [
   "All Locations",
   "Bengaluru, Karnataka",
   "Delhi, NCR",
@@ -60,240 +54,218 @@ export function HeroSection({
   onTagClick,
   totalJobsCount,
 }: HeroSectionProps) {
-  const [locationInput, setLocationInput] = useState(selectedLocation || "");
-  const [suggestions, setSuggestions] = useState<string[]>(DEFAULT_POPULAR_CITIES);
-  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-  const [detectingLocation, setDetectingLocation] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setLocationInput(selectedLocation);
-  }, [selectedLocation]);
-
-  // Click outside listener for location dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowLocationDropdown(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleSelectLocation = (loc: string) => {
-    setLocationInput(loc);
-    setSelectedLocation(loc === "All Locations" ? "All" : loc);
-    setShowLocationDropdown(false);
-  };
-
-  const handleDetectLocation = () => {
-    if (!navigator.geolocation) return;
-    setDetectingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const res = await fetch(
-            `/api/locations?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`
-          );
-          const data = await res.json();
-          if (data.city) {
-            handleSelectLocation(data.city);
-          }
-        } catch {
-          handleSelectLocation("Delhi, NCR");
-        } finally {
-          setDetectingLocation(false);
-        }
-      },
-      () => setDetectingLocation(false),
-      { timeout: 8000 }
-    );
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch();
-  };
+  const locationOptions = [
+    {
+      label: "Special Options",
+      options: [
+        {
+          value: "All",
+          label: (
+            <Space>
+              <GlobalOutlined style={{ color: "#1677ff" }} />
+              <span>All Locations (India)</span>
+            </Space>
+          ),
+        },
+        {
+          value: "Remote",
+          label: (
+            <Space>
+              <ThunderboltFilled style={{ color: "#16a34a" }} />
+              <span>Remote / Work From Home</span>
+            </Space>
+          ),
+        },
+      ],
+    },
+    {
+      label: "Major Cities",
+      options: POPULAR_CITIES.filter((c) => c !== "All Locations").map((city) => ({
+        value: city,
+        label: (
+          <Space>
+            <EnvironmentOutlined style={{ color: "#94a3b8" }} />
+            <span>{city}</span>
+          </Space>
+        ),
+      })),
+    },
+  ];
 
   return (
-    <section className="relative bg-gradient-to-b from-white via-slate-50/70 to-slate-100/60 border-b border-slate-200/80 pt-8 pb-10 sm:pt-12 sm:pb-14">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        {/* Subtle Trust Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-200/90 text-orange-800 text-xs font-bold mb-4 shadow-2xs">
-          <CheckCircle2 className="w-3.5 h-3.5 text-orange-600" />
-          <span>India&apos;s Verified Direct Hiring &amp; Placement Network</span>
+    <section
+      style={{
+        background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+        borderBottom: "1px solid #e2e8f0",
+        padding: "36px 16px 40px",
+      }}
+    >
+      <div style={{ maxWidth: 960, margin: "0 auto", textAlign: "center" }}>
+        {/* Trust Badge */}
+        <div style={{ display: "inline-block", marginBottom: 14 }}>
+          <Tag
+            color="orange"
+            style={{
+              padding: "4px 12px",
+              borderRadius: 20,
+              fontSize: 12,
+              fontWeight: 600,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              border: "1px solid #fed7aa",
+            }}
+          >
+            <CheckCircleFilled style={{ color: "#ea580c" }} />
+            <span>India&apos;s Verified Direct Hiring &amp; Placement Network</span>
+          </Tag>
         </div>
 
-        {/* Clean Hero Headline (Naukri Pattern) */}
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-2.5">
-          Find your dream job now
+        {/* Hero Title */}
+        <h1
+          style={{
+            fontSize: "clamp(26px, 4.5vw, 44px)",
+            fontWeight: 800,
+            color: "#0f172a",
+            letterSpacing: "-0.03em",
+            lineHeight: 1.2,
+            margin: "0 0 10px",
+          }}
+        >
+          Find your dream job with verified corporate employers
         </h1>
-        <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium max-w-2xl mx-auto mb-8">
-          <strong className="text-slate-900 font-bold">{totalJobsCount > 0 ? totalJobsCount : 1200}+ verified openings</strong> from top corporate employers across India with transparent CTC in ₹ LPA.
+
+        <p
+          style={{
+            fontSize: 15,
+            color: "#64748b",
+            maxWidth: 620,
+            margin: "0 auto 28px",
+            lineHeight: 1.5,
+          }}
+        >
+          <strong style={{ color: "#0f172a" }}>
+            {totalJobsCount > 0 ? totalJobsCount : "1,200"}+ verified openings
+          </strong>{" "}
+          across India with transparent CTC in ₹ LPA & direct HR interview calls.
         </p>
 
-        {/* Unified Search Capsule (Iconic Naukri Search Bar) */}
-        <form
-          onSubmit={handleSubmit}
-          className="relative max-w-4xl mx-auto bg-white rounded-2xl sm:rounded-full border border-slate-300 shadow-[0_8px_30px_rgb(0,0,0,0.06)] p-2 sm:p-2.5 transition-all focus-within:border-orange-500 focus-within:ring-4 focus-within:ring-orange-500/10 text-left"
+        {/* Ant Design Unified Search Bar */}
+        <div
+          style={{
+            maxWidth: 820,
+            margin: "0 auto",
+            backgroundColor: "#ffffff",
+            borderRadius: 16,
+            border: "1px solid #cbd5e1",
+            boxShadow: "0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04)",
+            padding: "8px",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            alignItems: "center",
+          }}
         >
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center">
-            {/* Field 1: Designation / Skills / Company */}
-            <div className="flex-1 flex items-center gap-3 px-3 py-2 sm:py-1">
-              <Search className="w-4 h-4 text-slate-400 shrink-0" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Enter designation / skills / company"
-                className="w-full bg-transparent text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none font-medium"
-              />
-            </div>
-
-            {/* Vertical Divider */}
-            <div className="hidden sm:block w-[1px] h-8 bg-slate-200 mx-1"></div>
-
-            {/* Field 2: Location Selector with Dropdown */}
-            <div className="relative sm:w-64" ref={dropdownRef}>
-              <div
-                className="flex items-center gap-2.5 px-3 py-2 sm:py-1 cursor-pointer"
-                onClick={() => setShowLocationDropdown(!showLocationDropdown)}
-              >
-                <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                <input
-                  type="text"
-                  value={locationInput}
-                  onChange={(e) => {
-                    setLocationInput(e.target.value);
-                    setShowLocationDropdown(true);
-                  }}
-                  onFocus={() => setShowLocationDropdown(true)}
-                  placeholder="Enter location"
-                  className="w-full bg-transparent text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none font-medium truncate cursor-pointer"
-                />
-                {locationInput ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSelectLocation("");
-                    }}
-                    className="p-1 text-slate-400 hover:text-slate-600"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                ) : (
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                )}
-              </div>
-
-              {/* Floating Location Dropdown Suggestions */}
-              {showLocationDropdown && (
-                <div className="absolute left-0 right-0 top-full mt-3 bg-white rounded-2xl border border-slate-200 shadow-xl p-2 z-50 text-left max-h-72 overflow-y-auto animate-in fade-in duration-100">
-                  <button
-                    type="button"
-                    onClick={handleDetectLocation}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-orange-700 hover:bg-orange-50 rounded-xl transition-colors border-b border-slate-100 mb-1"
-                  >
-                    <Navigation className="w-3.5 h-3.5 text-orange-600" />
-                    <span>{detectingLocation ? "Detecting location..." : "Use Current Location"}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleSelectLocation("Remote")}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-xl transition-colors border-b border-slate-100 mb-1"
-                  >
-                    <Globe className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Pan-India Remote Roles</span>
-                  </button>
-
-                  <div className="px-3 py-1 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                    Popular Hubs
-                  </div>
-
-                  {DEFAULT_POPULAR_CITIES.map((city) => (
-                    <button
-                      key={city}
-                      type="button"
-                      onClick={() => handleSelectLocation(city)}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-xs rounded-xl text-left transition-colors font-medium ${
-                        locationInput.toLowerCase() === city.toLowerCase()
-                          ? "bg-orange-50 text-orange-700 font-bold"
-                          : "text-slate-700 hover:bg-slate-50"
-                      }`}
-                    >
-                      <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                      <span className="truncate">{city}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Field 3: Search Action Button */}
-            <div className="p-1 sm:p-0 sm:pl-2 shrink-0">
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-7 py-3 rounded-xl sm:rounded-full bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs sm:text-sm transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Search className="w-4 h-4" />
-                <span>Search Jobs</span>
-              </button>
-            </div>
+          {/* Query input */}
+          <div style={{ flex: "1 1 280px" }}>
+            <Input
+              size="large"
+              variant="borderless"
+              prefix={<SearchOutlined style={{ color: "#94a3b8", fontSize: 16, marginRight: 6 }} />}
+              placeholder="Designation, skills, or company name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onPressEnter={onSearch}
+              allowClear
+              style={{ fontSize: 14 }}
+            />
           </div>
-        </form>
 
-        {/* Popular Trending Roles Quick Pills */}
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-1.5 text-xs text-slate-500">
-          <span className="flex items-center gap-1 font-bold text-slate-600 text-[11px] pr-1">
-            <TrendingUp className="w-3.5 h-3.5 text-orange-600" /> Popular Searches:
-          </span>
-          {POPULAR_SEARCH_TAGS.map((tag) => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => onTagClick(tag)}
-              className="px-3 py-1 rounded-full bg-white hover:bg-orange-50 hover:text-orange-700 border border-slate-200/90 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-            >
-              {tag}
-            </button>
-          ))}
+          {/* Divider */}
+          <div
+            className="hidden sm:block"
+            style={{ width: 1, height: 28, backgroundColor: "#e2e8f0" }}
+          />
+
+          {/* Location Select */}
+          <div style={{ flex: "1 1 220px", display: "flex", alignItems: "center" }}>
+            <Select
+              size="large"
+              variant="borderless"
+              showSearch
+              placeholder="Select or type city..."
+              value={selectedLocation === "All" ? undefined : selectedLocation}
+              onChange={(val) => setSelectedLocation(val || "All")}
+              options={locationOptions}
+              style={{ width: "100%", fontSize: 14 }}
+              suffixIcon={<EnvironmentOutlined style={{ color: "#94a3b8" }} />}
+              allowClear
+            />
+          </div>
+
+          {/* Search Button */}
+          <Button
+            type="primary"
+            size="large"
+            icon={<SearchOutlined style={{ fontSize: 16 }} />}
+            onClick={onSearch}
+            style={{
+              height: 44,
+              padding: "0 24px",
+              borderRadius: 12,
+              fontWeight: 700,
+              boxShadow: "0 2px 8px rgba(234, 88, 12, 0.25)",
+            }}
+          >
+            Search Jobs
+          </Button>
         </div>
 
-        {/* Live Metrics Ticker Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-10 pt-8 border-t border-slate-200/80 max-w-4xl mx-auto">
-          <div className="p-3.5 rounded-2xl bg-white border border-slate-200 text-left shadow-2xs">
-            <div className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-1.5">
-              <span>{totalJobsCount}</span>
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-700 font-extrabold border border-emerald-200">
-                LIVE
-              </span>
-            </div>
-            <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Active Verified Jobs</div>
-          </div>
+        {/* Popular Tags */}
+        <div
+          style={{
+            marginTop: 18,
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: "#64748b",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              marginRight: 4,
+            }}
+          >
+            <FireOutlined style={{ color: "#ea580c" }} /> Popular:
+          </span>
 
-          <div className="p-3.5 rounded-2xl bg-white border border-slate-200 text-left shadow-2xs">
-            <div className="text-xl sm:text-2xl font-black text-orange-600">₹42 LPA</div>
-            <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Highest Tech Package</div>
-          </div>
-
-          <div className="p-3.5 rounded-2xl bg-white border border-slate-200 text-left shadow-2xs">
-            <div className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-1">
-              <span>24-48 Hrs</span>
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
-            </div>
-            <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Direct Recruiter SLA</div>
-          </div>
-
-          <div className="p-3.5 rounded-2xl bg-white border border-slate-200 text-left shadow-2xs">
-            <div className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-1">
-              <span>100% Free</span>
-              <ShieldCheck className="w-3.5 h-3.5 text-orange-600" />
-            </div>
-            <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Zero Placement Charges</div>
-          </div>
+          {POPULAR_SEARCH_TAGS.map((tag) => (
+            <Tag
+              key={tag}
+              onClick={() => onTagClick(tag)}
+              style={{
+                cursor: "pointer",
+                borderRadius: 20,
+                padding: "2px 10px",
+                fontSize: 12,
+                fontWeight: 500,
+                color: "#334155",
+                backgroundColor: "#ffffff",
+                border: "1px solid #e2e8f0",
+                transition: "all 0.2s",
+              }}
+              className="hover:border-orange-500 hover:text-orange-600"
+            >
+              {tag}
+            </Tag>
+          ))}
         </div>
       </div>
     </section>

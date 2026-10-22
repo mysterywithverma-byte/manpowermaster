@@ -3,15 +3,23 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
-  X,
-  User,
-  Building2,
-  Mail,
-  ArrowRight,
-  Sparkles,
-  ShieldCheck,
-  CheckCircle2,
-} from "lucide-react";
+  Modal,
+  Segmented,
+  Button,
+  Alert,
+  Divider,
+  Space,
+  Typography,
+} from "antd";
+import {
+  UserOutlined,
+  BankOutlined,
+  GoogleOutlined,
+  CheckCircleFilled,
+  SafetyCertificateOutlined,
+} from "@ant-design/icons";
+
+const { Text, Title, Paragraph } = Typography;
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -26,334 +34,241 @@ export function AuthModal({
   onClose,
   onOpenDetailedRegistration,
   initialRole = "seeker",
-  initialMode = "login",
 }: AuthModalProps) {
-  const { login, register, loginAsDemo } = useAuth();
-  const [mode, setMode] = useState<"login" | "register">(initialMode);
+  const { loginAsDemo } = useAuth();
   const [role, setRole] = useState<"seeker" | "employer">(initialRole);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [companyName, setCompanyName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (isOpen) {
       setRole(initialRole);
-      setMode(initialMode);
       setError("");
     }
-  }, [isOpen, initialRole, initialMode]);
+  }, [isOpen, initialRole]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("authError") === "google_env_missing") {
-        setError(
-          "Google Sign-In requires GOOGLE_CLIENT_ID in Vercel environment variables. Please use Email below."
-        );
+        setError("Google Sign-In configuration missing. Please verify GOOGLE_CLIENT_ID.");
+      } else if (params.get("auth_error")) {
+        setError(params.get("auth_error") || "Google Sign-In failed.");
       }
     }
   }, [isOpen]);
-
-  if (!isOpen) return null;
 
   const handleGoogleSignIn = () => {
     setLoading(true);
     window.location.href = `/api/auth/google?role=${role}`;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      if (mode === "login") {
-        const result = await login(email, undefined, role);
-        const ok = typeof result === "boolean" ? result : result.success;
-        if (ok) {
-          onClose();
-        } else {
-          const errMsg =
-            typeof result === "object" && result.error
-              ? result.error
-              : "Could not authenticate account.";
-          setError(errMsg);
-        }
-      } else {
-        const result = await register({
-          name,
-          email,
-          role,
-          companyName: role === "employer" ? companyName : undefined,
-        });
-        const ok = typeof result === "boolean" ? result : result.success;
-        if (ok) {
-          onClose();
-        } else {
-          const errMsg =
-            typeof result === "object" && result.error
-              ? result.error
-              : "Registration could not be completed.";
-          setError(errMsg);
-        }
-      }
-    } catch {
-      setError("An unexpected error occurred.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div
-        className="relative w-full max-w-md rounded-3xl bg-white border-2 border-orange-400 shadow-2xl p-6 text-slate-900 max-h-[92vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+    <Modal
+      open={isOpen}
+      onCancel={onClose}
+      footer={null}
+      width={460}
+      centered
+      styles={{
+        body: { padding: "28px 24px" },
+      }}
+    >
+      {/* Brand Header */}
+      <div style={{ textAlign: "center", marginBottom: 20 }}>
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 50,
+            height: 50,
+            borderRadius: 14,
+            background: "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)",
+            color: "#ffffff",
+            fontSize: 24,
+            boxShadow: "0 8px 16px -4px rgba(234, 88, 12, 0.35)",
+            marginBottom: 12,
+          }}
         >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Header */}
-        <div className="text-center mb-4">
-          <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-orange-600 text-white mb-2 shadow-xs">
-            {role === "employer" ? (
-              <Building2 className="w-5 h-5" />
-            ) : (
-              <Sparkles className="w-5 h-5" />
-            )}
-          </div>
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
-            {role === "employer"
-              ? mode === "login"
-                ? "Recruiter / Employer Login"
-                : "Register Employer Account"
-              : mode === "login"
-              ? "Welcome Back"
-              : "Join Manpower Master"}
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {role === "employer"
-              ? "Post job vacancies & hire direct verified candidates"
-              : "100% Free for candidates • Direct verified placements"}
-          </p>
+          {role === "employer" ? <BankOutlined /> : <UserOutlined />}
         </div>
 
-        {/* Role Selector Tabs (Employer vs Candidate) */}
-        <div className="mb-3">
-          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1 text-center">
-            Choose Account Type
-          </label>
-          <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-100 border border-slate-200">
-            <button
-              type="button"
-              onClick={() => setRole("seeker")}
-              className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                role === "seeker"
-                  ? "bg-orange-600 text-white shadow-xs"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200"
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Job Seeker</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole("employer")}
-              className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                role === "employer"
-                  ? "bg-orange-600 text-white shadow-xs"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200"
-              }`}
-            >
-              <Building2 className="w-3.5 h-3.5" />
-              <span>Employer / Recruiter</span>
-            </button>
-          </div>
-        </div>
+        <Title level={3} style={{ margin: "0 0 6px", fontSize: 22, color: "#0f172a", fontWeight: 700 }}>
+          {role === "employer" ? "Employer & Recruiter Portal" : "Job Seeker Sign In"}
+        </Title>
+        <Text type="secondary" style={{ fontSize: 13 }}>
+          {role === "employer"
+            ? "Post jobs, search candidate resumes & hire verified talent"
+            : "Direct interview calls from top hiring companies • 100% Free"}
+        </Text>
+      </div>
 
-        {/* Google Sign-In Button */}
-        <div className="mb-3">
-          <button
-            type="button"
-            onClick={handleGoogleSignIn}
-            className="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-800 text-xs font-semibold shadow-xs transition-all flex items-center justify-center gap-2.5 cursor-pointer"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-              />
-            </svg>
-            <span>Continue with Google</span>
-          </button>
-        </div>
+      {/* Account Type Selector */}
+      <div style={{ marginBottom: 16 }}>
+        <Text strong style={{ fontSize: 12, color: "#475569", display: "block", marginBottom: 6 }}>
+          Select your profile type:
+        </Text>
+        <Segmented
+          block
+          size="large"
+          value={role}
+          onChange={(val) => setRole(val as "seeker" | "employer")}
+          options={[
+            {
+              label: (
+                <Space size={6} style={{ padding: "4px 0" }}>
+                  <UserOutlined style={{ color: role === "seeker" ? "#ea580c" : undefined }} />
+                  <span style={{ fontWeight: 600 }}>Candidate / Seeker</span>
+                </Space>
+              ),
+              value: "seeker",
+            },
+            {
+              label: (
+                <Space size={6} style={{ padding: "4px 0" }}>
+                  <BankOutlined style={{ color: role === "employer" ? "#ea580c" : undefined }} />
+                  <span style={{ fontWeight: 600 }}>Employer / HR</span>
+                </Space>
+              ),
+              value: "employer",
+            },
+          ]}
+        />
+      </div>
 
-        {/* Tab Toggle: Sign In vs Register */}
-        <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200 mb-3">
-          <button
-            type="button"
-            onClick={() => setMode("login")}
-            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              mode === "login"
-                ? "bg-orange-600 text-white shadow-xs"
-                : "text-slate-500 hover:text-slate-900"
-            }`}
-          >
-            Sign In with Email
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("register")}
-            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              mode === "register"
-                ? "bg-orange-600 text-white shadow-xs"
-                : "text-slate-500 hover:text-slate-900"
-            }`}
-          >
-            Create Account
-          </button>
-        </div>
-
-        {error && (
-          <div className="mb-3 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-600 font-bold text-center">
-            {error}
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-3">
-          {mode === "register" && (
-            <>
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  {role === "employer" ? "Recruiter / Contact Name" : "Full Name"}
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder={role === "employer" ? "e.g. Priya Nair" : "e.g. Aarav Sharma"}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600"
-                />
-              </div>
-
-              {role === "employer" && (
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Company / Organization Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Infosys, TCS, Manpower Solutions"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
-                  />
-                </div>
-              )}
-
-              {role === "seeker" && onOpenDetailedRegistration && (
-                <div className="p-3 rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-between gap-2">
-                  <div className="text-[11px] text-slate-700 font-medium">
-                    <strong className="text-orange-700 block font-bold">
-                      Recommended for Candidates:
-                    </strong>
-                    Build complete profile with custom degree, passing year &amp; resume.
-                  </div>
-                  <button
-                    type="button"
-                    onClick={onOpenDetailedRegistration}
-                    className="px-2.5 py-1 rounded-xl bg-orange-600 text-white text-[11px] font-bold shrink-0 hover:bg-orange-700 transition-all cursor-pointer shadow-2xs"
-                  >
-                    Full Profile
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-
-          <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1">
-              {role === "employer" ? "Company / Work Email" : "Email Address"}
-            </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-              <input
-                type="email"
-                required
-                placeholder={role === "employer" ? "recruiter@company.com" : "candidate@gmail.com"}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600 font-semibold"
-              />
+      {/* Feature Highlights for Selected Role */}
+      <div
+        style={{
+          background: "#f8fafc",
+          border: "1px solid #e2e8f0",
+          borderRadius: 12,
+          padding: "12px 16px",
+          marginBottom: 20,
+        }}
+      >
+        {role === "seeker" ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#334155" }}>
+              <CheckCircleFilled style={{ color: "#16a34a", fontSize: 14 }} />
+              <span>Full Naukri 360° Profile & automated resume parser</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#334155" }}>
+              <CheckCircleFilled style={{ color: "#16a34a", fontSize: 14 }} />
+              <span>Fresher or Experienced career track customization</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#16a34a", fontWeight: 600 }}>
+              <SafetyCertificateOutlined style={{ fontSize: 14 }} />
+              <span>100% Free • Verified companies • Real-time alerts</span>
             </div>
           </div>
-
-          <div className="pt-1">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
-            >
-              <span>
-                {mode === "login"
-                  ? `Sign In as ${role === "employer" ? "Employer" : "Candidate"}`
-                  : `Register as ${role === "employer" ? "Employer" : "Candidate"}`}
-              </span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#334155" }}>
+              <CheckCircleFilled style={{ color: "#ea580c", fontSize: 14 }} />
+              <span>Company verification (GSTIN / CIN / Headquarter City)</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#334155" }}>
+              <CheckCircleFilled style={{ color: "#ea580c", fontSize: 14 }} />
+              <span>Unlimited job vacancy postings with instant live indexing</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#ea580c", fontWeight: 600 }}>
+              <SafetyCertificateOutlined style={{ fontSize: 14 }} />
+              <span>Direct candidate resume access & interview scheduler</span>
+            </div>
           </div>
-        </form>
-
-        {/* Quick Demo Access Bar */}
-        <div className="mt-4 pt-4 border-t border-slate-100 text-center">
-          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-2">
-            One-Click Demo Switcher
-          </span>
-          <div className="grid grid-cols-3 gap-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                loginAsDemo("seeker");
-                onClose();
-              }}
-              className="py-1 px-2 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-orange-700 text-[10px] font-bold text-slate-600 transition-colors cursor-pointer"
-            >
-              Demo Candidate
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                loginAsDemo("employer");
-                onClose();
-              }}
-              className="py-1 px-2 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-orange-700 text-[10px] font-bold text-slate-600 transition-colors cursor-pointer"
-            >
-              Demo Employer
-            </button>
-          </div>
-        </div>
+        )}
       </div>
-    </div>
+
+      {error && (
+        <Alert
+          message={error}
+          type="error"
+          showIcon
+          style={{ marginBottom: 16, borderRadius: 8 }}
+        />
+      )}
+
+      {/* Primary Google Login Button */}
+      <Button
+        type="default"
+        block
+        size="large"
+        loading={loading}
+        icon={
+          <svg width="20" height="20" viewBox="0 0 24 24" style={{ marginRight: 8, verticalAlign: "middle" }}>
+            <path
+              fill="#4285F4"
+              d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.665-5.17 3.665-9.12z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.13C3.27 21.43 7.33 24 12 24z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.57H1.25C.45 8.16 0 9.98 0 12c0 2.02.45 3.84 1.25 5.43l4.03-3.14z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.27 2.57 1.25 6.57l4.03 3.14c.95-2.83 3.6-4.96 6.72-4.96z"
+            />
+          </svg>
+        }
+        onClick={handleGoogleSignIn}
+        style={{
+          height: 52,
+          borderRadius: 12,
+          fontSize: 15,
+          fontWeight: 700,
+          color: "#1e293b",
+          borderColor: "#cbd5e1",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.04)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        Continue with Google
+      </Button>
+
+      <div style={{ textAlign: "center", marginTop: 10 }}>
+        <Text type="secondary" style={{ fontSize: 11 }}>
+          By continuing, you agree to Manpower Master Terms of Service & Privacy Policy
+        </Text>
+      </div>
+
+      {/* Quick Demo Switcher for Testing */}
+      <Divider style={{ margin: "20px 0 14px" }}>
+        <Text type="secondary" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>
+          Quick Demo Login
+        </Text>
+      </Divider>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <Button
+          size="middle"
+          icon={<UserOutlined />}
+          onClick={() => {
+            loginAsDemo("seeker");
+            onClose();
+          }}
+          style={{ fontSize: 12, fontWeight: 600, borderRadius: 8 }}
+        >
+          Demo Candidate
+        </Button>
+        <Button
+          size="middle"
+          icon={<BankOutlined />}
+          onClick={() => {
+            loginAsDemo("employer");
+            onClose();
+          }}
+          style={{ fontSize: 12, fontWeight: 600, borderRadius: 8 }}
+        >
+          Demo Employer
+        </Button>
+      </div>
+    </Modal>
   );
 }

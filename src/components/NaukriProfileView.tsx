@@ -3,37 +3,44 @@
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
-  FileText,
-  Upload,
-  Download,
-  Trash2,
-  Edit3,
-  Plus,
-  Briefcase,
-  GraduationCap,
-  Code2,
-  FolderGit2,
-  Award,
-  User,
-  MapPin,
-  Phone,
-  Mail,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Sparkles,
-  Camera,
-  ExternalLink,
-  ChevronRight,
-  ShieldCheck,
-  Check,
-  Building2,
-  Globe2,
-  Eye,
-  TrendingUp,
-} from "lucide-react";
+  Card,
+  Tag,
+  Button,
+  Avatar,
+  Progress,
+  Space,
+  Row,
+  Col,
+  Typography,
+  Tooltip,
+  Divider,
+} from "antd";
+import {
+  UserOutlined,
+  EditOutlined,
+  PlusOutlined,
+  FilePdfOutlined,
+  DownloadOutlined,
+  UploadOutlined,
+  CheckCircleFilled,
+  EnvironmentOutlined,
+  PhoneOutlined,
+  MailOutlined,
+  BankOutlined,
+  BookOutlined,
+  RocketOutlined,
+  GlobalOutlined,
+  GithubOutlined,
+  LinkedinOutlined,
+  RightOutlined,
+  SafetyCertificateOutlined,
+  ThunderboltFilled,
+  CameraOutlined,
+} from "@ant-design/icons";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { ResumeBuilderModal } from "@/components/ResumeBuilderModal";
+
+const { Text, Title, Paragraph } = Typography;
 
 interface NaukriProfileViewProps {
   onOpenProfileBuilder: () => void;
@@ -49,11 +56,11 @@ export function NaukriProfileView({ onOpenProfileBuilder }: NaukriProfileViewPro
     let score = 20;
     if (user?.name) score += 10;
     if (user?.headline) score += 15;
-    if (user?.phone) score += 15;
+    if (user?.phone) score += 10;
     if (user?.resumeUrl) score += 20;
     if (user?.skills && user.skills.length > 0) score += 10;
     if (user?.education && user.education.length > 0) score += 5;
-    if (user?.experienceHistory && user.experienceHistory.length > 0) score += 5;
+    if (user?.experienceHistory && user.experienceHistory.length > 0) score += 10;
     return Math.min(score, 100);
   }, [user]);
 
@@ -71,627 +78,906 @@ export function NaukriProfileView({ onOpenProfileBuilder }: NaukriProfileViewPro
     { id: "skills", label: "Key Skills" },
     { id: "employment", label: "Employment" },
     { id: "education", label: "Education" },
+    { id: "it-skills", label: "IT Skills" },
     { id: "projects", label: "Projects" },
     { id: "summary", label: "Profile Summary" },
-    { id: "certifications", label: "Accomplishments" },
+    { id: "accomplishments", label: "Accomplishments" },
     { id: "career-profile", label: "Desired Career Profile" },
     { id: "personal-details", label: "Personal Details" },
   ];
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* ========================================================= */}
       {/* TOP HEADER: NAUKRI CANDIDATE PROFILE SUMMARY CARD         */}
       {/* ========================================================= */}
-      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-xs p-5 sm:p-7 relative overflow-hidden">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          
+      <Card
+        style={{
+          borderRadius: 18,
+          border: "1px solid #e2e8f0",
+          boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.04)",
+        }}
+        styles={{ body: { padding: "20px 24px" } }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 20,
+          }}
+        >
           {/* Left: Avatar + Details */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
-            {/* Avatar with Camera Trigger */}
+          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            {/* Naukri-style Animated Progress Ring wrapping DP */}
             <div
               onClick={onOpenProfileBuilder}
-              className="relative cursor-pointer group shrink-0"
-              title="Click to update profile photo"
+              style={{
+                position: "relative",
+                cursor: "pointer",
+                width: 96,
+                height: 96,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+              title={`Profile ${profileScore}% Completed - Click to Edit`}
             >
-              {user?.avatar ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={user.avatar}
-                  alt={user?.name || "Profile"}
-                  className="w-20 h-20 rounded-2xl object-cover border-2 border-slate-200 shadow-xs group-hover:opacity-90 transition-opacity"
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-2xl font-black shadow-xs">
-                  {user?.name ? user.name.charAt(0).toUpperCase() : "C"}
-                </div>
-              )}
-              <div className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-slate-900 text-white shadow-xs group-hover:bg-orange-600 transition-colors">
-                <Camera className="w-3.5 h-3.5" />
+              <Progress
+                type="circle"
+                percent={profileScore}
+                size={96}
+                strokeWidth={5}
+                strokeColor={{
+                  "0%": "#fb923c",
+                  "100%": "#ea580c",
+                }}
+                trailColor="#fed7aa"
+                showInfo={false}
+                style={{ position: "absolute", top: 0, left: 0 }}
+              />
+
+              <Avatar
+                size={74}
+                src={user?.avatar}
+                style={{
+                  backgroundColor: "#ea580c",
+                  fontSize: 28,
+                  fontWeight: 800,
+                  border: "3px solid #ffffff",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+                }}
+              >
+                {user?.name ? user.name.charAt(0).toUpperCase() : "C"}
+              </Avatar>
+
+              <div
+                style={{
+                  position: "absolute",
+                  top: 2,
+                  right: 2,
+                  backgroundColor: "#0f172a",
+                  color: "#ffffff",
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 10,
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                  border: "1.5px solid #ffffff",
+                }}
+              >
+                <CameraOutlined />
+              </div>
+
+              {/* Profile % Pill Badge directly on DP */}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: -6,
+                  backgroundColor: profileScore >= 80 ? "#16a34a" : "#ea580c",
+                  color: "#ffffff",
+                  padding: "1px 8px",
+                  borderRadius: 12,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                  border: "2px solid #ffffff",
+                  letterSpacing: "-0.01em",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {profileScore}%
               </div>
             </div>
 
-            {/* Candidate Metadata */}
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <Title level={4} style={{ margin: 0, color: "#0f172a" }}>
                   {user?.name || "Candidate Name"}
-                </h1>
-                {user?.isVerified && (
-                  <VerifiedBadge size="sm" label="Verified Candidate" />
-                )}
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                </Title>
+                {user?.isVerified && <VerifiedBadge size="sm" label="Verified Candidate" />}
+                <Tag color="green" style={{ borderRadius: 10, fontWeight: 700 }}>
                   {user?.noticePeriod ? `${user.noticePeriod} Joiner` : "Immediate Joiner"}
-                </span>
+                </Tag>
               </div>
 
               {/* Headline */}
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                <span>{user?.headline || "Senior Software Engineer (Full Stack)"}</span>
-                <button
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                <Text style={{ fontSize: 13, color: "#475569", fontWeight: 600 }}>
+                  {user?.headline || "Senior Software Engineer (Full Stack)"}
+                </Text>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<EditOutlined style={{ color: "#ea580c" }} />}
                   onClick={onOpenProfileBuilder}
-                  className="text-slate-400 hover:text-orange-600 transition-colors cursor-pointer"
-                  title="Edit Headline"
+                  style={{ padding: "0 4px", height: "auto", fontWeight: 600 }}
                 >
-                  <Edit3 className="w-3 h-3" />
-                </button>
+                  Edit
+                </Button>
               </div>
 
-              {/* 4-Column Micro Stats */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 pt-1 font-medium">
-                <span className="flex items-center gap-1">
-                  <Briefcase className="w-3.5 h-3.5 text-slate-400" />
-                  <span>3 Years 2 Months</span>
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
+              {/* Quick Contact Micro Info */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  fontSize: 12,
+                  color: "#64748b",
+                  marginTop: 6,
+                  flexWrap: "wrap",
+                }}
+              >
+                <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <EnvironmentOutlined style={{ color: "#ea580c" }} />
                   <span>{user?.location || "Bengaluru, Karnataka"}</span>
                 </span>
                 <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Phone className="w-3.5 h-3.5 text-slate-400" />
+                <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <PhoneOutlined style={{ color: "#ea580c" }} />
                   <span>{user?.phone || "+91 98765 43210"}</span>
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600 inline" />
+                  <CheckCircleFilled style={{ color: "#16a34a", fontSize: 12 }} />
                 </span>
                 <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Mail className="w-3.5 h-3.5 text-slate-400" />
+                <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <MailOutlined style={{ color: "#ea580c" }} />
                   <span>{user?.email || "candidate@example.com"}</span>
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600 inline" />
+                  <CheckCircleFilled style={{ color: "#16a34a", fontSize: 12 }} />
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Right: Naukri Profile Completeness Score Widget */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-            <div className="p-3.5 rounded-2xl bg-orange-50/70 border border-orange-200/80 text-left min-w-[210px]">
-              <div className="flex items-center justify-between text-xs font-bold mb-1.5">
-                <span className="text-slate-700 flex items-center gap-1">
-                  <TrendingUp className="w-3.5 h-3.5 text-orange-600" />
-                  <span>Profile Strength</span>
-                </span>
-                <span className="text-orange-700 font-extrabold">{profileScore}%</span>
+          {/* Right: Naukri Profile Completeness Widget & Actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div
+              style={{
+                padding: "10px 16px",
+                borderRadius: 14,
+                backgroundColor: "#fff7ed",
+                border: "1px solid #fed7aa",
+                minWidth: 190,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                <span style={{ color: "#c2410c" }}>Profile Strength</span>
+                <span style={{ color: "#ea580c" }}>{profileScore}%</span>
               </div>
-              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-orange-600 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${profileScore}%` }}
-                />
+              <Progress percent={profileScore} strokeColor="#ea580c" showInfo={false} size="small" />
+              <div style={{ fontSize: 11, color: "#9a3412", marginTop: 4 }}>
+                {profileScore >= 90 ? "Excellent profile visibility" : "Add details to boost recruiter reach"}
               </div>
-              <p className="text-[10px] text-slate-600 mt-1.5 font-medium leading-tight">
-                {profileScore >= 90
-                  ? "Excellent! Your profile receives 3X more recruiter reach."
-                  : "Add missing details to boost your rank on recruiter searches."}
-              </p>
             </div>
 
-            {/* Quick Actions */}
-            <div className="flex flex-col gap-2">
-              <button
+            <Space size={10}>
+              <Button
+                type="primary"
+                icon={<FilePdfOutlined />}
                 onClick={() => setIsResumeBuilderOpen(true)}
-                className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer whitespace-nowrap"
+                style={{ fontWeight: 600, borderRadius: 8 }}
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Generate ATS Resume</span>
-              </button>
-              <button
+                Generate ATS Resume
+              </Button>
+              <Button
+                icon={<EditOutlined />}
                 onClick={onOpenProfileBuilder}
-                className="px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                style={{ fontWeight: 600, borderRadius: 8 }}
               >
-                <Edit3 className="w-3 h-3" />
-                <span>Edit Full Profile</span>
-              </button>
-            </div>
+                Edit Full Profile
+              </Button>
+            </Space>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* ========================================================= */}
       {/* TWO-COLUMN NAUKRI LAYOUT                                  */}
       {/* ========================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
+      <Row gutter={[20, 20]} align="top">
         {/* Left Column: Naukri Quick Links (Sticky Sidebar) */}
-        <div className="hidden lg:block lg:col-span-3 sticky top-20 bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-3">
-          <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 px-3 py-2">
-            Quick Links
-          </div>
-          <nav className="space-y-0.5">
-            {quickLinks.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => scrollToSection(item.id)}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
-                  activeQuickLink === item.id
-                    ? "bg-orange-50 text-orange-700 font-bold"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                }`}
-              >
-                <span>{item.label}</span>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              </button>
-            ))}
-          </nav>
-
-          {/* FastForward Help Box */}
-          <div className="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-xs">
-            <div className="font-bold text-slate-900 mb-1 flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Naukri FastForward</span>
-            </div>
-            <p className="text-[11px] text-slate-500 leading-tight">
-              Get an instant ATS score and standout resume format preferred by top Indian corporate recruiters.
-            </p>
-            <button
-              onClick={() => setIsResumeBuilderOpen(true)}
-              className="mt-2.5 w-full py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] cursor-pointer transition-colors"
+        <Col xs={24} lg={6}>
+          <div
+            style={{
+              position: "sticky",
+              top: 80,
+              backgroundColor: "#ffffff",
+              borderRadius: 14,
+              border: "1px solid #e2e8f0",
+              padding: 12,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 800,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                color: "#94a3b8",
+                padding: "6px 8px",
+              }}
             >
-              Open Resume Builder
-            </button>
+              Quick Links
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {quickLinks.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: activeQuickLink === item.id ? 700 : 500,
+                    backgroundColor: activeQuickLink === item.id ? "#fff7ed" : "transparent",
+                    color: activeQuickLink === item.id ? "#c2410c" : "#475569",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <span>{item.label}</span>
+                  <RightOutlined style={{ fontSize: 10, color: "#94a3b8" }} />
+                </div>
+              ))}
+            </div>
+
+            {/* FastForward Help Box */}
+            <div
+              style={{
+                marginTop: 16,
+                padding: 12,
+                borderRadius: 10,
+                backgroundColor: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                fontSize: 12,
+              }}
+            >
+              <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                <ThunderboltFilled style={{ color: "#ea580c" }} />
+                <span>Naukri FastForward</span>
+              </div>
+              <p style={{ margin: 0, fontSize: 11, color: "#64748b", lineHeight: "1.4" }}>
+                Generate an ATS score and resume format preferred by top Indian recruiters.
+              </p>
+              <Button
+                size="small"
+                type="primary"
+                block
+                style={{ marginTop: 8, borderRadius: 8 }}
+                onClick={() => setIsResumeBuilderOpen(true)}
+              >
+                Open Resume Builder
+              </Button>
+            </div>
           </div>
-        </div>
+        </Col>
 
         {/* Right Column: Detailed Naukri Section Cards */}
-        <div className="lg:col-span-9 space-y-5">
-          
-          {/* SECTION 1: RESUME CARD (With FastForward Generator Banner) */}
-          <div
-            id="resume"
-            className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 sm:p-6 space-y-4"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-extrabold text-slate-900">Resume</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Resume is the most important document recruiters look at. Keep it updated.
-                </p>
-              </div>
-              <button
-                onClick={onOpenProfileBuilder}
-                className="text-xs font-bold text-orange-600 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <Upload className="w-3.5 h-3.5" /> Upload File
-              </button>
-            </div>
-
-            {/* Active Resume Status Card */}
-            {user?.resumeUrl ? (
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-600 text-white flex items-center justify-center font-black">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-slate-900">
-                      {user.resumeFileName || "candidate_resume.pdf"}
-                    </div>
-                    <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5 font-medium">
-                      <span className="text-emerald-700 font-bold flex items-center gap-0.5">
-                        <Check className="w-3 h-3" /> Attached &amp; Active
-                      </span>
-                      <span>•</span>
-                      <span>Updated recently</span>
-                    </div>
-                  </div>
+        <Col xs={24} lg={18}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            {/* SECTION 1: RESUME CARD */}
+            <Card
+              id="resume"
+              style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+              styles={{ body: { padding: 20 } }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div>
+                  <Title level={5} style={{ margin: 0, color: "#0f172a" }}>Resume</Title>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Resume is the most critical document recruiters evaluate. Keep it current.
+                  </Text>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <a
-                    href={user.resumeUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
-                  >
-                    <Download className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Download</span>
-                  </a>
-                  <button
-                    onClick={() => setIsResumeBuilderOpen(true)}
-                    className="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>Edit in Builder</span>
-                  </button>
-                </div>
-              </div>
-            ) : null}
-
-            {/* FASTFORWARD RESUME BUILDER CALLOUT (Naukri Standard) */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-orange-50 via-amber-50/50 to-orange-50 border border-orange-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-orange-900 font-extrabold text-xs uppercase tracking-wider">
-                  <Sparkles className="w-4 h-4 text-orange-600" />
-                  <span>Don't have a professional resume?</span>
-                </div>
-                <h3 className="text-sm font-bold text-slate-900">
-                  Generate an ATS-Compliant Corporate Resume in 2 minutes
-                </h3>
-                <p className="text-xs text-slate-600 leading-relaxed max-w-xl">
-                  Our built-in resume generator automatically formats your profile details into high-ranking ATS templates (Naukri Corporate, Modern Tech, and Minimalist) ready for instant PDF download.
-                </p>
-              </div>
-
-              <button
-                onClick={() => setIsResumeBuilderOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Create ATS Resume</span>
-              </button>
-            </div>
-            
-            <div className="text-[11px] text-slate-400">
-              Supported Formats: DOC, DOCX, PDF, RTF | Max file size: 5 MB
-            </div>
-          </div>
-
-          {/* SECTION 2: RESUME HEADLINE */}
-          <div
-            id="headline"
-            className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 sm:p-6 space-y-2.5"
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-extrabold text-slate-900">Resume Headline</h2>
-              <button
-                onClick={onOpenProfileBuilder}
-                className="text-xs font-bold text-orange-600 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <Edit3 className="w-3.5 h-3.5" /> Edit
-              </button>
-            </div>
-            <p className="text-xs text-slate-700 leading-relaxed font-medium">
-              {user?.headline ||
-                "Senior Software Engineer with 4+ years experience in React, Next.js, Node.js and building high-scale fintech & recruitment microservices."}
-            </p>
-            <p className="text-[11px] text-slate-400">
-              It is the first thing recruiters see and read in search candidate listings.
-            </p>
-          </div>
-
-          {/* SECTION 3: KEY SKILLS */}
-          <div
-            id="skills"
-            className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 sm:p-6 space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-extrabold text-slate-900">Key Skills</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Recruiters search candidates based on key skills. Add your top technical &amp; functional strengths.
-                </p>
-              </div>
-              <button
-                onClick={onOpenProfileBuilder}
-                className="text-xs font-bold text-orange-600 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add Skills
-              </button>
-            </div>
-
-            <div className="flex flex-wrap gap-2 pt-1">
-              {(user?.skills && user.skills.length > 0
-                ? user.skills
-                : ["React.js", "Next.js", "TypeScript", "Node.js", "MongoDB", "Tailwind CSS", "REST APIs", "Git", "Docker"]
-              ).map((skill, i) => (
-                <span
-                  key={i}
-                  className="px-3 py-1.5 rounded-xl bg-slate-50 text-slate-800 text-xs font-semibold border border-slate-200/80 hover:border-slate-300 transition-colors"
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<UploadOutlined />}
+                  onClick={onOpenProfileBuilder}
                 >
-                  {skill}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* SECTION 4: EMPLOYMENT (WORK EXPERIENCE) */}
-          <div
-            id="employment"
-            className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 sm:p-6 space-y-4"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-extrabold text-slate-900">Employment History</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Details of current and previous organizations worked at.
-                </p>
+                  Upload Resume
+                </Button>
               </div>
-              <button
-                onClick={onOpenProfileBuilder}
-                className="text-xs font-bold text-orange-600 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add Employment
-              </button>
-            </div>
 
-            <div className="space-y-4">
-              {(user?.experienceHistory && user.experienceHistory.length > 0
-                ? user.experienceHistory
-                : [
-                    {
-                      role: "Senior Software Engineer",
-                      company: "Tech Systems Solutions",
-                      duration: "2022 - Present",
-                      description: "Architected modern responsive portals with Next.js and high-throughput Node.js microservices.",
-                    },
-                    {
-                      role: "Full Stack Developer",
-                      company: "Innovate Labs Ltd",
-                      duration: "2020 - 2022",
-                      description: "Built scalable UI components and REST APIs for enterprise clients.",
-                    },
-                  ]
-              ).map((exp, i) => (
+              {user?.resumeUrl ? (
                 <div
-                  key={i}
-                  className="p-4 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-1.5"
+                  style={{
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    backgroundColor: "#f8fafc",
+                    border: "1px solid #e2e8f0",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 12,
+                  }}
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs font-bold text-slate-900">{exp.role}</span>
-                    <span className="text-[11px] font-semibold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200/60">
-                      {exp.duration}
+                  <Space align="center" size={12}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 8,
+                        backgroundColor: "#ea580c",
+                        color: "#fff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 16,
+                      }}
+                    >
+                      <FilePdfOutlined />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>
+                        {user.resumeFileName || "candidate_resume.pdf"}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>
+                        <CheckCircleFilled /> Attached &amp; Active
+                      </div>
+                    </div>
+                  </Space>
+
+                  <Space size={8}>
+                    <a href={user.resumeUrl} target="_blank" rel="noreferrer">
+                      <Button size="small" icon={<DownloadOutlined />}>
+                        Download
+                      </Button>
+                    </a>
+                    <Button
+                      type="primary"
+                      size="small"
+                      icon={<EditOutlined />}
+                      onClick={() => setIsResumeBuilderOpen(true)}
+                    >
+                      Edit in Builder
+                    </Button>
+                  </Space>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 12,
+                    backgroundColor: "#fff7ed",
+                    border: "1px dashed #fed7aa",
+                    textAlign: "center",
+                  }}
+                >
+                  <Text strong style={{ color: "#c2410c", display: "block" }}>
+                    No Resume Attached
+                  </Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Upload your resume file or use our ATS Resume Builder to generate one instantly.
+                  </Text>
+                  <div style={{ marginTop: 10 }}>
+                    <Button
+                      type="primary"
+                      size="small"
+                      icon={<FilePdfOutlined />}
+                      onClick={() => setIsResumeBuilderOpen(true)}
+                    >
+                      Generate ATS Resume
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </Card>
+
+            {/* SECTION 2: RESUME HEADLINE */}
+            <Card
+              id="headline"
+              style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+              styles={{ body: { padding: 20 } }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <Title level={5} style={{ margin: 0, color: "#0f172a" }}>Resume Headline</Title>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<EditOutlined style={{ color: "#ea580c" }} />}
+                  onClick={onOpenProfileBuilder}
+                  style={{ fontWeight: 600 }}
+                >
+                  Edit Headline
+                </Button>
+              </div>
+              <Paragraph style={{ margin: 0, fontSize: 13, color: "#334155", fontWeight: 500 }}>
+                {user?.headline ||
+                  "Software Engineer with experience in React, Next.js, and Node.js microservices."}
+              </Paragraph>
+              <Text type="secondary" style={{ fontSize: 11, display: "block", marginTop: 4 }}>
+                This is the first summary line recruiters read in candidate search results.
+              </Text>
+            </Card>
+
+            {/* SECTION 3: KEY SKILLS */}
+            <Card
+              id="skills"
+              style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+              styles={{ body: { padding: 20 } }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div>
+                  <Title level={5} style={{ margin: 0, color: "#0f172a" }}>Key Skills</Title>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Recruiters search candidates by key skills. Add your core competencies.
+                  </Text>
+                </div>
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={onOpenProfileBuilder}
+                  style={{ borderRadius: 8, fontWeight: 600 }}
+                >
+                  Add Skills
+                </Button>
+              </div>
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {(user?.skills && user.skills.length > 0
+                  ? user.skills
+                  : ["React.js", "TypeScript", "Node.js", "MongoDB", "REST APIs", "Tailwind CSS"]
+                ).map((skill, idx) => (
+                  <Tag
+                    key={idx}
+                    style={{
+                      borderRadius: 14,
+                      padding: "4px 10px",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      backgroundColor: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    {skill}
+                  </Tag>
+                ))}
+              </div>
+            </Card>
+
+            {/* SECTION 4: EMPLOYMENT */}
+            <Card
+              id="employment"
+              style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+              styles={{ body: { padding: 20 } }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                <div>
+                  <Title level={5} style={{ margin: 0, color: "#0f172a" }}>Employment History</Title>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Organizations worked at, designations, and durations.
+                  </Text>
+                </div>
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={onOpenProfileBuilder}
+                  style={{ borderRadius: 8, fontWeight: 600 }}
+                >
+                  Add Employment
+                </Button>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {(user?.experienceHistory && user.experienceHistory.length > 0
+                  ? user.experienceHistory
+                  : [
+                      {
+                        role: "Software Developer",
+                        company: "Tech Systems Solutions",
+                        duration: "2022 - Present",
+                        description: "Developed responsive portals with React/Next.js and microservices.",
+                      },
+                    ]
+                ).map((exp, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: "12px 14px",
+                      borderRadius: 10,
+                      backgroundColor: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <Text strong style={{ fontSize: 13, color: "#0f172a" }}>{exp.role}</Text>
+                      <Tag color="orange" style={{ borderRadius: 8 }}>{exp.duration}</Tag>
+                    </div>
+                    <div style={{ fontSize: 12, color: "#475569", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                      <BankOutlined style={{ color: "#94a3b8" }} />
+                      <span>{exp.company}</span>
+                    </div>
+                    {exp.description && (
+                      <Paragraph style={{ margin: "6px 0 0 0", fontSize: 12, color: "#64748b" }}>
+                        {exp.description}
+                      </Paragraph>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* SECTION 5: EDUCATION */}
+            <Card
+              id="education"
+              style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+              styles={{ body: { padding: 20 } }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                <div>
+                  <Title level={5} style={{ margin: 0, color: "#0f172a" }}>Education</Title>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Highest qualification, degrees, colleges, and passing years.
+                  </Text>
+                </div>
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={onOpenProfileBuilder}
+                  style={{ borderRadius: 8, fontWeight: 600 }}
+                >
+                  Add Education
+                </Button>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {(user?.education && user.education.length > 0
+                  ? user.education
+                  : [
+                      {
+                        degree: "B.Tech in Computer Science & Engineering",
+                        institution: "National Institute of Technology",
+                        year: "2022",
+                      },
+                    ]
+                ).map((edu, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: "10px 14px",
+                      borderRadius: 10,
+                      backgroundColor: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>{edu.degree}</div>
+                      <div style={{ fontSize: 12, color: "#64748b", display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                        <BookOutlined style={{ color: "#94a3b8" }} />
+                        <span>{edu.institution || edu.institute}</span>
+                      </div>
+                    </div>
+                    <Tag style={{ borderRadius: 8, fontWeight: 700 }}>{edu.year || edu.passingYear}</Tag>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* SECTION 6: IT SKILLS */}
+            <Card
+              id="it-skills"
+              style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+              styles={{ body: { padding: 20 } }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div>
+                  <Title level={5} style={{ margin: 0, color: "#0f172a" }}>IT Skills</Title>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Software technologies, versions used, and years of experience.
+                  </Text>
+                </div>
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={onOpenProfileBuilder}
+                  style={{ borderRadius: 8, fontWeight: 600 }}
+                >
+                  Add IT Skill
+                </Button>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
+                {(user?.itSkills && user.itSkills.length > 0
+                  ? user.itSkills
+                  : [
+                      { skill: "React.js", version: "18.x", lastUsed: "2024", expYears: 3, expMonths: 0 },
+                      { skill: "TypeScript", version: "5.x", lastUsed: "2024", expYears: 2, expMonths: 6 },
+                      { skill: "Node.js", version: "20.x", lastUsed: "2024", expYears: 3, expMonths: 0 },
+                    ]
+                ).map((it, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: 10,
+                      borderRadius: 8,
+                      backgroundColor: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      fontSize: 12,
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, color: "#0f172a" }}>{it.skill}</div>
+                    <div style={{ color: "#64748b", marginTop: 2 }}>
+                      Ver: {it.version || "Latest"} • {it.expYears} yrs {it.expMonths || 0} mos
+                    </div>
+                    <div style={{ color: "#94a3b8", fontSize: 11, marginTop: 2 }}>
+                      Last used: {it.lastUsed || "2024"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* SECTION 7: PROJECTS */}
+            <Card
+              id="projects"
+              style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+              styles={{ body: { padding: 20 } }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div>
+                  <Title level={5} style={{ margin: 0, color: "#0f172a" }}>Projects</Title>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Academic and corporate portfolio initiatives.
+                  </Text>
+                </div>
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={onOpenProfileBuilder}
+                  style={{ borderRadius: 8, fontWeight: 600 }}
+                >
+                  Add Project
+                </Button>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {(user?.projects && user.projects.length > 0
+                  ? user.projects
+                  : [
+                      {
+                        title: "Talent Acquisition Job Portal",
+                        role: "Full Stack Engineer",
+                        details: "High-scale recruitment application with ATS screening and live telemetry.",
+                      },
+                    ]
+                ).map((proj, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: "12px 14px",
+                      borderRadius: 10,
+                      backgroundColor: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>{proj.title}</div>
+                    <div style={{ fontSize: 12, color: "#c2410c", fontWeight: 600, marginTop: 2 }}>
+                      {proj.role || "Developer"}
+                    </div>
+                    {proj.details && (
+                      <Paragraph style={{ margin: "4px 0 0 0", fontSize: 12, color: "#64748b" }}>
+                        {proj.details}
+                      </Paragraph>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* SECTION 8: PROFILE SUMMARY */}
+            <Card
+              id="summary"
+              style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+              styles={{ body: { padding: 20 } }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <Title level={5} style={{ margin: 0, color: "#0f172a" }}>Profile Summary</Title>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<EditOutlined style={{ color: "#ea580c" }} />}
+                  onClick={onOpenProfileBuilder}
+                  style={{ fontWeight: 600 }}
+                >
+                  Edit Summary
+                </Button>
+              </div>
+              <Paragraph style={{ margin: 0, fontSize: 13, color: "#475569", lineHeight: "1.6" }}>
+                {user?.bio ||
+                  "Dedicated software engineer with a strong track record of designing modern web applications, high-performance APIs, and collaborating with cross-functional product teams to deliver measurable business results."}
+              </Paragraph>
+            </Card>
+
+            {/* SECTION 9: ACCOMPLISHMENTS & PROFILES */}
+            <Card
+              id="accomplishments"
+              style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+              styles={{ body: { padding: 20 } }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <Title level={5} style={{ margin: 0, color: "#0f172a" }}>Accomplishments &amp; Online Profiles</Title>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<EditOutlined style={{ color: "#ea580c" }} />}
+                  onClick={onOpenProfileBuilder}
+                  style={{ fontWeight: 600 }}
+                >
+                  Edit Links
+                </Button>
+              </div>
+
+              <Row gutter={[12, 12]}>
+                <Col xs={24} sm={8}>
+                  <div style={{ padding: 10, borderRadius: 8, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 12 }}>
+                    <div style={{ color: "#94a3b8", fontWeight: 700, fontSize: 11, marginBottom: 2 }}>PORTFOLIO</div>
+                    <div style={{ fontWeight: 600, color: "#0f172a", textOverflow: "ellipsis", overflow: "hidden" }}>
+                      {user?.portfolioUrl ? <a href={user.portfolioUrl} target="_blank">{user.portfolioUrl}</a> : "Not added"}
+                    </div>
+                  </div>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <div style={{ padding: 10, borderRadius: 8, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 12 }}>
+                    <div style={{ color: "#94a3b8", fontWeight: 700, fontSize: 11, marginBottom: 2 }}>GITHUB</div>
+                    <div style={{ fontWeight: 600, color: "#0f172a", textOverflow: "ellipsis", overflow: "hidden" }}>
+                      {user?.githubUrl ? <a href={user.githubUrl} target="_blank">{user.githubUrl}</a> : "Not added"}
+                    </div>
+                  </div>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <div style={{ padding: 10, borderRadius: 8, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 12 }}>
+                    <div style={{ color: "#94a3b8", fontWeight: 700, fontSize: 11, marginBottom: 2 }}>LINKEDIN</div>
+                    <div style={{ fontWeight: 600, color: "#0f172a", textOverflow: "ellipsis", overflow: "hidden" }}>
+                      {user?.linkedinUrl ? <a href={user.linkedinUrl} target="_blank">{user.linkedinUrl}</a> : "Not added"}
+                    </div>
+                  </div>
+                </Col>
+              </Row>
+            </Card>
+
+            {/* SECTION 10: DESIRED CAREER PROFILE */}
+            <Card
+              id="career-profile"
+              style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+              styles={{ body: { padding: 20 } }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <Title level={5} style={{ margin: 0, color: "#0f172a" }}>Desired Career Profile</Title>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<EditOutlined style={{ color: "#ea580c" }} />}
+                  onClick={onOpenProfileBuilder}
+                  style={{ fontWeight: 600 }}
+                >
+                  Edit Preferences
+                </Button>
+              </div>
+
+              <Row gutter={[12, 12]}>
+                <Col xs={12} sm={8}>
+                  <div style={{ padding: 10, borderRadius: 8, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 12 }}>
+                    <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, display: "block" }}>DESIRED ROLE</span>
+                    <span style={{ fontWeight: 700, color: "#0f172a" }}>
+                      {user?.careerPreferences?.desiredRole || "Software Developer"}
                     </span>
                   </div>
-                  <div className="text-xs text-slate-600 font-medium flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{exp.company}</span>
+                </Col>
+                <Col xs={12} sm={8}>
+                  <div style={{ padding: 10, borderRadius: 8, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 12 }}>
+                    <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, display: "block" }}>EXPECTED CTC</span>
+                    <span style={{ fontWeight: 700, color: "#0f172a" }}>
+                      ₹{user?.expectedCtc || 18} LPA
+                    </span>
                   </div>
-                  {exp.description && (
-                    <p className="text-xs text-slate-700 leading-relaxed pt-1">
-                      {exp.description}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+                </Col>
+                <Col xs={12} sm={8}>
+                  <div style={{ padding: 10, borderRadius: 8, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 12 }}>
+                    <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, display: "block" }}>NOTICE PERIOD</span>
+                    <span style={{ fontWeight: 700, color: "#16a34a" }}>
+                      {user?.noticePeriod || "Immediate"}
+                    </span>
+                  </div>
+                </Col>
+              </Row>
+            </Card>
 
-          {/* SECTION 5: EDUCATION */}
-          <div
-            id="education"
-            className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 sm:p-6 space-y-4"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-extrabold text-slate-900">Education</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Higher education, degree programs, and academic achievements.
-                </p>
-              </div>
-              <button
-                onClick={onOpenProfileBuilder}
-                className="text-xs font-bold text-orange-600 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add Education
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {(user?.education && user.education.length > 0
-                ? user.education
-                : [
-                    {
-                      degree: "B.Tech in Computer Science & Engineering",
-                      institution: "National Institute of Technology",
-                      year: "2021",
-                    },
-                  ]
-              ).map((edu, i) => (
-                <div
-                  key={i}
-                  className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80 flex items-center justify-between text-xs"
+            {/* SECTION 11: PERSONAL DETAILS */}
+            <Card
+              id="personal-details"
+              style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+              styles={{ body: { padding: 20 } }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <Title level={5} style={{ margin: 0, color: "#0f172a" }}>Personal Details</Title>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<EditOutlined style={{ color: "#ea580c" }} />}
+                  onClick={onOpenProfileBuilder}
+                  style={{ fontWeight: 600 }}
                 >
-                  <div className="space-y-0.5">
-                    <div className="font-bold text-slate-900">{edu.degree}</div>
-                    <div className="text-slate-500 flex items-center gap-1">
-                      <GraduationCap className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{edu.institution}</span>
-                    </div>
+                  Edit Details
+                </Button>
+              </div>
+
+              <Row gutter={[12, 12]}>
+                <Col xs={12} sm={6}>
+                  <div style={{ padding: 10, borderRadius: 8, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 12 }}>
+                    <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, display: "block" }}>GENDER</span>
+                    <span style={{ fontWeight: 600, color: "#0f172a" }}>
+                      {user?.personalDetails?.gender || "Male"}
+                    </span>
                   </div>
-                  <span className="font-bold text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
-                    {edu.year}
-                  </span>
-                </div>
-              ))}
-            </div>
+                </Col>
+                <Col xs={12} sm={6}>
+                  <div style={{ padding: 10, borderRadius: 8, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 12 }}>
+                    <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, display: "block" }}>MARITAL STATUS</span>
+                    <span style={{ fontWeight: 600, color: "#0f172a" }}>
+                      {user?.personalDetails?.maritalStatus || "Single"}
+                    </span>
+                  </div>
+                </Col>
+                <Col xs={12} sm={6}>
+                  <div style={{ padding: 10, borderRadius: 8, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 12 }}>
+                    <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, display: "block" }}>HOMETOWN</span>
+                    <span style={{ fontWeight: 600, color: "#0f172a" }}>
+                      {user?.personalDetails?.hometown || user?.location || "Delhi"}
+                    </span>
+                  </div>
+                </Col>
+                <Col xs={12} sm={6}>
+                  <div style={{ padding: 10, borderRadius: 8, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 12 }}>
+                    <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, display: "block" }}>LANGUAGES</span>
+                    <span style={{ fontWeight: 600, color: "#0f172a" }}>
+                      {user?.personalDetails?.languages
+                        ? user.personalDetails.languages.map((l: any) => (typeof l === "string" ? l : l.language)).join(", ")
+                        : "English, Hindi"}
+                    </span>
+                  </div>
+                </Col>
+              </Row>
+            </Card>
           </div>
-
-          {/* SECTION 6: PROJECTS */}
-          <div
-            id="projects"
-            className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 sm:p-6 space-y-4"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-extrabold text-slate-900">Projects</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Showcase projects built during academic or professional tenures.
-                </p>
-              </div>
-              <button
-                onClick={() => setIsResumeBuilderOpen(true)}
-                className="text-xs font-bold text-orange-600 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add Projects in Builder
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-1">
-                <div className="font-bold text-xs text-slate-900">
-                  Talent Acquisition &amp; Job Nexus Portal
-                </div>
-                <div className="text-[11px] text-orange-700 font-semibold font-mono">
-                  Next.js 16 • TypeScript • MongoDB
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed pt-1">
-                  High-throughput recruitment platform with split-screen job discovery and automated ATS screening.
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-1">
-                <div className="font-bold text-xs text-slate-900">
-                  Cloud Infrastructure Health Monitor
-                </div>
-                <div className="text-[11px] text-orange-700 font-semibold font-mono">
-                  React • Node.js • WebSockets
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed pt-1">
-                  Live streaming telemetry engine tracking response latencies and server availability across multi-cloud instances.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 7: PROFILE SUMMARY */}
-          <div
-            id="summary"
-            className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 sm:p-6 space-y-2.5"
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-extrabold text-slate-900">Profile Summary</h2>
-              <button
-                onClick={onOpenProfileBuilder}
-                className="text-xs font-bold text-orange-600 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <Edit3 className="w-3.5 h-3.5" /> Edit
-              </button>
-            </div>
-            <p className="text-xs text-slate-700 leading-relaxed">
-              {user?.bio ||
-                "Seasoned Full Stack Engineer with strong foundations in React, Next.js, and Node.js microservices. Proven track record in boosting system throughput, reducing database latency, and delivering high-quality corporate applications with zero downtime."}
-            </p>
-          </div>
-
-          {/* SECTION 8: DESIRED CAREER PROFILE */}
-          <div
-            id="career-profile"
-            className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 sm:p-6 space-y-4"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-extrabold text-slate-900">Desired Career Profile</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Helps recruiters match roles with your compensation expectations and work preferences.
-                </p>
-              </div>
-              <button
-                onClick={onOpenProfileBuilder}
-                className="text-xs font-bold text-orange-600 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <Edit3 className="w-3.5 h-3.5" /> Edit
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                  Desired Role
-                </span>
-                <span className="font-semibold text-slate-800">Software Developer / Tech Lead</span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                  Expected CTC
-                </span>
-                <span className="font-bold text-slate-900">
-                  ₹{user?.expectedCtc || 36} LPA (Annual)
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                  Notice Period
-                </span>
-                <span className="font-semibold text-emerald-800">
-                  {user?.noticePeriod || "Immediate Joiner"}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                  Employment Type
-                </span>
-                <span className="font-semibold text-slate-800">Full Time / Permanent</span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                  Preferred Workplace
-                </span>
-                <span className="font-semibold text-slate-800">Hybrid / Remote / On-site</span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                  Preferred Locations
-                </span>
-                <span className="font-semibold text-slate-800">Bengaluru, Delhi NCR, Chandigarh</span>
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 9: PERSONAL DETAILS */}
-          <div
-            id="personal-details"
-            className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 sm:p-6 space-y-4"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-extrabold text-slate-900">Personal Details</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Confidential identity details verified for corporate hiring background checks.
-                </p>
-              </div>
-              <button
-                onClick={onOpenProfileBuilder}
-                className="text-xs font-bold text-orange-600 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <Edit3 className="w-3.5 h-3.5" /> Edit
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                  Gender &amp; Status
-                </span>
-                <span className="font-semibold text-slate-800">Male • Single</span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                  Work Authorization
-                </span>
-                <span className="font-semibold text-slate-800">Citizen of India</span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                  Languages Known
-                </span>
-                <span className="font-semibold text-slate-800">English, Hindi, Punjabi</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
+        </Col>
+      </Row>
 
       {/* Embedded Resume Builder Modal */}
       <ResumeBuilderModal

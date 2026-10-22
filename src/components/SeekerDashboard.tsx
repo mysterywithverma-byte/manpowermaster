@@ -1,45 +1,97 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { MockJob, MockApplication } from "@/lib/mock-data";
 import { JobCard } from "@/components/JobCard";
 import { ProfileBuilderModal } from "@/components/ProfileBuilderModal";
+import { ResumeBuilderModal } from "@/components/ResumeBuilderModal";
+import { NaukriProfileView } from "@/components/NaukriProfileView";
 import { formatSalary, timeAgo } from "@/lib/utils";
 import {
-  Briefcase,
-  Bookmark,
-  User,
-  Clock,
-  CheckCircle2,
-  FileText,
-  MapPin,
-  TrendingUp,
-  GraduationCap,
-  Download,
-  Edit3,
-  Camera,
-  Sparkles,
-} from "lucide-react";
+  Card,
+  Tabs,
+  Avatar,
+  Badge,
+  Tag,
+  Button,
+  Progress,
+  Space,
+  Typography,
+  Table,
+  Empty,
+  Tooltip,
+  Switch,
+  Input,
+  Select,
+} from "antd";
+import type { ColumnsType } from "antd/es/table";
+import {
+  UserOutlined,
+  SolutionOutlined,
+  BookOutlined,
+  BellOutlined,
+  EditOutlined,
+  FilePdfOutlined,
+  EnvironmentOutlined,
+  PhoneOutlined,
+  DollarOutlined,
+  CheckCircleFilled,
+  PlusOutlined,
+  DeleteOutlined,
+  BankOutlined,
+  IdcardOutlined,
+} from "@ant-design/icons";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
-import { NaukriProfileView } from "@/components/NaukriProfileView";
-import { ResumeBuilderModal } from "@/components/ResumeBuilderModal";
+
+const { Text, Title } = Typography;
 
 interface SeekerDashboardProps {
   onSelectJob: (job: MockJob) => void;
   onApplyJob: (job: MockJob) => void;
 }
 
-const STAGES: MockApplication["status"][] = ["Applied", "Shortlisted", "Interviewed", "Hired"];
+interface JobAlert {
+  id: string;
+  role: string;
+  location: string;
+  frequency: "Daily" | "Weekly";
+  experience: string;
+  active: boolean;
+}
 
 export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProps) {
   const { user, savedJobs } = useAuth();
-  const [tab, setTab] = useState<"applications" | "bookmarks" | "profile">("applications");
+  const [tab, setTab] = useState("applications");
   const [applications, setApplications] = useState<any[]>([]);
   const [bookmarkedJobs, setBookmarkedJobs] = useState<MockJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isResumeBuilderOpen, setIsResumeBuilderOpen] = useState(false);
+
+  // Job Alerts state
+  const [jobAlerts, setJobAlerts] = useState<JobAlert[]>([
+    {
+      id: "1",
+      role: "Software Engineer",
+      location: "Bengaluru",
+      frequency: "Daily",
+      experience: "2-5 Years",
+      active: true,
+    },
+    {
+      id: "2",
+      role: "Data Analyst",
+      location: "Remote",
+      frequency: "Weekly",
+      experience: "0-2 Years",
+      active: false,
+    },
+  ]);
+  const [newAlertRole, setNewAlertRole] = useState("");
+  const [newAlertLocation, setNewAlertLocation] = useState("");
+  const [newAlertFreq, setNewAlertFreq] = useState<"Daily" | "Weekly">("Daily");
+  const [showAddAlert, setShowAddAlert] = useState(false);
 
   // Fetch applications
   const fetchApps = async () => {
@@ -60,7 +112,6 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
 
   useEffect(() => {
     fetchApps();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Fetch bookmarked jobs
@@ -70,7 +121,9 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
         const res = await fetch("/api/jobs");
         const data = await res.json();
         if (data.success && data.data) {
-          const filtered = data.data.filter((j: MockJob) => savedJobs.includes(j._id));
+          const filtered = data.data.filter((j: MockJob) =>
+            savedJobs.includes(j._id)
+          );
           setBookmarkedJobs(filtered);
         }
       } catch (err) {
@@ -80,7 +133,7 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
     fetchBookmarked();
   }, [savedJobs]);
 
-  const completenessScore = React.useMemo(() => {
+  const completenessScore = useMemo(() => {
     let score = 20;
     if (user?.name) score += 10;
     if (user?.headline) score += 15;
@@ -92,333 +145,469 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
     return Math.min(score, 100);
   }, [user]);
 
-  const getStatusBadge = (status: MockApplication["status"]) => {
+  const getStatusTag = (status: MockApplication["status"]) => {
     switch (status) {
       case "Hired":
-        return "bg-emerald-100 text-emerald-700 border-emerald-300";
+        return <Tag color="success">Hired</Tag>;
       case "Interviewed":
-        return "bg-orange-100 text-orange-700 border-orange-300";
+        return <Tag color="processing">Interview Scheduled</Tag>;
       case "Shortlisted":
-        return "bg-amber-100 text-amber-700 border-amber-300";
+        return <Tag color="warning">Shortlisted</Tag>;
       case "Rejected":
-        return "bg-rose-100 text-rose-700 border-rose-300";
+        return <Tag color="error">Archived</Tag>;
       default:
-        return "bg-slate-100 text-slate-700 border-slate-200";
+        return <Tag color="default">Application Received</Tag>;
     }
   };
 
+  // Ant Design Table Columns for Applications
+  const applicationColumns: ColumnsType<any> = [
+    {
+      title: "Role & Company",
+      key: "job",
+      render: (_, record) => {
+        const job = record.jobId || {};
+        return (
+          <Space align="start" size={10}>
+            <Avatar
+              shape="square"
+              src={job.companyLogo}
+              style={{ backgroundColor: "#f1f5f9", color: "#ea580c", fontWeight: 700 }}
+            >
+              {job.company ? job.company.charAt(0) : <BankOutlined />}
+            </Avatar>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>
+                {job.title || "Job Application"}
+              </div>
+              <div style={{ fontSize: 12, color: "#64748b" }}>{job.company}</div>
+            </div>
+          </Space>
+        );
+      },
+    },
+    {
+      title: "Location",
+      key: "location",
+      render: (_, record) => (
+        <span style={{ fontSize: 12, color: "#475569" }}>
+          {record.jobId?.location || "India"}
+        </span>
+      ),
+    },
+    {
+      title: "Salary Package",
+      key: "salary",
+      render: (_, record) => {
+        const job = record.jobId;
+        return (
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#16a34a" }}>
+            {job ? formatSalary(job.salaryMin, job.salaryMax) : "—"}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Status",
+      key: "status",
+      render: (_, record) => getStatusTag(record.status),
+    },
+    {
+      title: "Applied On",
+      key: "createdAt",
+      render: (_, record) => (
+        <span style={{ fontSize: 12, color: "#94a3b8" }}>
+          {timeAgo(record.createdAt)}
+        </span>
+      ),
+    },
+  ];
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 bg-white min-h-[80vh]">
-      {/* Profile Overview Header Card (Pure White) */}
-      <div className="p-5 sm:p-8 rounded-3xl bg-white border-2 border-slate-200 shadow-sm mb-8 relative overflow-hidden">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
+      {/* Overview Profile Card */}
+      <Card
+        style={{
+          borderRadius: 16,
+          border: "1px solid #e2e8f0",
+          boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.04)",
+          marginBottom: 24,
+        }}
+        styles={{ body: { padding: 24 } }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 20,
+          }}
+        >
+          {/* User Info with Animated Progress Ring on DP */}
+          <Space align="start" size={16}>
             <div
               onClick={() => setIsProfileModalOpen(true)}
-              className="relative cursor-pointer group shrink-0"
-              title="Click to update profile photo"
+              style={{
+                position: "relative",
+                cursor: "pointer",
+                width: 84,
+                height: 84,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+              title={`Profile ${completenessScore}% Complete - Click to Edit`}
             >
-              {user?.avatar ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={user.avatar}
-                  alt={user?.name || "Profile"}
-                  className="w-16 h-16 rounded-2xl object-cover border-2 border-orange-400 shadow-md group-hover:opacity-90 transition-opacity"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-2xl bg-orange-600 flex items-center justify-center text-2xl font-black text-white shadow-xs">
-                  {user?.name ? user.name.charAt(0).toUpperCase() : "A"}
-                </div>
-              )}
-              <div className="absolute -bottom-1 -right-1 p-1 rounded-full bg-slate-900/80 text-white shadow-xs group-hover:bg-orange-600 transition-colors">
-                <Camera className="w-3.5 h-3.5" />
+              <Progress
+                type="circle"
+                percent={completenessScore}
+                size={84}
+                strokeWidth={5}
+                strokeColor={{
+                  "0%": "#fb923c",
+                  "100%": "#ea580c",
+                }}
+                trailColor="#fed7aa"
+                showInfo={false}
+                style={{ position: "absolute", top: 0, left: 0 }}
+              />
+              <Avatar
+                size={64}
+                src={user?.avatar}
+                style={{
+                  backgroundColor: "#ea580c",
+                  fontWeight: 800,
+                  fontSize: 24,
+                  border: "3px solid #ffffff",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+                }}
+              >
+                {user?.name ? user.name.charAt(0).toUpperCase() : "A"}
+              </Avatar>
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: -6,
+                  backgroundColor: completenessScore >= 80 ? "#16a34a" : "#ea580c",
+                  color: "#ffffff",
+                  padding: "1px 7px",
+                  borderRadius: 10,
+                  fontSize: 10,
+                  fontWeight: 800,
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
+                  border: "2px solid #ffffff",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {completenessScore}%
               </div>
             </div>
             <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <Title level={3} style={{ margin: 0, fontSize: 20, color: "#0f172a" }}>
                   {user?.name}
-                </h1>
-                {user?.isVerified && (
-                  <VerifiedBadge size="sm" label="Verified Candidate" />
-                )}
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                </Title>
+                {user?.isVerified && <VerifiedBadge size="sm" label="Verified Candidate" />}
+                <Tag color="green" style={{ fontWeight: 700, borderRadius: 12 }}>
                   {user?.noticePeriod ? `${user.noticePeriod} Joiner` : "Immediate Joiner"}
-                </span>
+                </Tag>
               </div>
-              <p className="text-xs text-orange-700 font-bold mt-0.5">
-                {user?.headline}
-              </p>
-              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-1.5 font-medium">
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-orange-600" /> {user?.location || "Bengaluru, Karnataka"}
+
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#ea580c", marginTop: 4 }}>
+                {user?.headline || "Software Engineer / Professional Candidate"}
+              </div>
+
+              <Space
+                size={14}
+                split={<span style={{ color: "#cbd5e1" }}>•</span>}
+                style={{ fontSize: 12, color: "#64748b", marginTop: 6 }}
+              >
+                <span>
+                  <EnvironmentOutlined /> {user?.location || "Bengaluru, Karnataka"}
                 </span>
-                <span>•</span>
-                <span>{user?.phone || "+91 98765 43210"}</span>
+                <span>
+                  <PhoneOutlined /> {user?.phone || "+91 98765 43210"}
+                </span>
                 {user?.expectedCtc && (
-                  <>
-                    <span>•</span>
-                    <span className="text-slate-900 font-bold">
-                      Expected CTC: ₹{user.expectedCtc} LPA
-                    </span>
-                  </>
+                  <strong style={{ color: "#0f172a" }}>Expected: ₹{user.expectedCtc} LPA</strong>
+                )}
+              </Space>
+            </div>
+          </Space>
+
+          {/* Profile Progress & Action Buttons */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div
+              style={{
+                padding: "10px 14px",
+                borderRadius: 12,
+                backgroundColor: "#fff7ed",
+                border: "1px solid #fed7aa",
+                minWidth: 160,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                <span style={{ color: "#64748b" }}>Profile Score</span>
+                <span style={{ color: "#ea580c" }}>{completenessScore}%</span>
+              </div>
+              <Progress
+                percent={completenessScore}
+                showInfo={false}
+                strokeColor="#ea580c"
+                size="small"
+              />
+            </div>
+
+            <Space size={10}>
+              <Button
+                type="primary"
+                icon={<FilePdfOutlined />}
+                onClick={() => setIsResumeBuilderOpen(true)}
+                style={{ fontWeight: 600, borderRadius: 8 }}
+              >
+                ATS Resume
+              </Button>
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => setIsProfileModalOpen(true)}
+                style={{ fontWeight: 600, borderRadius: 8 }}
+              >
+                Edit Profile
+              </Button>
+            </Space>
+          </div>
+        </div>
+      </Card>
+
+      {/* Main Tabs */}
+      <Tabs
+        activeKey={tab}
+        onChange={setTab}
+        type="card"
+        items={[
+          {
+            key: "applications",
+            label: (
+              <Space>
+                <SolutionOutlined />
+                <span>Applications Pipeline</span>
+                <Badge count={applications.length} style={{ backgroundColor: "#ea580c" }} size="small" />
+              </Space>
+            ),
+            children: (
+              <Card
+                style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+                styles={{ body: { padding: 0 } }}
+              >
+                <Table
+                  dataSource={applications}
+                  columns={applicationColumns}
+                  rowKey="_id"
+                  loading={loading}
+                  pagination={{ pageSize: 8 }}
+                  locale={{
+                    emptyText: (
+                      <Empty
+                        description="You haven't applied to any roles yet"
+                        style={{ padding: "32px 0" }}
+                      />
+                    ),
+                  }}
+                />
+              </Card>
+            ),
+          },
+          {
+            key: "bookmarks",
+            label: (
+              <Space>
+                <BookOutlined />
+                <span>Saved Jobs</span>
+                <Badge count={bookmarkedJobs.length} style={{ backgroundColor: "#64748b" }} size="small" />
+              </Space>
+            ),
+            children: (
+              <div>
+                {bookmarkedJobs.length === 0 ? (
+                  <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0", textAlign: "center", padding: 32 }}>
+                    <Empty description="No saved jobs found. Click the bookmark icon on any job card to save it." />
+                  </Card>
+                ) : (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 14 }}>
+                    {bookmarkedJobs.map((job) => (
+                      <JobCard
+                        key={job._id}
+                        job={job}
+                        onSelectJob={onSelectJob}
+                        onApplyJob={onApplyJob}
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
-            </div>
-          </div>
-
-          {/* Profile Completeness & Edit Button */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-            <div className="p-3.5 rounded-2xl bg-orange-50 border border-orange-200 text-left min-w-[180px]">
-              <div className="flex items-center justify-between text-xs font-bold mb-1">
-                <span className="text-slate-600">Profile Score</span>
-                <span className="text-orange-700">{completenessScore}%</span>
-              </div>
-              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-orange-600 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${completenessScore}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => setIsResumeBuilderOpen(true)}
-                className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer whitespace-nowrap"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Generate ATS Resume</span>
-              </button>
-              <button
-                onClick={() => setIsProfileModalOpen(true)}
-                className="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-all cursor-pointer whitespace-nowrap"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Edit Profile</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Controls */}
-        <div className="flex items-center gap-2 mt-6 pt-5 border-t border-slate-100 overflow-x-auto pb-1">
-          <button
-            onClick={() => setTab("applications")}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-              tab === "applications"
-                ? "bg-orange-600 text-white shadow-xs"
-                : "text-slate-600 hover:text-orange-700 hover:bg-orange-50"
-            }`}
-          >
-            <Briefcase className="w-3.5 h-3.5" />
-            <span>Applications Pipeline</span>
-            <span className="px-1.5 py-0.2 rounded-full bg-white text-orange-700 text-[10px] font-black">
-              {applications.length}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setTab("bookmarks")}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-              tab === "bookmarks"
-                ? "bg-orange-600 text-white shadow-xs"
-                : "text-slate-600 hover:text-orange-700 hover:bg-orange-50"
-            }`}
-          >
-            <Bookmark className="w-3.5 h-3.5" />
-            <span>Saved Jobs</span>
-            <span className="px-1.5 py-0.2 rounded-full bg-white text-orange-700 text-[10px] font-black">
-              {bookmarkedJobs.length}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setTab("profile")}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-              tab === "profile"
-                ? "bg-orange-600 text-white shadow-xs"
-                : "text-slate-600 hover:text-orange-700 hover:bg-orange-50"
-            }`}
-          >
-            <User className="w-3.5 h-3.5" />
-            <span>Naukri Profile &amp; CV</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Tab 1: Applications Pipeline */}
-      {tab === "applications" && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-black text-slate-900 flex items-center gap-2 mb-2">
-            <TrendingUp className="w-5 h-5 text-orange-600" />
-            <span>Live Application Status Pipeline</span>
-          </h2>
-
-          {loading ? (
-            <div className="p-12 text-center text-slate-400 font-medium">Loading applications...</div>
-          ) : applications.length === 0 ? (
-            <div className="p-12 rounded-3xl bg-white border-2 border-slate-200 text-center shadow-sm">
-              <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-slate-900 mb-1">No applications yet</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4">
-                Explore open positions and apply with 1-click using your profile.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {applications.map((app) => {
-                const job = app.jobId || {};
-                const currentStageIndex = STAGES.indexOf(app.status);
-
-                return (
-                  <div
-                    key={app._id}
-                    className="p-5 sm:p-6 rounded-2xl bg-white border-2 border-slate-200 shadow-sm hover:border-orange-300 transition-all"
-                  >
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold text-xs text-slate-800">
-                            {job.company || "Company"}
-                          </span>
-                          <span className="text-slate-300">•</span>
-                          <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
-                            <Clock className="w-3 h-3 text-orange-600" /> Applied {timeAgo(app.appliedAt)}
-                          </span>
-                        </div>
-                        <h3 className="text-lg font-black text-slate-900">
-                          {job.title || "Software Engineering Role"}
-                        </h3>
-                        <div className="text-xs text-slate-500 mt-1 flex items-center gap-2 font-medium">
-                          <MapPin className="w-3.5 h-3.5 text-orange-600" /> {job.location || "Bengaluru, India"}
-                          {job.salaryMin && (
-                            <>
-                              <span>•</span>
-                              <span className="text-orange-600 font-black">
-                                {formatSalary(job.salaryMin, job.salaryMax)}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`px-3.5 py-1.5 rounded-xl text-xs font-black border ${getStatusBadge(
-                            app.status
-                          )}`}
-                        >
-                          {app.status}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Progress Step Indicator */}
-                    {app.status !== "Rejected" ? (
-                      <div className="py-3 px-4 rounded-xl bg-orange-50/60 border border-orange-200 mb-3">
-                        <div className="flex items-center justify-between relative">
-                          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-200 -translate-y-1/2 -z-0"></div>
-                          {STAGES.map((stage, idx) => {
-                            const isCompleted = currentStageIndex >= idx;
-                            const isCurrent = currentStageIndex === idx;
-
-                            return (
-                              <div key={stage} className="flex flex-col items-center relative z-10">
-                                <div
-                                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${
-                                    isCompleted
-                                      ? "bg-orange-600 text-white shadow-sm ring-2 ring-orange-400"
-                                      : "bg-white border-2 border-slate-300 text-slate-400"
-                                  }`}
-                                >
-                                  {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : idx + 1}
-                                </div>
-                                <span
-                                  className={`text-[10px] mt-1 font-bold ${
-                                    isCurrent ? "text-orange-600 font-black" : isCompleted ? "text-slate-800" : "text-slate-400"
-                                  }`}
-                                >
-                                  {stage}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-bold mb-3">
-                        Candidate application closed by employer.
-                      </div>
-                    )}
-
-                    {app.coverNote && (
-                      <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200 font-normal">
-                        <span className="font-bold text-slate-800">Your Pitch: </span>
-                        {app.coverNote}
-                      </div>
-                    )}
+            ),
+          },
+          {
+            key: "profile",
+            label: (
+              <Space>
+                <IdcardOutlined />
+                <span>Profile Details (Naukri 360°)</span>
+              </Space>
+            ),
+            children: (
+              <NaukriProfileView onOpenProfileBuilder={() => setIsProfileModalOpen(true)} />
+            ),
+          },
+          {
+            key: "alerts",
+            label: (
+              <Space>
+                <BellOutlined />
+                <span>Job Alerts</span>
+              </Space>
+            ),
+            children: (
+              <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <div>
+                    <Title level={4} style={{ margin: 0, fontSize: 16, color: "#0f172a" }}>
+                      Active Job Alerts
+                    </Title>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Receive daily WhatsApp &amp; Email alerts when relevant corporate jobs are posted.
+                    </Text>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => setShowAddAlert(!showAddAlert)}
+                    style={{ fontWeight: 600, borderRadius: 8 }}
+                  >
+                    Create Job Alert
+                  </Button>
+                </div>
 
-      {/* Tab 2: Bookmarked Roles */}
-      {tab === "bookmarks" && (
-        <div>
-          <h2 className="text-lg font-black text-slate-900 flex items-center gap-2 mb-4">
-            <Bookmark className="w-5 h-5 text-orange-600" />
-            <span>Saved Roles ({bookmarkedJobs.length})</span>
-          </h2>
+                {showAddAlert && (
+                  <Card
+                    size="small"
+                    style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, marginBottom: 16 }}
+                  >
+                    <Space wrap size={10}>
+                      <Input
+                        placeholder="Role / Title"
+                        value={newAlertRole}
+                        onChange={(e) => setNewAlertRole(e.target.value)}
+                        style={{ width: 180 }}
+                      />
+                      <Input
+                        placeholder="City"
+                        value={newAlertLocation}
+                        onChange={(e) => setNewAlertLocation(e.target.value)}
+                        style={{ width: 140 }}
+                      />
+                      <Select
+                        value={newAlertFreq}
+                        onChange={(val) => setNewAlertFreq(val)}
+                        options={[
+                          { label: "Daily", value: "Daily" },
+                          { label: "Weekly", value: "Weekly" },
+                        ]}
+                        style={{ width: 110 }}
+                      />
+                      <Button
+                        type="primary"
+                        icon={<CheckCircleFilled />}
+                        onClick={() => {
+                          if (!newAlertRole) return;
+                          setJobAlerts((prev) => [
+                            ...prev,
+                            {
+                              id: String(Date.now()),
+                              role: newAlertRole,
+                              location: newAlertLocation || "All India",
+                              frequency: newAlertFreq,
+                              experience: "Any",
+                              active: true,
+                            },
+                          ]);
+                          setNewAlertRole("");
+                          setNewAlertLocation("");
+                          setShowAddAlert(false);
+                        }}
+                        style={{ fontWeight: 600, borderRadius: 8 }}
+                      >
+                        Save Alert
+                      </Button>
+                    </Space>
+                  </Card>
+                )}
 
-          {bookmarkedJobs.length === 0 ? (
-            <div className="p-12 rounded-3xl bg-white border-2 border-slate-200 text-center shadow-sm">
-              <Bookmark className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-slate-900 mb-1">No bookmarked jobs</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Bookmark exciting jobs on the explore page to compare compensation and apply later.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {bookmarkedJobs.map((job) => (
-                <JobCard
-                  key={job._id}
-                  job={job}
-                  onSelectJob={onSelectJob}
-                  onApplyJob={onApplyJob}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Tab 3: Authentic Naukri Candidate Profile & FastForward Resume Builder */}
-      {tab === "profile" && (
-        <NaukriProfileView onOpenProfileBuilder={() => setIsProfileModalOpen(true)} />
-      )}
-
-      {/* Profile Builder Modal */}
-      <ProfileBuilderModal
-        isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-        onProfileUpdated={() => {
-          fetchApps();
-        }}
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {jobAlerts.map((alert) => (
+                    <div
+                      key={alert.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "12px 16px",
+                        borderRadius: 10,
+                        backgroundColor: "#f8fafc",
+                        border: "1px solid #e2e8f0",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>
+                          {alert.role}
+                        </div>
+                        <div style={{ fontSize: 12, color: "#64748b" }}>
+                          {alert.location} • {alert.frequency} Digest
+                        </div>
+                      </div>
+                      <Space size={14}>
+                        <Switch
+                          checked={alert.active}
+                          onChange={(checked) =>
+                            setJobAlerts((prev) =>
+                              prev.map((a) => (a.id === alert.id ? { ...a, active: checked } : a))
+                            )
+                          }
+                        />
+                        <Button
+                          type="text"
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() =>
+                            setJobAlerts((prev) => prev.filter((a) => a.id !== alert.id))
+                          }
+                        />
+                      </Space>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            ),
+          },
+        ]}
       />
 
-      {/* ATS Resume Builder Modal */}
-      <ResumeBuilderModal
-        isOpen={isResumeBuilderOpen}
-        onClose={() => setIsResumeBuilderOpen(false)}
-        onSaved={() => {
-          fetchApps();
-        }}
-      />
+      {/* Profile Builder & Resume Builder Modals */}
+      {isProfileModalOpen && (
+        <ProfileBuilderModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+        />
+      )}
+
+      {isResumeBuilderOpen && (
+        <ResumeBuilderModal
+          isOpen={isResumeBuilderOpen}
+          onClose={() => setIsResumeBuilderOpen(false)}
+        />
+      )}
     </div>
   );
 }

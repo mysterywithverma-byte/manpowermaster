@@ -14,8 +14,31 @@ export interface IUser extends Document {
   resumeFileName?: string;
   noticePeriod?: string;
   expectedCtc?: number;
+  currentCtc?: number;
+  workStatus?: "fresher" | "experienced";
+  candidateType?: "fresher" | "experienced";
+  profileCompleted?: boolean;
   education?: any[];
   experienceHistory?: any[];
+  itSkills?: any[];
+  projects?: any[];
+  accomplishments?: any;
+  careerPreferences?: any;
+  personalDetails?: any;
+  employerDetails?: {
+    companyName?: string;
+    companyType?: string;
+    industry?: string;
+    recruiterDesignation?: string;
+    website?: string;
+    gstin?: string;
+    cin?: string;
+    companySize?: string;
+    officeAddress?: string;
+    city?: string;
+    state?: string;
+    hiringRoles?: string[];
+  };
   savedJobs: string[];
   companyName?: string;
   companyLogo?: string;
@@ -46,8 +69,18 @@ const UserSchema = new Schema<IUser>(
     resumeFileName: { type: String, default: "" },
     noticePeriod: { type: String, default: "Immediate" },
     expectedCtc: { type: Number, default: 0 },
+    currentCtc: { type: Number, default: 0 },
+    workStatus: { type: String, enum: ["fresher", "experienced"], default: "fresher" },
+    candidateType: { type: String, enum: ["fresher", "experienced"], default: "fresher" },
+    profileCompleted: { type: Boolean, default: false },
     education: { type: Schema.Types.Mixed, default: [] },
     experienceHistory: { type: Schema.Types.Mixed, default: [] },
+    itSkills: { type: Schema.Types.Mixed, default: [] },
+    projects: { type: Schema.Types.Mixed, default: [] },
+    accomplishments: { type: Schema.Types.Mixed, default: {} },
+    careerPreferences: { type: Schema.Types.Mixed, default: {} },
+    personalDetails: { type: Schema.Types.Mixed, default: {} },
+    employerDetails: { type: Schema.Types.Mixed, default: {} },
     savedJobs: { type: [String], default: [] },
     companyName: { type: String, default: "" },
     companyLogo: { type: String, default: "" },

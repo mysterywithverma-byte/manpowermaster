@@ -5,22 +5,36 @@ import { useAuth } from "@/context/AuthContext";
 import { MockJob, MockApplication } from "@/lib/mock-data";
 import { formatSalary, timeAgo } from "@/lib/utils";
 import {
-  Building2,
-  PlusCircle,
-  Users,
-  CheckCircle2,
-  Filter,
-  FileText,
-  Mail,
-  Phone,
-  Briefcase,
-  ExternalLink,
-  MessageCircle,
-  RefreshCw,
-  Sparkles,
-  Trash2,
-} from "lucide-react";
+  Card,
+  Statistic,
+  Row,
+  Col,
+  Select,
+  Tag,
+  Button,
+  Avatar,
+  Space,
+  Typography,
+  Alert,
+  Tooltip,
+} from "antd";
+import {
+  BankOutlined,
+  PlusOutlined,
+  TeamOutlined,
+  CheckCircleFilled,
+  ReloadOutlined,
+  WhatsAppOutlined,
+  FilePdfOutlined,
+  LinkOutlined,
+  EnvironmentOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  FieldTimeOutlined,
+} from "@ant-design/icons";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+
+const { Text, Title } = Typography;
 
 interface EmployerDashboardProps {
   onOpenPostJob: () => void;
@@ -40,7 +54,9 @@ export function EmployerDashboard({ onOpenPostJob }: EmployerDashboardProps) {
     try {
       setLoading(true);
       const recruiterId = user?._id || "user-employer-1";
-      const companyParam = user?.companyName ? `&company=${encodeURIComponent(user.companyName)}` : "";
+      const companyParam = user?.companyName
+        ? `&company=${encodeURIComponent(user.companyName)}`
+        : "";
 
       const [jobsRes, appsRes] = await Promise.all([
         fetch(`/api/jobs?postedBy=${recruiterId}${companyParam}`),
@@ -86,7 +102,10 @@ export function EmployerDashboard({ onOpenPostJob }: EmployerDashboardProps) {
     }
   };
 
-  const handleUpdateStatus = async (appId: string, newStatus: MockApplication["status"]) => {
+  const handleUpdateStatus = async (
+    appId: string,
+    newStatus: MockApplication["status"]
+  ) => {
     try {
       setStatusUpdatingId(appId);
       const res = await fetch(`/api/applications/${appId}`, {
@@ -121,279 +140,336 @@ export function EmployerDashboard({ onOpenPostJob }: EmployerDashboardProps) {
   ).length;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 bg-white min-h-[80vh]">
-      {/* Top Banner (Pure White) */}
-      <div className="p-5 sm:p-8 rounded-3xl bg-white border-2 border-slate-200 shadow-sm mb-8 relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-orange-600 flex items-center justify-center text-white shadow-xs shrink-0">
-              <Building2 className="w-7 h-7" />
-            </div>
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
+      {/* Top Banner Card */}
+      <Card
+        style={{
+          borderRadius: 16,
+          border: "1px solid #e2e8f0",
+          boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.04)",
+          marginBottom: 24,
+        }}
+        styles={{ body: { padding: 24 } }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 16,
+          }}
+        >
+          <Space align="start" size={16}>
+            <Avatar
+              shape="square"
+              size={58}
+              icon={<BankOutlined />}
+              style={{
+                backgroundColor: "#ea580c",
+                color: "#ffffff",
+                fontSize: 26,
+                borderRadius: 12,
+              }}
+            />
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <Title level={3} style={{ margin: 0, fontSize: 20, color: "#0f172a" }}>
                   {user?.companyName || "Corporate Employer"} Talent Console
-                </h1>
+                </Title>
                 <VerifiedBadge size="sm" label="Verified Employer" />
               </div>
-              <p className="text-xs text-slate-500 mt-1">
-                Recruiter Lead: <strong className="text-slate-800">{user?.name}</strong> ({user?.email})
-              </p>
+              <Text type="secondary" style={{ fontSize: 13, display: "block", marginTop: 4 }}>
+                Lead Recruiter: <strong style={{ color: "#334155" }}>{user?.name}</strong> ({user?.email})
+              </Text>
             </div>
-          </div>
+          </Space>
 
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Free External Jobs Sync API Button */}
-            <button
+          <Space wrap size={10}>
+            <Button
+              icon={<ReloadOutlined spin={syncingJobs} />}
+              loading={syncingJobs}
               onClick={handleSyncLiveJobs}
-              disabled={syncingJobs}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold text-xs border border-orange-200 transition-all cursor-pointer disabled:opacity-50"
-              title="Fetch fresh live jobs via free Remotive Public API"
+              style={{ fontWeight: 600, borderRadius: 8 }}
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${syncingJobs ? "animate-spin" : ""}`} />
-              <span>{syncingJobs ? "Fetching..." : "Fetch Live Jobs"}</span>
-            </button>
-
-            <button
+              Sync Live Jobs
+            </Button>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
               onClick={onOpenPostJob}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+              style={{ fontWeight: 600, borderRadius: 8 }}
             >
-              <PlusCircle className="w-4 h-4" />
-              <span>Post Opening</span>
-            </button>
-          </div>
+              Post Job Opening
+            </Button>
+          </Space>
         </div>
 
         {syncMessage && (
-          <div className="mt-3 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-700 font-bold flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>{syncMessage}</span>
-          </div>
+          <Alert
+            message={syncMessage}
+            type="success"
+            showIcon
+            style={{ marginTop: 14, borderRadius: 8 }}
+          />
         )}
 
-        {/* Analytics Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-6 pt-5 border-t border-slate-100">
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200">
-            <div className="text-xl sm:text-2xl font-black text-slate-900">{jobs.length}</div>
-            <div className="text-xs text-slate-500 font-bold mt-0.5">Active Openings</div>
+        {/* Statistics Row */}
+        <Row gutter={[16, 16]} style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #f1f5f9" }}>
+          <Col xs={12} sm={6}>
+            <Card size="small" style={{ borderRadius: 10, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
+              <Statistic title="Active Openings" value={jobs.length} valueStyle={{ color: "#0f172a", fontWeight: 800 }} />
+            </Card>
+          </Col>
+          <Col xs={12} sm={6}>
+            <Card size="small" style={{ borderRadius: 10, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
+              <Statistic title="Total Candidates" value={applications.length} valueStyle={{ color: "#ea580c", fontWeight: 800 }} />
+            </Card>
+          </Col>
+          <Col xs={12} sm={6}>
+            <Card size="small" style={{ borderRadius: 10, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
+              <Statistic title="In Interviews" value={totalShortlisted} valueStyle={{ color: "#eab308", fontWeight: 800 }} />
+            </Card>
+          </Col>
+          <Col xs={12} sm={6}>
+            <Card size="small" style={{ borderRadius: 10, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
+              <Statistic title="Hired / Selected" value={totalHired} valueStyle={{ color: "#16a34a", fontWeight: 800 }} />
+            </Card>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* Candidate Pipeline Section */}
+      <div style={{ marginBottom: 32 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+            marginBottom: 16,
+          }}
+        >
+          <div>
+            <Title level={4} style={{ margin: 0, fontSize: 18, color: "#0f172a" }}>
+              Candidate Pipeline &amp; Stage Board
+            </Title>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              Review applicant resumes, message via WhatsApp, and manage hiring stages.
+            </Text>
           </div>
 
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200">
-            <div className="text-xl sm:text-2xl font-black text-orange-600">{applications.length}</div>
-            <div className="text-xs text-slate-500 font-bold mt-0.5">Total Candidates</div>
-          </div>
-
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200">
-            <div className="text-xl sm:text-2xl font-black text-amber-600">{totalShortlisted}</div>
-            <div className="text-xs text-slate-500 font-bold mt-0.5">In Interviews</div>
-          </div>
-
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200">
-            <div className="text-xl sm:text-2xl font-black text-emerald-600">{totalHired}</div>
-            <div className="text-xs text-slate-500 font-bold mt-0.5">Hired / Selected</div>
-          </div>
+          <Select
+            value={selectedJobId}
+            onChange={(val) => setSelectedJobId(val)}
+            style={{ width: 240 }}
+            options={[
+              { value: "all", label: `All Positions (${applications.length})` },
+              ...jobs.map((j) => ({
+                value: j._id,
+                label: `${j.title} (${j.company})`,
+              })),
+            ]}
+          />
         </div>
+
+        {/* Candidate List Cards */}
+        {loading ? (
+          <Card style={{ textAlign: "center", padding: 32, borderRadius: 14 }}>
+            <Text type="secondary">Loading candidate applications...</Text>
+          </Card>
+        ) : filteredApps.length === 0 ? (
+          <Card style={{ textAlign: "center", padding: 36, borderRadius: 14, border: "1px solid #e2e8f0" }}>
+            <TeamOutlined style={{ fontSize: 32, color: "#cbd5e1", marginBottom: 8 }} />
+            <div style={{ fontWeight: 700, fontSize: 15, color: "#0f172a" }}>No applicants yet for this filter</div>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              Candidates applying from the job board will appear here in real-time.
+            </Text>
+          </Card>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {filteredApps.map((app) => {
+              const jobTitle = typeof app.jobId === "object" ? app.jobId?.title : "Software Engineer";
+              const companyName = typeof app.jobId === "object" ? app.jobId?.company : "Company";
+              const phoneClean = app.applicantDetails?.phone?.replace(/[^0-9]/g, "") || "919876543210";
+
+              return (
+                <Card
+                  key={app._id}
+                  style={{
+                    borderRadius: 14,
+                    border: "1px solid #e2e8f0",
+                    boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.04)",
+                  }}
+                  styles={{ body: { padding: 18 } }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      justifyContent: "space-between",
+                      flexWrap: "wrap",
+                      gap: 14,
+                    }}
+                  >
+                    {/* Candidate Details */}
+                    <Space align="start" size={14}>
+                      <Avatar
+                        size={44}
+                        style={{ backgroundColor: "#ea580c", fontWeight: 800, fontSize: 18 }}
+                      >
+                        {app.applicantDetails?.name?.charAt(0) || "C"}
+                      </Avatar>
+
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <Text strong style={{ fontSize: 15, color: "#0f172a" }}>
+                            {app.applicantDetails?.name}
+                          </Text>
+                          <Tag color="green" style={{ borderRadius: 6, fontWeight: 700 }}>
+                            {app.applicantDetails?.noticePeriod || "Immediate Joiner"}
+                          </Tag>
+                        </div>
+
+                        <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                          Applied for: <strong style={{ color: "#334155" }}>{jobTitle}</strong> ({companyName})
+                        </div>
+
+                        <Space
+                          size={12}
+                          split={<span style={{ color: "#cbd5e1" }}>•</span>}
+                          style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}
+                        >
+                          <span>
+                            <MailOutlined /> {app.applicantDetails?.email}
+                          </span>
+                          {app.applicantDetails?.phone && (
+                            <span>
+                              <PhoneOutlined /> {app.applicantDetails?.phone}
+                            </span>
+                          )}
+                          <span>Exp: {app.applicantDetails?.experienceYears} yrs</span>
+                          {app.applicantDetails?.expectedCtc && (
+                            <strong style={{ color: "#16a34a" }}>
+                              CTC: ₹{app.applicantDetails?.expectedCtc} LPA
+                            </strong>
+                          )}
+                        </Space>
+                      </div>
+                    </Space>
+
+                    {/* Stage controller & WhatsApp */}
+                    <Space size={8} wrap>
+                      <Button
+                        size="middle"
+                        icon={<WhatsAppOutlined style={{ color: "#16a34a", fontSize: 16 }} />}
+                        href={`https://wa.me/${phoneClean}?text=${encodeURIComponent(
+                          `Hi ${app.applicantDetails?.name}, this is ${user?.companyName || "HR"} regarding your application for ${jobTitle}.`
+                        )}`}
+                        target="_blank"
+                        style={{
+                          borderColor: "#bbf7d0",
+                          backgroundColor: "#f0fdf4",
+                          fontWeight: 600,
+                          borderRadius: 6,
+                        }}
+                      >
+                        WhatsApp
+                      </Button>
+
+                      <Select
+                        size="middle"
+                        value={app.status}
+                        loading={statusUpdatingId === app._id}
+                        onChange={(val) => handleUpdateStatus(app._id, val)}
+                        style={{ width: 140 }}
+                        options={[
+                          { label: "Applied", value: "Applied" },
+                          { label: "Shortlisted", value: "Shortlisted" },
+                          { label: "Interviewing", value: "Interviewed" },
+                          { label: "Hired / Offer", value: "Hired" },
+                          { label: "Rejected", value: "Rejected" },
+                        ]}
+                      />
+                    </Space>
+                  </div>
+
+                  {/* Cover note & Resume */}
+                  <div
+                    style={{
+                      marginTop: 12,
+                      paddingTop: 10,
+                      borderTop: "1px dashed #f1f5f9",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      flexWrap: "wrap",
+                      gap: 8,
+                    }}
+                  >
+                    <Text italic type="secondary" style={{ fontSize: 12 }}>
+                      &ldquo;{app.coverNote || "Eager to discuss this position and contribute to the team."}&rdquo;
+                    </Text>
+
+                    <Button
+                      size="small"
+                      icon={<FilePdfOutlined style={{ color: "#ea580c" }} />}
+                      href={app.resumeUrl || "https://example.com/resume.pdf"}
+                      target="_blank"
+                      style={{ fontWeight: 600, borderRadius: 6 }}
+                    >
+                      View Resume (PDF)
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Main Content Area */}
-      <div className="space-y-8">
-        {/* Applicants Review Board */}
-        <div>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-            <div>
-              <h2 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
-                <Users className="w-5 h-5 text-orange-600" />
-                <span>Candidate Pipeline &amp; Stage Board</span>
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Review verified resumes, contact applicants on WhatsApp, and update hiring stages.
-              </p>
-            </div>
-
-            {/* Job Filter selector */}
-            <div className="flex items-center gap-2">
-              <Filter className="w-3.5 h-3.5 text-orange-600" />
-              <select
-                value={selectedJobId}
-                onChange={(e) => setSelectedJobId(e.target.value)}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none"
-              >
-                <option value="all">All Positions ({applications.length})</option>
-                {jobs.map((j) => (
-                  <option key={j._id} value={j._id}>
-                    {j.title} ({j.company})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="p-12 text-center text-slate-400 font-medium">Loading candidate applications...</div>
-          ) : filteredApps.length === 0 ? (
-            <div className="p-12 rounded-3xl bg-white border-2 border-slate-200 text-center shadow-sm">
-              <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-slate-900 mb-1">No applicants yet for this view</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Candidates applying from the job board will show up here in real time.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredApps.map((app) => {
-                const jobTitle = typeof app.jobId === "object" ? app.jobId?.title : "Software Engineer";
-                const companyName = typeof app.jobId === "object" ? app.jobId?.company : "Company";
-                const phoneClean = app.applicantDetails?.phone?.replace(/[^0-9]/g, "") || "919876543210";
-
-                return (
-                  <div
-                    key={app._id}
-                    className="p-5 sm:p-6 rounded-2xl bg-white border-2 border-slate-200 shadow-sm hover:border-orange-300 transition-all"
-                  >
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                      {/* Candidate Meta */}
-                      <div className="flex items-start gap-3.5">
-                        <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center font-bold text-base text-white shrink-0">
-                          {app.applicantDetails?.name?.charAt(0) || "C"}
-                        </div>
-
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-bold text-base text-slate-900">
-                              {app.applicantDetails?.name}
-                            </h3>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                              {app.applicantDetails?.noticePeriod || "Immediate Joiner"}
-                            </span>
-                          </div>
-
-                          <div className="text-xs text-slate-500 mt-0.5">
-                            Role: <strong className="text-slate-800">{jobTitle}</strong> ({companyName})
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-1 font-medium">
-                            <span className="flex items-center gap-1">
-                              <Mail className="w-3 h-3 text-orange-600" /> {app.applicantDetails?.email}
-                            </span>
-                            {app.applicantDetails?.phone && (
-                              <span className="flex items-center gap-1">
-                                <Phone className="w-3 h-3 text-orange-600" /> {app.applicantDetails?.phone}
-                              </span>
-                            )}
-                            <span>•</span>
-                            <span>Exp: <strong className="text-slate-800">{app.applicantDetails?.experienceYears} yrs</strong></span>
-                            {app.applicantDetails?.expectedCtc && (
-                              <span>• Expected: <strong className="text-orange-600 font-bold">₹{app.applicantDetails?.expectedCtc} LPA</strong></span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Status Action Controller & Direct WhatsApp */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        <a
-                          href={`https://wa.me/${phoneClean}?text=${encodeURIComponent(`Hi ${app.applicantDetails?.name}, this is ${user?.companyName || "HR"} regarding your application for ${jobTitle}.`)}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1"
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          <span>WhatsApp</span>
-                        </a>
-
-                        <div className="text-xs text-slate-500 font-bold">Stage:</div>
-                        <select
-                          disabled={statusUpdatingId === app._id}
-                          value={app.status}
-                          onChange={(e) => handleUpdateStatus(app._id, e.target.value as any)}
-                          className={`px-3 py-1.5 text-xs font-black rounded-xl border focus:outline-none cursor-pointer transition-colors ${
-                            app.status === "Hired"
-                              ? "bg-emerald-100 text-emerald-800 border-emerald-300"
-                              : app.status === "Interviewed"
-                              ? "bg-orange-100 text-orange-800 border-orange-300"
-                              : app.status === "Shortlisted"
-                              ? "bg-amber-100 text-amber-800 border-amber-300"
-                              : app.status === "Rejected"
-                              ? "bg-rose-100 text-rose-800 border-rose-300"
-                              : "bg-slate-50 text-slate-700 border-slate-200"
-                          }`}
-                        >
-                          <option value="Applied">Applied</option>
-                          <option value="Shortlisted">Shortlisted</option>
-                          <option value="Interviewed">Interviewing</option>
-                          <option value="Hired">Offer Extended / Hired</option>
-                          <option value="Rejected">Rejected</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Candidate Pitch & Links */}
-                    <div className="mt-3.5 pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                      <div className="text-slate-600 italic">
-                        &quot;{app.coverNote || "Eager to discuss this position and contribute to the team."}&quot;
-                      </div>
-
-                      <div className="flex items-center gap-3 shrink-0">
-                        {app.applicantDetails?.portfolioUrl && (
-                          <a
-                            href={app.applicantDetails.portfolioUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center gap-1 text-orange-600 font-bold hover:underline"
-                          >
-                            <span>Portfolio</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-
-                        <a
-                          href={app.resumeUrl || "https://example.com/resume.pdf"}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 text-orange-700 font-bold border border-orange-200 hover:bg-orange-100 transition-colors"
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>View Resume (PDF)</span>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Posted Jobs */}
-        <div className="pt-6 border-t border-slate-100">
-          <h2 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
-            <Briefcase className="w-5 h-5 text-orange-600" />
-            <span>Active Open Roles ({jobs.length})</span>
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {jobs.map((job) => (
-              <div
-                key={job._id}
-                className="p-5 rounded-2xl bg-white border-2 border-slate-200 shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="font-black text-sm text-slate-900 line-clamp-1">{job.title}</h3>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200">
-                    Active
-                  </span>
-                </div>
-                <div className="text-xs text-slate-500 mb-2">{job.company} • {job.location}</div>
-                <div className="text-sm font-black text-orange-600 mb-2">
-                  {formatSalary(job.salaryMin, job.salaryMax)}
-                </div>
-                <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-                  <span>{job.applicantsCount} Applicants</span>
-                  <span className="text-[10px]">{timeAgo(job.createdAt)}</span>
-                </div>
+      {/* Active Posted Jobs Grid */}
+      <div>
+        <Title level={4} style={{ margin: "0 0 16px", fontSize: 18, color: "#0f172a" }}>
+          Active Open Positions ({jobs.length})
+        </Title>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
+          {jobs.map((job) => (
+            <Card
+              key={job._id}
+              style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+              styles={{ body: { padding: 18 } }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                <Title level={5} ellipsis style={{ margin: 0, fontSize: 14, color: "#0f172a" }}>
+                  {job.title}
+                </Title>
+                <Tag color="green" style={{ borderRadius: 6, fontWeight: 700 }}>
+                  Active
+                </Tag>
               </div>
-            ))}
-          </div>
+              <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>
+                {job.company} • {job.location}
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#ea580c", marginBottom: 10 }}>
+                {formatSalary(job.salaryMin, job.salaryMax)}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: 11,
+                  color: "#94a3b8",
+                  paddingTop: 8,
+                  borderTop: "1px solid #f1f5f9",
+                }}
+              >
+                <span>{job.applicantsCount || 0} Applicants</span>
+                <span>{timeAgo(job.createdAt)}</span>
+              </div>
+            </Card>
+          ))}
         </div>
       </div>
     </div>

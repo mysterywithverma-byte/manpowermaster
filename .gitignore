@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# reference projects
+reference-job-board/
+reference-code100x-jobboard/
+
