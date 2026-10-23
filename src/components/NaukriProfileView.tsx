@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { compressImageToWebP } from "@/lib/image-compressor";
 import {
   Card,
   Tag,
@@ -80,33 +81,34 @@ export function NaukriProfileView({ onOpenProfileBuilder }: NaukriProfileViewPro
     }
 
     setUploadingAvatar(true);
-    const formData = new FormData();
-    formData.append("file", file);
 
     try {
+      // 1. Compress image & convert to modern WebP format in browser (reduces size by 90%+)
+      const compressed = await compressImageToWebP(file, 400, 0.82);
+      const formData = new FormData();
+      formData.append("file", compressed.file);
+
       const res = await fetch("/api/upload/image", {
         method: "POST",
         body: formData,
       });
       const data = await res.json();
-      if (data.success && data.url) {
-        // Update user state and persist in DB
-        updateUser({ avatar: data.url });
-        await fetch("/api/users/profile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: user?._id || user?.id,
-            email: user?.email,
-            avatar: data.url,
-          }),
-        });
-        message.success("Profile photo updated successfully!");
-      } else {
-        message.error(data.error || "Failed to upload image");
-      }
+      const finalAvatarUrl = data.success && data.url ? data.url : compressed.dataUrl;
+
+      // Update user state and persist in DB
+      updateUser({ avatar: finalAvatarUrl });
+      await fetch("/api/users/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user?._id || user?.id,
+          email: user?.email,
+          avatar: finalAvatarUrl,
+        }),
+      });
+      message.success("Profile photo converted to WebP & updated successfully!");
     } catch {
-      message.error("Error uploading profile photo");
+      message.error("Error compressing or uploading profile photo");
     } finally {
       setUploadingAvatar(false);
       if (fileInputRef.current) fileInputRef.current.value = "";

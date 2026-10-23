@@ -3,22 +3,51 @@ import { uploadFileToCloud } from "@/lib/storage";
 
 export async function POST(request: NextRequest) {
   try {
-    const data = await request.formData();
-    const file: File | null = data.get("file") as unknown as File;
+    const contentTypeHeader = request.headers.get("content-type") || "";
 
-    if (!file) {
-      return NextResponse.json({ success: false, error: "No image file uploaded" }, { status: 400 });
+    let buffer: Buffer;
+    let fileName = "image.webp";
+    let mimeType = "image/webp";
+
+    if (contentTypeHeader.includes("application/json")) {
+      const json = await request.json();
+      if (json.dataUrl) {
+        const matches = json.dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+        if (matches && matches.length === 3) {
+          mimeType = matches[1];
+          buffer = Buffer.from(matches[2], "base64");
+          fileName = json.fileName || "compressed.webp";
+        } else {
+          return NextResponse.json({ success: false, error: "Invalid dataUrl format" }, { status: 400 });
+        }
+      } else {
+        return NextResponse.json({ success: false, error: "No dataUrl provided" }, { status: 400 });
+      }
+    } else {
+      const data = await request.formData();
+      const file = data.get("file") as File | null;
+      const dataUrl = data.get("dataUrl") as string | null;
+
+      if (dataUrl) {
+        const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+        if (matches && matches.length === 3) {
+          mimeType = matches[1];
+          buffer = Buffer.from(matches[2], "base64");
+          fileName = "compressed.webp";
+        } else {
+          return NextResponse.json({ success: false, error: "Invalid dataUrl in form" }, { status: 400 });
+        }
+      } else if (file) {
+        const bytes = await file.arrayBuffer();
+        buffer = Buffer.from(bytes);
+        fileName = file.name;
+        mimeType = file.type || "image/webp";
+      } else {
+        return NextResponse.json({ success: false, error: "No image file uploaded" }, { status: 400 });
+      }
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    const uploadResult = await uploadFileToCloud(
-      buffer,
-      file.name,
-      file.type || "image/webp",
-      "images"
-    );
+    const uploadResult = await uploadFileToCloud(buffer, fileName, mimeType, "images");
 
     return NextResponse.json({
       success: true,
@@ -26,7 +55,7 @@ export async function POST(request: NextRequest) {
       url: uploadResult.url,
       provider: uploadResult.provider,
       sizeBytes: buffer.length,
-      mimeType: file.type,
+      mimeType,
       filename: uploadResult.fileName,
     });
   } catch (error: unknown) {

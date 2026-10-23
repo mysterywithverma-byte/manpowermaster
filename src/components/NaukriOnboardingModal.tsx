@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import confetti from "canvas-confetti";
+import { compressImageToWebP } from "@/lib/image-compressor";
 import {
   Modal,
   Steps,
@@ -430,17 +431,21 @@ export function NaukriOnboardingModal({
     setUploadingLogo(true);
     setError("");
     try {
+      // 1. Convert & compress image to lightweight WebP format
+      const compressed = await compressImageToWebP(file, 400, 0.82);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressed.file);
+
       const res = await fetch("/api/upload/image", { method: "POST", body: formData });
       const data = await res.json();
       if (data.success && data.url) {
         setCompanyLogo(data.url);
       } else {
-        setError(data.error || "Logo upload failed");
+        // Fallback directly to client compressed WebP data URL
+        setCompanyLogo(compressed.dataUrl);
       }
     } catch {
-      setError("Error uploading company logo");
+      setError("Error compressing and uploading company logo");
     } finally {
       setUploadingLogo(false);
     }
