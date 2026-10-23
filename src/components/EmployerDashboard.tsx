@@ -490,7 +490,7 @@ export function EmployerDashboard({
 
                         <Space
                           size={12}
-                          split={<span style={{ color: "#cbd5e1" }}>•</span>}
+                          separator={<span style={{ color: "#cbd5e1" }}>•</span>}
                           style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}
                         >
                           <span>
