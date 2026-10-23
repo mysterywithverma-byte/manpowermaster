@@ -77,7 +77,7 @@ export function Navbar({
                 {user?.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
               </div>
               <div style={{ fontSize: 11, color: "#64748b" }}>{user?.email}</div>
-              <Tag color="orange" bordered={false} style={{ marginTop: 4, textTransform: "uppercase", fontSize: 10, fontWeight: 700 }}>
+              <Tag color="orange" variant="filled" style={{ marginTop: 4, textTransform: "uppercase", fontSize: 10, fontWeight: 700 }}>
                 {user?.role === "seeker" ? "Employee" : "Employer"}
               </Tag>
             </div>

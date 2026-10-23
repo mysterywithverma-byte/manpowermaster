@@ -311,7 +311,7 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
                 </Title>
                 {user?.isVerified && <VerifiedBadge size="sm" label="Verified" />}
                 <Tag
-                  bordered={false}
+                  variant="filled"
                   style={{
                     backgroundColor: "#ecfdf5",
                     color: "#059669",
