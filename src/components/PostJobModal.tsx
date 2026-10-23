@@ -22,17 +22,16 @@ import {
   AutoComplete,
 } from "antd";
 import {
-  BankOutlined,
-  UploadOutlined,
-  EnvironmentOutlined,
-  DollarOutlined,
-  CheckOutlined,
-  SolutionOutlined,
-  PlusOutlined,
-  ThunderboltFilled,
-  UserOutlined,
-  CloseOutlined,
-} from "@ant-design/icons";
+  Building2,
+  MapPin,
+  Check,
+  Briefcase,
+  Plus,
+  Zap,
+  User,
+  X,
+  Upload as UploadIcon,
+} from "lucide-react";
 import { compressImageToWebP, formatBytes } from "@/lib/image-compressor";
 
 const { Text, Title } = Typography;
@@ -94,11 +93,33 @@ export function PostJobModal({
     }
   };
 
+  // Multi-Branch Integration for Employer
+  const userBranches = user?.employerDetails?.branches || [];
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("custom");
+
+  const handleBranchSelect = (branchId: string) => {
+    setSelectedBranchId(branchId);
+    if (branchId === "custom") return;
+    const branch = userBranches.find((b: any) => b.id === branchId);
+    if (branch) {
+      const locStr = branch.state ? `${branch.city}, ${branch.state}` : branch.city;
+      setLocation(locStr);
+    }
+  };
+
   React.useEffect(() => {
     if (isOpen) {
       fetchCities("");
+      if (user?.companyName) setCompany(user.companyName);
+      if (user?.companyLogo) setCompanyLogo(user.companyLogo);
+      if (userBranches.length > 0 && selectedBranchId === "custom") {
+        const firstBranch = userBranches[0];
+        setSelectedBranchId(firstBranch.id);
+        const locStr = firstBranch.state ? `${firstBranch.city}, ${firstBranch.state}` : firstBranch.city;
+        setLocation(locStr);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, user]);
 
   const handleLogoUpload = async (file: File) => {
     setUploadingLogo(true);
@@ -142,6 +163,11 @@ export function PostJobModal({
           company,
           companyLogo,
           location,
+          branchId: selectedBranchId !== "custom" ? selectedBranchId : undefined,
+          branchName:
+            selectedBranchId !== "custom"
+              ? userBranches.find((b: any) => b.id === selectedBranchId)?.branchName
+              : undefined,
           workplaceType,
           experienceLevel,
           jobType,
@@ -193,13 +219,13 @@ export function PostJobModal({
       onCancel={onClose}
       footer={
         success ? null : (
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, paddingTop: 12 }}>
-            <Button onClick={onClose} icon={<CloseOutlined />}>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 12 }}>
+            <Button onClick={onClose} icon={<X className="w-3.5 h-3.5" />}>
               Cancel
             </Button>
             <Button
               type="primary"
-              icon={<CheckOutlined />}
+              icon={<Check className="w-3.5 h-3.5" />}
               loading={loading}
               onClick={handleSubmit}
               style={{ fontWeight: 600, borderRadius: 8 }}
@@ -217,7 +243,7 @@ export function PostJobModal({
         <Result
           status="success"
           title="Job Vacancy Published Successfully!"
-          subTitle="Your opening is now live across Naukri 360° candidate search feeds."
+          subTitle="Your opening is now live across candidate search feeds."
         />
       ) : (
         <div>
@@ -267,19 +293,41 @@ export function PostJobModal({
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <Row gutter={[12, 12]}>
               <Col xs={24} sm={12}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Job Title *</label>
-                <Input
-                  prefix={<SolutionOutlined style={{ color: "#94a3b8" }} />}
-                  placeholder="e.g. Senior Frontend Developer"
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                  Job Title / Role * (Select or type custom)
+                </label>
+                <AutoComplete
+                  options={[
+                    { label: "Frontend Developer", value: "Frontend Developer" },
+                    { label: "Backend Developer", value: "Backend Developer" },
+                    { label: "Full Stack Engineer", value: "Full Stack Engineer" },
+                    { label: "Senior Software Engineer", value: "Senior Software Engineer" },
+                    { label: "DevOps Engineer", value: "DevOps Engineer" },
+                    { label: "Product Manager", value: "Product Manager" },
+                    { label: "UI/UX Designer", value: "UI/UX Designer" },
+                    { label: "Data Analyst", value: "Data Analyst" },
+                    { label: "Data Scientist", value: "Data Scientist" },
+                    { label: "QA Automation Engineer", value: "QA Automation Engineer" },
+                    { label: "HR Recruiter", value: "HR Recruiter" },
+                    { label: "Sales & Marketing Manager", value: "Sales & Marketing Manager" },
+                    { label: "Accountant / Finance Executive", value: "Accountant" },
+                    { label: "Operations Executive", value: "Operations Executive" },
+                  ]}
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  style={{ marginTop: 4, borderRadius: 8 }}
-                />
+                  onChange={(val) => setTitle(val)}
+                  style={{ width: "100%", marginTop: 4 }}
+                >
+                  <Input
+                    prefix={<Briefcase className="w-3.5 h-3.5 text-slate-400" />}
+                    placeholder="e.g. Senior Frontend Developer (or type custom...)"
+                    style={{ borderRadius: 8 }}
+                  />
+                </AutoComplete>
               </Col>
               <Col xs={24} sm={12}>
                 <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Company Name *</label>
                 <Input
-                  prefix={<BankOutlined style={{ color: "#94a3b8" }} />}
+                  prefix={<Building2 className="w-3.5 h-3.5 text-slate-400" />}
                   placeholder="e.g. Manpower Master Ltd"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
@@ -287,6 +335,42 @@ export function PostJobModal({
                 />
               </Col>
             </Row>
+
+            {/* Branch / Office Selection for Multi-Branch Employers */}
+            {userBranches.length > 0 && (
+              <div
+                style={{
+                  padding: "10px 14px",
+                  backgroundColor: "#fffaf5",
+                  border: "1px solid #fed7aa",
+                  borderRadius: 10,
+                  marginBottom: 4,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "#9a3412", display: "flex", alignItems: "center", gap: 6 }}>
+                    <Building2 className="w-4 h-4 text-orange-600" />
+                    Assign to Company Branch / Office Location:
+                  </label>
+                  <span style={{ fontSize: 11, color: "#ea580c", fontWeight: 600 }}>
+                    {userBranches.length} Branches Available
+                  </span>
+                </div>
+                <Select
+                  size="middle"
+                  value={selectedBranchId}
+                  onChange={handleBranchSelect}
+                  style={{ width: "100%" }}
+                  options={[
+                    { label: "📍 Custom / Unspecified Location", value: "custom" },
+                    ...userBranches.map((b: any) => ({
+                      label: `🏢 ${b.branchName} (${b.city}${b.state ? `, ${b.state}` : ""}) — ${b.branchType || "Branch"}`,
+                      value: b.id,
+                    })),
+                  ]}
+                />
+              </div>
+            )}
 
             <Row gutter={[12, 12]}>
               <Col xs={24} sm={8}>
@@ -299,8 +383,8 @@ export function PostJobModal({
                   style={{ width: "100%", marginTop: 4 }}
                 >
                   <Input
-                    prefix={<EnvironmentOutlined style={{ color: "#94a3b8" }} />}
-                    placeholder="Search city across India..."
+                    prefix={<MapPin className="w-3.5 h-3.5 text-slate-400" />}
+                    placeholder="Search city across India or type custom..."
                     style={{ borderRadius: 8 }}
                   />
                 </AutoComplete>

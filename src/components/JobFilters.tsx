@@ -11,12 +11,8 @@ import {
   Space,
   Divider,
   Typography,
-  Tooltip,
 } from "antd";
-import {
-  FilterOutlined,
-  ReloadOutlined,
-} from "@ant-design/icons";
+import { Filter, RotateCcw } from "lucide-react";
 
 const { Text } = Typography;
 
@@ -76,9 +72,9 @@ export function JobFilters({
         }}
       >
         <Space align="center" size={8}>
-          <FilterOutlined style={{ color: "#ea580c" }} />
-          <Text strong style={{ fontSize: 14, color: "#0f172a" }}>
-            All Filters
+          <Filter className="w-4 h-4 text-primary" />
+          <Text strong style={{ fontSize: 13, color: "#0f172a" }}>
+            Filters
           </Text>
           {activeCount > 0 && (
             <Badge
@@ -93,7 +89,7 @@ export function JobFilters({
           <Button
             type="link"
             size="small"
-            icon={<ReloadOutlined style={{ color: "#ea580c" }} />}
+            icon={<RotateCcw className="w-3.5 h-3.5" />}
             onClick={onReset}
             style={{ fontWeight: 600, padding: 0 }}
           >

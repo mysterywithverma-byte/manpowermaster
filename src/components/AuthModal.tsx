@@ -95,16 +95,16 @@ export function AuthModal({
         </div>
 
         <Title level={3} style={{ margin: "0 0 6px", fontSize: 22, color: "#0f172a", fontWeight: 700 }}>
-          {role === "employer" ? "Employer & Recruiter Portal" : "Job Seeker Sign In"}
+          {role === "employer" ? "Employer Sign In" : "Employee Sign In"}
         </Title>
         <Text type="secondary" style={{ fontSize: 13 }}>
           {role === "employer"
-            ? "Post jobs, search candidate resumes & hire verified talent"
-            : "Direct interview calls from top hiring companies • 100% Free"}
+            ? "Post verified jobs, search resumes & hire top talent"
+            : "Find verified corporate jobs & get direct HR interview calls"}
         </Text>
       </div>
 
-      {/* Account Type Selector */}
+      {/* Account Type Selector (Employer Left, Employee Right) */}
       <div style={{ marginBottom: 16 }}>
         <Text strong style={{ fontSize: 12, color: "#475569", display: "block", marginBottom: 6 }}>
           Select your profile type:
@@ -118,20 +118,20 @@ export function AuthModal({
             {
               label: (
                 <Space size={6} style={{ padding: "4px 0" }}>
-                  <UserOutlined style={{ color: role === "seeker" ? "#ea580c" : undefined }} />
-                  <span style={{ fontWeight: 600 }}>Candidate / Seeker</span>
+                  <BankOutlined style={{ color: role === "employer" ? "#ea580c" : undefined }} />
+                  <span style={{ fontWeight: 700 }}>Employer</span>
                 </Space>
               ),
-              value: "seeker",
+              value: "employer",
             },
             {
               label: (
                 <Space size={6} style={{ padding: "4px 0" }}>
-                  <BankOutlined style={{ color: role === "employer" ? "#ea580c" : undefined }} />
-                  <span style={{ fontWeight: 600 }}>Employer / HR</span>
+                  <UserOutlined style={{ color: role === "seeker" ? "#ea580c" : undefined }} />
+                  <span style={{ fontWeight: 700 }}>Employee</span>
                 </Space>
               ),
-              value: "employer",
+              value: "seeker",
             },
           ]}
         />
@@ -151,7 +151,7 @@ export function AuthModal({
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#334155" }}>
               <CheckCircleFilled style={{ color: "#16a34a", fontSize: 14 }} />
-              <span>Full Naukri 360° Profile & automated resume parser</span>
+              <span>Complete Candidate Profile & automated resume parser</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#334155" }}>
               <CheckCircleFilled style={{ color: "#16a34a", fontSize: 14 }} />
@@ -248,17 +248,6 @@ export function AuthModal({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <Button
           size="middle"
-          icon={<UserOutlined />}
-          onClick={() => {
-            loginAsDemo("seeker");
-            onClose();
-          }}
-          style={{ fontSize: 12, fontWeight: 600, borderRadius: 8 }}
-        >
-          Demo Candidate
-        </Button>
-        <Button
-          size="middle"
           icon={<BankOutlined />}
           onClick={() => {
             loginAsDemo("employer");
@@ -267,6 +256,17 @@ export function AuthModal({
           style={{ fontSize: 12, fontWeight: 600, borderRadius: 8 }}
         >
           Demo Employer
+        </Button>
+        <Button
+          size="middle"
+          icon={<UserOutlined />}
+          onClick={() => {
+            loginAsDemo("seeker");
+            onClose();
+          }}
+          style={{ fontSize: 12, fontWeight: 600, borderRadius: 8 }}
+        >
+          Demo Employee
         </Button>
       </div>
     </Modal>

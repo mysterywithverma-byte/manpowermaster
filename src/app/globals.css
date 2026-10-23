@@ -23,7 +23,8 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
-  padding-bottom: 70px;
+  -webkit-tap-highlight-color: transparent;
+  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
 }
 
 @media (min-width: 768px) {
@@ -158,3 +159,72 @@ html, body {
   box-shadow: 0 8px 20px rgba(249, 115, 22, 0.12);
   transform: translateY(-2px);
 }
+
+/* ──────────────────────────────────────────────────────────────────────
+   MOBILE-FIRST PHONE ENHANCEMENTS
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Hide scrollbar for horizontal swipe chip lists */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Mobile Safe-Area Inset Support */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);
+}
+
+@media (max-width: 640px) {
+  /* Prevent iOS zoom on inputs */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  select,
+  textarea,
+  .ant-input,
+  .ant-select-selection-search-input {
+    font-size: 16px !important;
+  }
+
+  /* Ant Design Modal full-responsiveness on mobile phones */
+  .ant-modal {
+    max-width: calc(100vw - 16px) !important;
+    margin: 8px auto !important;
+    padding-bottom: 12px !important;
+    top: 16px !important;
+  }
+
+  .ant-modal .ant-modal-content {
+    padding: 16px 14px !important;
+    border-radius: 20px !important;
+  }
+
+  /* Bottom sheet drawer smooth styling */
+  .ant-drawer-bottom .ant-drawer-content-wrapper {
+    border-radius: 24px 24px 0 0 !important;
+    overflow: hidden !important;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .ant-drawer-header {
+    padding: 12px 16px !important;
+  }
+
+  /* Prevent table column overflow */
+  .ant-table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Responsive card body padding */
+  .mobile-compact-card .ant-card-body {
+    padding: 12px 14px !important;
+  }
+}
+

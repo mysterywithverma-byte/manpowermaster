@@ -24,24 +24,26 @@ import {
   Switch,
   Input,
   Select,
+  Modal,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
-  UserOutlined,
-  SolutionOutlined,
-  BookOutlined,
-  BellOutlined,
-  EditOutlined,
-  FilePdfOutlined,
-  EnvironmentOutlined,
-  PhoneOutlined,
-  DollarOutlined,
-  CheckCircleFilled,
-  PlusOutlined,
-  DeleteOutlined,
-  BankOutlined,
-  IdcardOutlined,
-} from "@ant-design/icons";
+  User,
+  Briefcase,
+  Bookmark,
+  Bell,
+  Pencil,
+  FileText,
+  MapPin,
+  Phone,
+  Mail,
+  Eye,
+  Plus,
+  Trash2,
+  Building2,
+  CheckCircle2,
+  ExternalLink,
+} from "lucide-react";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 const { Text, Title } = Typography;
@@ -67,27 +69,17 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
   const [bookmarkedJobs, setBookmarkedJobs] = useState<MockJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [profileModalTab, setProfileModalTab] = useState("basic");
   const [isResumeBuilderOpen, setIsResumeBuilderOpen] = useState(false);
+  const [isViewProfileOpen, setIsViewProfileOpen] = useState(false);
 
-  // Job Alerts state
-  const [jobAlerts, setJobAlerts] = useState<JobAlert[]>([
-    {
-      id: "1",
-      role: "Software Engineer",
-      location: "Bengaluru",
-      frequency: "Daily",
-      experience: "2-5 Years",
-      active: true,
-    },
-    {
-      id: "2",
-      role: "Data Analyst",
-      location: "Remote",
-      frequency: "Weekly",
-      experience: "0-2 Years",
-      active: false,
-    },
-  ]);
+  const handleOpenProfileBuilder = (targetTab: string = "basic") => {
+    setProfileModalTab(targetTab);
+    setIsProfileModalOpen(true);
+  };
+
+  // Job Alerts state (Real empty state, no dummy data)
+  const [jobAlerts, setJobAlerts] = useState<JobAlert[]>([]);
   const [newAlertRole, setNewAlertRole] = useState("");
   const [newAlertLocation, setNewAlertLocation] = useState("");
   const [newAlertFreq, setNewAlertFreq] = useState<"Daily" | "Weekly">("Daily");
@@ -95,9 +87,14 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
 
   // Fetch applications
   const fetchApps = async () => {
+    if (!user?._id && !user?.id) {
+      setApplications([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
-      const applicantId = user?._id || user?.id || "user-seeker-1";
+      const applicantId = user._id || user.id;
       const res = await fetch(`/api/applications?applicantId=${applicantId}`);
       const data = await res.json();
       if (data.success) {
@@ -174,7 +171,7 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
               src={job.companyLogo}
               style={{ backgroundColor: "#f1f5f9", color: "#ea580c", fontWeight: 700 }}
             >
-              {job.company ? job.company.charAt(0) : <BankOutlined />}
+              {job.company ? job.company.charAt(0) : <Building2 className="w-4 h-4 text-orange-600" />}
             </Avatar>
             <div>
               <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>
@@ -190,7 +187,8 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
       title: "Location",
       key: "location",
       render: (_, record) => (
-        <span style={{ fontSize: 12, color: "#475569" }}>
+        <span style={{ fontSize: 12, color: "#475569", display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <MapPin className="w-3.5 h-3.5 text-slate-400" />
           {record.jobId?.location || "India"}
         </span>
       ),
@@ -221,67 +219,66 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
         </span>
       ),
     },
+    {
+      title: "",
+      key: "action",
+      width: 48,
+      render: (_, record) => (
+        <Tooltip title="View Job Details">
+          <Button
+            type="text"
+            shape="circle"
+            size="small"
+            icon={<ExternalLink className="w-3.5 h-3.5 text-slate-500" />}
+            onClick={() => onSelectJob(record.jobId)}
+          />
+        </Tooltip>
+      ),
+    },
   ];
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
-      {/* Overview Profile Card */}
+      {/* Modern Zoho-style Candidate Profile Card */}
       <Card
         style={{
-          borderRadius: 16,
+          borderRadius: 14,
           border: "1px solid #e2e8f0",
-          boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.04)",
-          marginBottom: 24,
+          backgroundColor: "#ffffff",
+          boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.03)",
+          marginBottom: 20,
         }}
-        styles={{ body: { padding: 24 } }}
+        styles={{ body: { padding: "18px 24px" } }}
       >
         <div
           style={{
             display: "flex",
-            alignItems: "flex-start",
+            alignItems: "center",
             justifyContent: "space-between",
             flexWrap: "wrap",
-            gap: 20,
+            gap: 16,
           }}
         >
-          {/* User Info with Animated Progress Ring on DP */}
-          <Space align="start" size={16}>
+          {/* Left: Clean Avatar & User Details */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <div
-              onClick={() => setIsProfileModalOpen(true)}
+              onClick={() => handleOpenProfileBuilder("basic")}
               style={{
                 position: "relative",
                 cursor: "pointer",
-                width: 84,
-                height: 84,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
                 flexShrink: 0,
               }}
-              title={`Profile ${completenessScore}% Complete - Click to Edit`}
+              title="Click to edit profile"
             >
-              <Progress
-                type="circle"
-                percent={completenessScore}
-                size={84}
-                strokeWidth={5}
-                strokeColor={{
-                  "0%": "#fb923c",
-                  "100%": "#ea580c",
-                }}
-                trailColor="#fed7aa"
-                showInfo={false}
-                style={{ position: "absolute", top: 0, left: 0 }}
-              />
               <Avatar
                 size={64}
                 src={user?.avatar}
                 style={{
                   backgroundColor: "#ea580c",
-                  fontWeight: 800,
-                  fontSize: 24,
-                  border: "3px solid #ffffff",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+                  fontWeight: 700,
+                  fontSize: 22,
+                  border: "2px solid #fed7aa",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
                 }}
               >
                 {user?.name ? user.name.charAt(0).toUpperCase() : "A"}
@@ -289,95 +286,121 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
               <div
                 style={{
                   position: "absolute",
-                  bottom: -6,
-                  backgroundColor: completenessScore >= 80 ? "#16a34a" : "#ea580c",
-                  color: "#ffffff",
-                  padding: "1px 7px",
-                  borderRadius: 10,
+                  bottom: -2,
+                  right: -2,
+                  backgroundColor: "#ffffff",
+                  borderRadius: "50%",
+                  padding: 3,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#ea580c",
                   fontSize: 10,
-                  fontWeight: 800,
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
-                  border: "2px solid #ffffff",
-                  whiteSpace: "nowrap",
+                  border: "1px solid #fed7aa",
                 }}
               >
-                {completenessScore}%
+                <Pencil className="w-2.5 h-2.5" />
               </div>
             </div>
+
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <Title level={3} style={{ margin: 0, fontSize: 20, color: "#0f172a" }}>
-                  {user?.name}
+                <Title level={4} style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#0f172a" }}>
+                  {user?.name || "Candidate"}
                 </Title>
-                {user?.isVerified && <VerifiedBadge size="sm" label="Verified Candidate" />}
-                <Tag color="green" style={{ fontWeight: 700, borderRadius: 12 }}>
-                  {user?.noticePeriod ? `${user.noticePeriod} Joiner` : "Immediate Joiner"}
+                {user?.isVerified && <VerifiedBadge size="sm" label="Verified" />}
+                <Tag
+                  bordered={false}
+                  style={{
+                    backgroundColor: "#ecfdf5",
+                    color: "#059669",
+                    fontWeight: 600,
+                    borderRadius: 6,
+                    fontSize: 11,
+                    padding: "1px 8px",
+                  }}
+                >
+                  {user?.noticePeriod ? `${user.noticePeriod} Joiner` : "Notice Period Not Set"}
                 </Tag>
               </div>
 
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#ea580c", marginTop: 4 }}>
-                {user?.headline || "Software Engineer / Professional Candidate"}
+              <div style={{ fontSize: 13, fontWeight: 500, color: user?.headline ? "#475569" : "#94a3b8", marginTop: 2, fontStyle: user?.headline ? "normal" : "italic" }}>
+                {user?.headline || "No headline added yet"}
               </div>
 
               <Space
                 size={14}
                 split={<span style={{ color: "#cbd5e1" }}>•</span>}
                 style={{ fontSize: 12, color: "#64748b", marginTop: 6 }}
+                wrap
               >
-                <span>
-                  <EnvironmentOutlined /> {user?.location || "Bengaluru, Karnataka"}
+                <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                  {user?.location || "Location not set"}
                 </span>
-                <span>
-                  <PhoneOutlined /> {user?.phone || "+91 98765 43210"}
+                <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <Phone className="w-3.5 h-3.5 text-slate-400" />
+                  {user?.phone || "No phone added"}
                 </span>
+                {user?.email && (
+                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                    {user.email}
+                  </span>
+                )}
                 {user?.expectedCtc && (
-                  <strong style={{ color: "#0f172a" }}>Expected: ₹{user.expectedCtc} LPA</strong>
+                  <span style={{ color: "#0f172a", fontWeight: 600 }}>
+                    ₹{user.expectedCtc} LPA Expected
+                  </span>
                 )}
               </Space>
             </div>
-          </Space>
+          </div>
 
-          {/* Profile Progress & Action Buttons */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div
-              style={{
-                padding: "10px 14px",
-                borderRadius: 12,
-                backgroundColor: "#fff7ed",
-                border: "1px solid #fed7aa",
-                minWidth: 160,
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
-                <span style={{ color: "#64748b" }}>Profile Score</span>
-                <span style={{ color: "#ea580c" }}>{completenessScore}%</span>
-              </div>
-              <Progress
-                percent={completenessScore}
-                showInfo={false}
-                strokeColor="#ea580c"
-                size="small"
+          {/* Right: Modern Zoho-style Compact Icon Action Toolbar */}
+          <Space size={8} align="center">
+            <Tooltip title="View Profile">
+              <Button
+                shape="circle"
+                size="large"
+                icon={<Eye className="w-4 h-4 text-slate-600" />}
+                onClick={() => setIsViewProfileOpen(true)}
+                style={{
+                  border: "1px solid #e2e8f0",
+                  backgroundColor: "#f8fafc",
+                }}
               />
-            </div>
+            </Tooltip>
 
-            <Space size={10}>
+            <Tooltip title="Edit Profile Details">
               <Button
                 type="primary"
-                icon={<FilePdfOutlined />}
-                onClick={() => setIsResumeBuilderOpen(true)}
-                style={{ fontWeight: 600, borderRadius: 8 }}
-              >
-                ATS Resume
-              </Button>
+                shape="circle"
+                size="large"
+                icon={<Pencil className="w-4 h-4" />}
+                onClick={() => handleOpenProfileBuilder("basic")}
+                style={{
+                  backgroundColor: "#ea580c",
+                  borderColor: "#ea580c",
+                  boxShadow: "0 2px 6px rgba(234, 88, 12, 0.25)",
+                }}
+              />
+            </Tooltip>
+
+            <Tooltip title="ATS Resume Builder">
               <Button
-                icon={<EditOutlined />}
-                onClick={() => setIsProfileModalOpen(true)}
-                style={{ fontWeight: 600, borderRadius: 8 }}
-              >
-                Edit Profile
-              </Button>
-            </Space>
-          </div>
+                shape="circle"
+                size="large"
+                icon={<FileText className="w-4 h-4 text-orange-600" />}
+                onClick={() => setIsResumeBuilderOpen(true)}
+                style={{
+                  border: "1px solid #fed7aa",
+                  backgroundColor: "#fff7ed",
+                }}
+              />
+            </Tooltip>
+          </Space>
         </div>
       </Card>
 
@@ -385,14 +408,15 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
       <Tabs
         activeKey={tab}
         onChange={setTab}
-        type="card"
+        size="middle"
+        style={{ marginTop: 4 }}
         items={[
           {
             key: "applications",
             label: (
-              <Space>
-                <SolutionOutlined />
-                <span>Applications Pipeline</span>
+              <Space size={6}>
+                <Briefcase className="w-4 h-4" />
+                <span>Applications</span>
                 <Badge count={applications.length} style={{ backgroundColor: "#ea580c" }} size="small" />
               </Space>
             ),
@@ -407,6 +431,7 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
                   rowKey="_id"
                   loading={loading}
                   pagination={{ pageSize: 8 }}
+                  scroll={{ x: 600 }}
                   locale={{
                     emptyText: (
                       <Empty
@@ -422,8 +447,8 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
           {
             key: "bookmarks",
             label: (
-              <Space>
-                <BookOutlined />
+              <Space size={6}>
+                <Bookmark className="w-4 h-4" />
                 <span>Saved Jobs</span>
                 <Badge count={bookmarkedJobs.length} style={{ backgroundColor: "#64748b" }} size="small" />
               </Space>
@@ -450,22 +475,10 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
             ),
           },
           {
-            key: "profile",
-            label: (
-              <Space>
-                <IdcardOutlined />
-                <span>Profile Details (Naukri 360°)</span>
-              </Space>
-            ),
-            children: (
-              <NaukriProfileView onOpenProfileBuilder={() => setIsProfileModalOpen(true)} />
-            ),
-          },
-          {
             key: "alerts",
             label: (
-              <Space>
-                <BellOutlined />
+              <Space size={6}>
+                <Bell className="w-4 h-4" />
                 <span>Job Alerts</span>
               </Space>
             ),
@@ -476,17 +489,15 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
                     <Title level={4} style={{ margin: 0, fontSize: 16, color: "#0f172a" }}>
                       Active Job Alerts
                     </Title>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      Receive daily WhatsApp &amp; Email alerts when relevant corporate jobs are posted.
-                    </Text>
                   </div>
                   <Button
                     type="primary"
-                    icon={<PlusOutlined />}
+                    size="small"
+                    icon={<Plus className="w-3.5 h-3.5" />}
                     onClick={() => setShowAddAlert(!showAddAlert)}
                     style={{ fontWeight: 600, borderRadius: 8 }}
                   >
-                    Create Job Alert
+                    Create Alert
                   </Button>
                 </div>
 
@@ -519,7 +530,7 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
                       />
                       <Button
                         type="primary"
-                        icon={<CheckCircleFilled />}
+                        icon={<CheckCircle2 className="w-3.5 h-3.5" />}
                         onClick={() => {
                           if (!newAlertRole) return;
                           setJobAlerts((prev) => [
@@ -545,49 +556,60 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
                   </Card>
                 )}
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {jobAlerts.map((alert) => (
-                    <div
-                      key={alert.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "12px 16px",
-                        borderRadius: 10,
-                        backgroundColor: "#f8fafc",
-                        border: "1px solid #e2e8f0",
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>
-                          {alert.role}
+                {jobAlerts.length === 0 ? (
+                  <Empty
+                    description="No job alerts created yet. Click 'Create Job Alert' to receive updates."
+                    style={{ padding: "32px 0" }}
+                  />
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {jobAlerts.map((alert) => (
+                      <div
+                        key={alert.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "12px 16px",
+                          borderRadius: 10,
+                          backgroundColor: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>
+                            {alert.role}
+                          </div>
+                          <div style={{ fontSize: 12, color: "#64748b" }}>
+                            {alert.location} • {alert.frequency} Digest
+                          </div>
                         </div>
-                        <div style={{ fontSize: 12, color: "#64748b" }}>
-                          {alert.location} • {alert.frequency} Digest
-                        </div>
+                        <Space size={14}>
+                          <Switch
+                            checked={alert.active}
+                            onChange={(checked) =>
+                              setJobAlerts((prev) =>
+                                prev.map((a) => (a.id === alert.id ? { ...a, active: checked } : a))
+                              )
+                            }
+                          />
+                          <Tooltip title="Delete Alert">
+                            <Button
+                              type="text"
+                              danger
+                              shape="circle"
+                              size="small"
+                              icon={<Trash2 className="w-3.5 h-3.5 text-rose-500" />}
+                              onClick={() =>
+                                setJobAlerts((prev) => prev.filter((a) => a.id !== alert.id))
+                              }
+                            />
+                          </Tooltip>
+                        </Space>
                       </div>
-                      <Space size={14}>
-                        <Switch
-                          checked={alert.active}
-                          onChange={(checked) =>
-                            setJobAlerts((prev) =>
-                              prev.map((a) => (a.id === alert.id ? { ...a, active: checked } : a))
-                            )
-                          }
-                        />
-                        <Button
-                          type="text"
-                          danger
-                          icon={<DeleteOutlined />}
-                          onClick={() =>
-                            setJobAlerts((prev) => prev.filter((a) => a.id !== alert.id))
-                          }
-                        />
-                      </Space>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </Card>
             ),
           },
@@ -598,6 +620,7 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
       {isProfileModalOpen && (
         <ProfileBuilderModal
           isOpen={isProfileModalOpen}
+          initialTab={profileModalTab}
           onClose={() => setIsProfileModalOpen(false)}
         />
       )}
@@ -608,6 +631,32 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
           onClose={() => setIsResumeBuilderOpen(false)}
         />
       )}
+
+      {/* Candidate Profile Details View Modal */}
+      <Modal
+        open={isViewProfileOpen}
+        onCancel={() => setIsViewProfileOpen(false)}
+        footer={null}
+        width={1050}
+        title={
+          <Space size={8}>
+            <User className="w-4 h-4 text-orange-600" />
+            <span style={{ fontWeight: 700 }}>Profile Details</span>
+          </Space>
+        }
+        destroyOnHidden
+        style={{ top: 24 }}
+      >
+        <div style={{ marginTop: 16 }}>
+          <NaukriProfileView
+            onOpenProfileBuilder={(targetTab = "basic") => {
+              setIsViewProfileOpen(false);
+              setProfileModalTab(targetTab);
+              setIsProfileModalOpen(true);
+            }}
+          />
+        </div>
+      </Modal>
     </div>
   );
 }

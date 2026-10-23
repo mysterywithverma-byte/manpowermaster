@@ -31,6 +31,8 @@ import {
   MailOutlined,
   PhoneOutlined,
   FieldTimeOutlined,
+  EditOutlined,
+  ShopOutlined,
 } from "@ant-design/icons";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 
@@ -38,9 +40,13 @@ const { Text, Title } = Typography;
 
 interface EmployerDashboardProps {
   onOpenPostJob: () => void;
+  onOpenEditProfile?: () => void;
 }
 
-export function EmployerDashboard({ onOpenPostJob }: EmployerDashboardProps) {
+export function EmployerDashboard({
+  onOpenPostJob,
+  onOpenEditProfile,
+}: EmployerDashboardProps) {
   const { user } = useAuth();
   const [jobs, setJobs] = useState<MockJob[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
@@ -186,6 +192,21 @@ export function EmployerDashboard({ onOpenPostJob }: EmployerDashboardProps) {
           </Space>
 
           <Space wrap size={10}>
+            {onOpenEditProfile && (
+              <Button
+                icon={<EditOutlined />}
+                onClick={onOpenEditProfile}
+                style={{
+                  fontWeight: 600,
+                  borderRadius: 8,
+                  borderColor: "#fed7aa",
+                  backgroundColor: "#fff7ed",
+                  color: "#ea580c",
+                }}
+              >
+                Company Profile &amp; Branches
+              </Button>
+            )}
             <Button
               icon={<ReloadOutlined spin={syncingJobs} />}
               loading={syncingJobs}
@@ -237,6 +258,137 @@ export function EmployerDashboard({ onOpenPostJob }: EmployerDashboardProps) {
             </Card>
           </Col>
         </Row>
+
+        {/* Zoho Company Profile & Multi-Branch Network Card */}
+        <div
+          style={{
+            marginTop: 20,
+            padding: 16,
+            borderRadius: 12,
+            backgroundColor: "#f8fafc",
+            border: "1px solid #e2e8f0",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 12,
+              marginBottom: 12,
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <BankOutlined style={{ color: "#ea580c", fontSize: 16 }} />
+                <span style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>
+                  {user?.employerDetails?.brandName || user?.companyName || "Corporate Profile"} — Company Details &amp; Office Network
+                </span>
+                {user?.employerDetails?.gstin && (
+                  <Tag color="green" style={{ borderRadius: 4, fontSize: 10, margin: 0 }}>
+                    GST: {user.employerDetails.gstin}
+                  </Tag>
+                )}
+              </div>
+              <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
+                {user?.employerDetails?.industry || "IT & Software Services"} •{" "}
+                {user?.employerDetails?.companyType || "Private Limited"} •{" "}
+                {user?.employerDetails?.companySize || "Growth Entity"}
+                {user?.employerDetails?.cin ? ` • CIN: ${user.employerDetails.cin}` : ""}
+              </div>
+            </div>
+
+            {onOpenEditProfile && (
+              <Button
+                size="small"
+                icon={<EditOutlined />}
+                onClick={onOpenEditProfile}
+                style={{ fontWeight: 600, borderRadius: 6 }}
+              >
+                Manage Branches &amp; Profile
+              </Button>
+            )}
+          </div>
+
+          {/* Branches Network Display */}
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+            <EnvironmentOutlined style={{ color: "#ea580c" }} />
+            <span>
+              Hiring Branch Network ({(user?.employerDetails?.branches || []).length || 1} Locations Configured):
+            </span>
+          </div>
+
+          <Row gutter={[12, 12]}>
+            {(user?.employerDetails?.branches && user.employerDetails.branches.length > 0
+              ? user.employerDetails.branches
+              : [
+                  {
+                    id: "br-default-hq",
+                    branchName: `${user?.employerDetails?.brandName || user?.companyName || "Corporate"} Headquarter`,
+                    branchType: "Headquarters",
+                    city: user?.location || "Bengaluru",
+                    state: "Karnataka",
+                    address: user?.employerDetails?.officeAddress || "Main Corporate Center",
+                    contactPerson: user?.name,
+                    contactPhone: user?.phone,
+                    isHeadquarters: true,
+                  },
+                ]
+            ).map((b: any) => (
+              <Col xs={24} sm={12} md={8} key={b.id}>
+                <div
+                  style={{
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 8,
+                    padding: "10px 12px",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                      <strong style={{ fontSize: 12, color: "#1e293b" }}>{b.branchName}</strong>
+                      <Tag
+                        color={b.isHeadquarters || b.branchType === "Headquarters" ? "orange" : "blue"}
+                        style={{ borderRadius: 4, fontSize: 10, margin: 0 }}
+                      >
+                        {b.branchType || "Branch"}
+                      </Tag>
+                    </div>
+                    <div style={{ fontSize: 11, color: "#475569" }}>
+                      <EnvironmentOutlined style={{ color: "#ea580c", marginRight: 4 }} />
+                      {b.city} {b.state ? `, ${b.state}` : ""} {b.pincode ? `- ${b.pincode}` : ""}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "#94a3b8",
+                        marginTop: 2,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                      title={b.address}
+                    >
+                      {b.address}
+                    </div>
+                  </div>
+
+                  {(b.contactPerson || b.contactPhone) && (
+                    <div style={{ fontSize: 10, color: "#64748b", marginTop: 6, paddingTop: 4, borderTop: "1px dashed #f1f5f9" }}>
+                      HR: {b.contactPerson} {b.contactPhone ? `(${b.contactPhone})` : ""}
+                    </div>
+                  )}
+                </div>
+              </Col>
+            ))}
+          </Row>
+        </div>
       </Card>
 
       {/* Candidate Pipeline Section */}

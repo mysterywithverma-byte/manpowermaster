@@ -13,17 +13,17 @@ import {
 } from "antd";
 import type { MenuProps } from "antd";
 import {
-  UserOutlined,
-  BankOutlined,
-  LogoutOutlined,
-  PlusOutlined,
-  DownOutlined,
-  AppstoreOutlined,
-  CheckCircleFilled,
-  SwapOutlined,
-  LoginOutlined,
-  UserAddOutlined,
-} from "@ant-design/icons";
+  Compass,
+  User,
+  Building2,
+  LogOut,
+  Plus,
+  ChevronDown,
+  ArrowLeftRight,
+  LogIn,
+  UserPlus,
+  CheckCircle2,
+} from "lucide-react";
 import { TextLogo } from "@/components/TextLogo";
 import { NotificationBell } from "@/components/NotificationBell";
 
@@ -32,6 +32,7 @@ interface NavbarProps {
   onOpenEmployerAuth?: () => void;
   onOpenRegister?: () => void;
   onOpenPostJob: () => void;
+  onOpenOnboarding?: () => void;
   onSelectJobId?: (jobId: string) => void;
 }
 
@@ -40,6 +41,7 @@ export function Navbar({
   onOpenEmployerAuth,
   onOpenRegister,
   onOpenPostJob,
+  onOpenOnboarding,
   onSelectJobId,
 }: NavbarProps) {
   const { user, role, activeView, setActiveView, logout, savedJobs, updateUser } = useAuth();
@@ -72,11 +74,11 @@ export function Navbar({
             <div style={{ lineHeight: 1.3 }}>
               <div style={{ fontWeight: 700, color: "#0f172a", fontSize: 13, display: "flex", alignItems: "center", gap: 4 }}>
                 {user?.name}
-                {user?.isVerified && <CheckCircleFilled style={{ color: "#16a34a", fontSize: 12 }} />}
+                {user?.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
               </div>
               <div style={{ fontSize: 11, color: "#64748b" }}>{user?.email}</div>
               <Tag color="orange" bordered={false} style={{ marginTop: 4, textTransform: "uppercase", fontSize: 10, fontWeight: 700 }}>
-                {user?.role}
+                {user?.role === "seeker" ? "Employee" : "Employer"}
               </Tag>
             </div>
           </Space>
@@ -86,33 +88,49 @@ export function Navbar({
     { type: "divider" },
     {
       key: "explore",
-      icon: <AppstoreOutlined />,
+      icon: <Compass className="w-4 h-4" />,
       label: "Explore Job Board",
       onClick: () => setActiveView("explore"),
     },
     {
       key: "seeker-dash",
-      icon: <UserOutlined />,
-      label: "Candidate Dashboard",
+      icon: <User className="w-4 h-4" />,
+      label: "Profile Dashboard",
       onClick: () => setActiveView("seeker-dashboard"),
     },
     {
       key: "employer-dash",
-      icon: <BankOutlined />,
-      label: "Employer Talent Console",
+      icon: <Building2 className="w-4 h-4" />,
+      label: "Employer Console",
       onClick: () => setActiveView("employer-dashboard"),
     },
-    { type: "divider" },
+    ...(role === "employer"
+      ? [
+          {
+            key: "employer-profile",
+            icon: <Building2 className="w-4 h-4 text-orange-600" />,
+            label: "Company Profile & Branches",
+            onClick: () => {
+              if (onOpenOnboarding) {
+                onOpenOnboarding();
+              } else {
+                setActiveView("employer-dashboard");
+              }
+            },
+          },
+        ]
+      : []),
+    { type: "divider" as const },
     {
       key: "switch-role",
-      icon: <SwapOutlined />,
-      label: role === "seeker" ? "Switch to Employer Mode" : "Switch to Candidate Mode",
+      icon: <ArrowLeftRight className="w-4 h-4" />,
+      label: role === "seeker" ? "Switch to Employer Mode" : "Switch to Employee Mode",
       onClick: () => handleSwitchRole(role === "seeker" ? "employer" : "seeker"),
     },
     { type: "divider" },
     {
       key: "logout",
-      icon: <LogoutOutlined />,
+      icon: <LogOut className="w-4 h-4" />,
       danger: true,
       label: "Sign Out",
       onClick: logout,
@@ -157,7 +175,7 @@ export function Navbar({
           <Button
             type={activeView === "explore" ? "primary" : "text"}
             size="small"
-            icon={<AppstoreOutlined />}
+            icon={<Compass className="w-3.5 h-3.5" />}
             onClick={() => setActiveView("explore")}
             style={{
               fontWeight: 600,
@@ -172,14 +190,14 @@ export function Navbar({
               <Button
                 type={activeView === "seeker-dashboard" ? "primary" : "text"}
                 size="small"
-                icon={<UserOutlined />}
+                icon={<User className="w-3.5 h-3.5" />}
                 onClick={() => setActiveView("seeker-dashboard")}
                 style={{
                   fontWeight: 600,
                   boxShadow: activeView === "seeker-dashboard" ? "0 2px 4px rgba(234, 88, 12, 0.2)" : "none",
                 }}
               >
-                My Applications
+                Dashboard
               </Button>
             </Badge>
           )}
@@ -188,7 +206,7 @@ export function Navbar({
             <Button
               type={activeView === "employer-dashboard" ? "primary" : "text"}
               size="small"
-              icon={<BankOutlined />}
+              icon={<Building2 className="w-3.5 h-3.5" />}
               onClick={() => setActiveView("employer-dashboard")}
               style={{
                 fontWeight: 600,
@@ -201,38 +219,34 @@ export function Navbar({
         </nav>
 
         {/* Right Actions */}
-        <Space size={10} align="center">
-          {/* Post Job Button / Employer Access */}
-          {user && role === "employer" ? (
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={onOpenPostJob}
-              style={{ fontWeight: 600, borderRadius: 8 }}
-            >
-              Post a Job
-            </Button>
-          ) : user && role === "seeker" ? (
-            <Button
-              icon={<BankOutlined style={{ color: "#ea580c" }} />}
-              onClick={onOpenPostJob}
-              style={{ borderColor: "#fed7aa", backgroundColor: "#fff7ed", fontWeight: 600, borderRadius: 8 }}
-            >
-              Post a Job
-            </Button>
-          ) : !user ? (
-            <Button
-              icon={<BankOutlined style={{ color: "#ea580c" }} />}
-              onClick={onOpenEmployerAuth || onOpenPostJob}
-              style={{ borderColor: "#fed7aa", backgroundColor: "#fff7ed", fontWeight: 600, borderRadius: 8 }}
-            >
-              Post a Job
-            </Button>
-          ) : null}
+        <Space size={8} align="center">
+          {/* Post Job Button / Employer Access (Only for Employers or Guest visitors) */}
+          {(!user || role === "employer") && (
+            <div className="hidden sm:inline-flex">
+              {role === "employer" ? (
+                <Button
+                  type="primary"
+                  icon={<Plus className="w-3.5 h-3.5" />}
+                  onClick={onOpenPostJob}
+                  style={{ fontWeight: 600, borderRadius: 8 }}
+                >
+                  Post Job
+                </Button>
+              ) : (
+                <Button
+                  icon={<Building2 className="w-3.5 h-3.5 text-orange-600" />}
+                  onClick={onOpenEmployerAuth || onOpenPostJob}
+                  style={{ borderColor: "#fed7aa", backgroundColor: "#fff7ed", fontWeight: 600, borderRadius: 8 }}
+                >
+                  Post Job
+                </Button>
+              )}
+            </div>
+          )}
 
           {/* User Profile or Sign In */}
           {user ? (
-            <Space size={8} align="center">
+            <Space size={6} align="center">
               <NotificationBell onSelectJobId={onSelectJobId} />
 
               <Dropdown
@@ -245,7 +259,7 @@ export function Navbar({
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 8,
+                    gap: 6,
                     padding: "4px 8px 4px 4px",
                     borderRadius: 20,
                     cursor: "pointer",
@@ -253,7 +267,7 @@ export function Navbar({
                     backgroundColor: "#ffffff",
                     transition: "all 0.2s",
                   }}
-                  className="hover:border-orange-400 hover:shadow-xs"
+                  className="hover:border-orange-400 hover:shadow-xs active:scale-95"
                 >
                   <Avatar
                     size={30}
@@ -262,37 +276,30 @@ export function Navbar({
                   >
                     {user.name.charAt(0).toUpperCase()}
                   </Avatar>
-                  <div className="hidden lg:block text-left" style={{ lineHeight: 1.15 }}>
+                  <div className="hidden md:block text-left" style={{ lineHeight: 1.15 }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", display: "flex", alignItems: "center", gap: 3 }}>
                       <span className="truncate max-w-[90px]">{user.name.split(" ")[0]}</span>
-                      {user.isVerified && <CheckCircleFilled style={{ color: "#16a34a", fontSize: 11 }} />}
+                      {user.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
                     </div>
                     <div style={{ fontSize: 10, color: "#ea580c", fontWeight: 600, textTransform: "capitalize" }}>
-                      {user.role}
+                      {user.role === "seeker" ? "Employee" : "Employer"}
                     </div>
                   </div>
-                  <DownOutlined style={{ fontSize: 10, color: "#94a3b8" }} />
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                 </div>
               </Dropdown>
             </Space>
           ) : (
-            <Space size={8}>
-              <Button
-                icon={<LoginOutlined />}
-                onClick={onOpenAuth}
-                style={{ fontWeight: 600, borderRadius: 8 }}
-              >
-                Sign In
-              </Button>
-              <Button
-                type="primary"
-                icon={<UserAddOutlined />}
-                onClick={onOpenRegister || onOpenAuth}
-                style={{ fontWeight: 600, borderRadius: 8 }}
-              >
-                Register
-              </Button>
-            </Space>
+            <Button
+              type="primary"
+              size="middle"
+              icon={<LogIn className="w-3.5 h-3.5" />}
+              onClick={onOpenAuth}
+              style={{ fontWeight: 600, borderRadius: 8, padding: "0 16px" }}
+              className="active:scale-95"
+            >
+              Sign In
+            </Button>
           )}
         </Space>
       </div>

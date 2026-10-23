@@ -200,7 +200,6 @@ export default function HomePage() {
           setAuthInitialRole("employer");
           setIsAuthOpen(true);
         }}
-        onOpenRegister={() => setIsOnboardingOpen(true)}
         onOpenPostJob={() => {
           if (!user) {
             setAuthInitialRole("employer");
@@ -209,6 +208,7 @@ export default function HomePage() {
             setIsPostJobOpen(true);
           }
         }}
+        onOpenOnboarding={() => setIsOnboardingOpen(true)}
         onSelectJobId={handleSelectJobById}
       />
 
@@ -228,60 +228,64 @@ export default function HomePage() {
             />
 
             {/* Jobs Explorer Grid Container */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-10">
               {/* Explorer Sub-Header Controls */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5 sm:mb-8">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                    <Briefcase className="w-5 h-5 text-orange-600" />
+                  <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 shrink-0" />
                     <span>Verified Open Positions in India</span>
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
                     Showing <strong className="text-orange-700 font-bold">{sortedJobs.length}</strong> active openings
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
                   {/* Mobile Filters Toggle Button */}
                   <button
-                    onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
-                    className="md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-200 text-xs font-bold text-orange-700"
+                    onClick={() => setMobileFiltersOpen(true)}
+                    className="md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-200 text-xs font-bold text-orange-700 active:scale-95 transition-all shadow-xs"
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5" />
                     <span>Filters</span>
+                    {(filters.location !== "All" || filters.jobType !== "All" || filters.experienceLevel !== "All" || filters.workplaceType !== "All" || filters.minSalary > 0) && (
+                      <span className="w-2 h-2 rounded-full bg-orange-600" />
+                    )}
                   </button>
 
-                  {/* Sync Free API Jobs Button */}
-                  <button
-                    onClick={handleSyncExternalJobs}
-                    disabled={syncingJobs}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer disabled:opacity-50"
-                    title="Fetch live jobs from Free Remotive & Arbeitnow APIs"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${syncingJobs ? "animate-spin" : ""}`} />
-                    <span>{syncingJobs ? "Syncing..." : "Sync Live Jobs"}</span>
-                  </button>
-
-                  {/* Sort By Dropdown */}
-                  <div className="flex items-center gap-1.5">
-                    <ArrowUpDown className="w-3.5 h-3.5 text-orange-600" />
-                    <span className="text-xs text-slate-500 font-medium hidden sm:inline">Sort:</span>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as any)}
-                      className="px-3 py-1.5 text-xs font-bold rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none cursor-pointer shadow-xs"
+                  <div className="flex items-center gap-2">
+                    {/* Sync Free API Jobs Button */}
+                    <button
+                      onClick={handleSyncExternalJobs}
+                      disabled={syncingJobs}
+                      className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+                      title="Fetch live jobs from Free Remotive & Arbeitnow APIs"
                     >
-                      <option value="featured">Featured &amp; Recommended</option>
-                      <option value="latest">Latest First</option>
-                      <option value="salary">Highest Package (CTC)</option>
-                    </select>
+                      <RefreshCw className={`w-3.5 h-3.5 ${syncingJobs ? "animate-spin" : ""}`} />
+                      <span className="hidden xs:inline">{syncingJobs ? "Syncing..." : "Sync Live Jobs"}</span>
+                      <span className="xs:hidden">{syncingJobs ? "..." : "Sync"}</span>
+                    </button>
+
+                    {/* Sort By Dropdown */}
+                    <div className="flex items-center gap-1">
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as any)}
+                        className="px-2.5 py-1.5 text-xs font-bold rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none cursor-pointer shadow-xs max-w-[130px] sm:max-w-none truncate"
+                      >
+                        <option value="featured">Featured</option>
+                        <option value="latest">Latest</option>
+                        <option value="salary">Highest CTC</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Toast Banner for Free API Sync */}
               {syncToast && (
-                <div className="mb-6 p-3 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-800 text-xs font-bold flex items-center gap-2 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="mb-4 p-3 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-800 text-xs font-bold flex items-center gap-2 shadow-xs animate-in fade-in slide-in-from-top-2 duration-200">
                   <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
                   <span>{syncToast}</span>
                 </div>
@@ -299,28 +303,55 @@ export default function HomePage() {
                   />
                 </aside>
 
-                {/* Mobile Filters Drawer Modal */}
+                {/* Mobile Filters Drawer Modal (Bottom Sheet) */}
                 {mobileFiltersOpen && (
-                  <div className="md:hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm p-3 overflow-y-auto flex flex-col justify-end">
-                    <div className="bg-white rounded-3xl p-4 sm:p-5 border-2 border-orange-300 shadow-2xl max-h-[85vh] overflow-y-auto">
-                      <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-3">
-                        <div className="flex items-center gap-2">
-                          <SlidersHorizontal className="w-4 h-4 text-orange-600" />
-                          <span className="text-sm font-black text-slate-900">Filter Job Openings</span>
+                  <div className="md:hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex flex-col justify-end">
+                    <div
+                      className="bg-white rounded-t-3xl shadow-2xl max-h-[88vh] flex flex-col animate-in slide-in-from-bottom duration-250 border-t border-slate-200"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Drag Handle & Header */}
+                      <div className="pt-2.5 px-4 pb-3 border-b border-slate-100 flex flex-col">
+                        <div className="w-10 h-1.5 rounded-full bg-slate-300 mx-auto mb-2.5" />
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <SlidersHorizontal className="w-4 h-4 text-orange-600" />
+                            <span className="text-sm font-black text-slate-900">Filter Job Openings</span>
+                          </div>
+                          <button
+                            onClick={() => setMobileFiltersOpen(false)}
+                            className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer active:scale-95"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
                         </div>
-                        <button onClick={() => setMobileFiltersOpen(false)} className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
-                          <X className="w-5 h-5" />
+                      </div>
+
+                      {/* Scrollable Filters Content */}
+                      <div className="p-4 overflow-y-auto flex-1">
+                        <JobFilters
+                          filters={filters}
+                          setFilters={setFilters}
+                          onReset={handleResetFilters}
+                          resultsCount={sortedJobs.length}
+                        />
+                      </div>
+
+                      {/* Sticky Bottom Actions */}
+                      <div className="p-3 border-t border-slate-100 bg-white/95 backdrop-blur-md pb-safe flex gap-2">
+                        <button
+                          onClick={handleResetFilters}
+                          className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-bold text-xs text-slate-700 active:scale-95 transition-all"
+                        >
+                          Reset
+                        </button>
+                        <button
+                          onClick={() => setMobileFiltersOpen(false)}
+                          className="flex-1 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 font-bold text-xs text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+                        >
+                          Show {sortedJobs.length} Roles
                         </button>
                       </div>
-                      <JobFilters
-                        filters={filters}
-                        setFilters={setFilters}
-                        onReset={handleResetFilters}
-                        resultsCount={sortedJobs.length}
-                      />
-                      <button onClick={() => setMobileFiltersOpen(false)} className="w-full mt-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 font-bold text-xs text-white shadow-xs cursor-pointer">
-                        Apply Filters &amp; View Roles ({sortedJobs.length})
-                      </button>
                     </div>
                   </div>
                 )}
@@ -344,25 +375,32 @@ export default function HomePage() {
 
               {/* Dual Action Banners: Candidate Fast-Track & Employer Talent Hub */}
               <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Candidate Banner */}
+                {/* Employee Banner */}
                 <div className="rounded-3xl bg-gradient-to-br from-orange-50 via-white to-orange-50/50 border-2 border-orange-200 p-6 flex flex-col justify-between shadow-xs">
                   <div>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-600 text-white text-[10px] font-black uppercase tracking-wider mb-2.5">
-                      For Job Seekers
+                      For Employees
                     </span>
                     <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
                       Accelerate your career search with Manpower Master
                     </h3>
                     <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                      Complete your candidate profile, upload your resume, and get direct interview invites from verified corporate employers with zero recruiter spam.
+                      Complete your employee profile, upload your resume, and get direct interview invites from verified corporate employers with zero recruiter spam.
                     </p>
                   </div>
                   <div className="mt-5 pt-4 border-t border-orange-100 flex items-center justify-between gap-3">
                     <button
-                      onClick={() => setIsOnboardingOpen(true)}
-                      className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                      onClick={() => {
+                        if (!user) {
+                          setAuthInitialRole("seeker");
+                          setIsAuthOpen(true);
+                        } else {
+                          setIsOnboardingOpen(true);
+                        }
+                      }}
+                      className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer active:scale-95"
                     >
-                      Register as Candidate
+                      {user ? "Update Employee Profile" : "Sign In as Employee"}
                     </button>
                     <span className="text-[11px] text-slate-400 font-medium">100% Free Placements</span>
                   </div>
@@ -424,7 +462,10 @@ export default function HomePage() {
         )}
 
         {activeView === "employer-dashboard" && (
-          <EmployerDashboard onOpenPostJob={() => setIsPostJobOpen(true)} />
+          <EmployerDashboard
+            onOpenPostJob={() => setIsPostJobOpen(true)}
+            onOpenEditProfile={() => setIsOnboardingOpen(true)}
+          />
         )}
       </main>
 

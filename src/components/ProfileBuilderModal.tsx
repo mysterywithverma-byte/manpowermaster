@@ -24,25 +24,22 @@ import {
   AutoComplete,
 } from "antd";
 import {
-  UserOutlined,
-  EditOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  UploadOutlined,
-  CheckCircleFilled,
-  PhoneOutlined,
-  MailOutlined,
-  EnvironmentOutlined,
-  BankOutlined,
-  BookOutlined,
-  RocketOutlined,
-  GlobalOutlined,
-  GithubOutlined,
-  LinkedinOutlined,
-  FilePdfOutlined,
-  CheckOutlined,
-  CloseOutlined,
-} from "@ant-design/icons";
+  User,
+  Plus,
+  Trash2,
+  Phone,
+  Mail,
+  MapPin,
+  Building2,
+  GraduationCap,
+  Sparkles,
+  Globe,
+  FileText,
+  Check,
+  X,
+  Link as LinkIcon,
+  Upload as UploadIcon,
+} from "lucide-react";
 import { compressImageToWebP, formatBytes } from "@/lib/image-compressor";
 
 const { Text, Title } = Typography;
@@ -51,15 +48,23 @@ interface ProfileBuilderModalProps {
   isOpen: boolean;
   onClose: () => void;
   onProfileUpdated?: () => void;
+  initialTab?: string;
 }
 
 export function ProfileBuilderModal({
   isOpen,
   onClose,
   onProfileUpdated,
+  initialTab = "basic",
 }: ProfileBuilderModalProps) {
   const { user, updateUser } = useAuth();
-  const [activeTab, setActiveTab] = useState("basic");
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, isOpen]);
 
   // Tab 1: Basic & Headline
   const [name, setName] = useState(user?.name || "");
@@ -322,18 +327,18 @@ export function ProfileBuilderModal({
       open={isOpen}
       onCancel={onClose}
       footer={
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, paddingTop: 12 }}>
-          <Button onClick={onClose} icon={<CloseOutlined />}>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 12 }}>
+          <Button onClick={onClose} icon={<X className="w-3.5 h-3.5" />}>
             Cancel
           </Button>
           <Button
             type="primary"
-            icon={<CheckOutlined />}
+            icon={<Check className="w-3.5 h-3.5" />}
             loading={saving}
             onClick={handleSaveAll}
             style={{ fontWeight: 600, borderRadius: 8 }}
           >
-            Save Profile Details
+            Save Changes
           </Button>
         </div>
       }
@@ -344,10 +349,20 @@ export function ProfileBuilderModal({
       {/* Header */}
       <div style={{ marginBottom: 16 }}>
         <Title level={4} style={{ margin: 0, color: "#0f172a" }}>
-          Edit Naukri 360° Profile Details
+          {activeTab === "basic" && "Edit Basic & Headline Details"}
+          {activeTab === "skills" && "Edit Key & IT Skills"}
+          {activeTab === "employment" && "Edit Work Experience"}
+          {activeTab === "education" && "Edit Education & Qualifications"}
+          {activeTab === "projects" && "Edit Projects & Portfolio"}
+          {activeTab === "personal" && "Edit Personal Details & Preferences"}
         </Title>
         <Text type="secondary" style={{ fontSize: 12 }}>
-          Keep all professional, educational, and identity details synced for recruiter searches.
+          {activeTab === "basic" && "Manage your contact info, current city, notice period, and headline."}
+          {activeTab === "skills" && "Add technical, functional, and software tools you work with."}
+          {activeTab === "employment" && "Add previous companies, designations, and work responsibilities."}
+          {activeTab === "education" && "Add your degrees, institutions, and graduation years."}
+          {activeTab === "projects" && "Showcase projects and key contributions you have built."}
+          {activeTab === "personal" && "Manage personal demographics, languages, and social links."}
         </Text>
       </div>
 
@@ -369,7 +384,7 @@ export function ProfileBuilderModal({
                   <Col xs={24} sm={12}>
                     <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Full Name</label>
                     <Input
-                      prefix={<UserOutlined style={{ color: "#94a3b8" }} />}
+                      prefix={<User className="w-3.5 h-3.5 text-slate-400" />}
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       style={{ marginTop: 4, borderRadius: 8 }}
@@ -378,7 +393,7 @@ export function ProfileBuilderModal({
                   <Col xs={24} sm={12}>
                     <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Mobile Number</label>
                     <Input
-                      prefix={<PhoneOutlined style={{ color: "#94a3b8" }} />}
+                      prefix={<Phone className="w-3.5 h-3.5 text-slate-400" />}
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       style={{ marginTop: 4, borderRadius: 8 }}
@@ -397,15 +412,17 @@ export function ProfileBuilderModal({
                       style={{ width: "100%", marginTop: 4 }}
                     >
                       <Input
-                        prefix={<EnvironmentOutlined style={{ color: "#94a3b8" }} />}
-                        placeholder="Search city across India..."
+                        prefix={<MapPin className="w-3.5 h-3.5 text-slate-400" />}
+                        placeholder="Type city or select..."
                         style={{ borderRadius: 8 }}
                       />
                     </AutoComplete>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Notice Period</label>
-                    <Select
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                      Notice Period (Select or type custom)
+                    </label>
+                    <AutoComplete
                       value={noticePeriod}
                       onChange={(val) => setNoticePeriod(val)}
                       options={[
@@ -414,9 +431,12 @@ export function ProfileBuilderModal({
                         { label: "30 Days (1 Month)", value: "30 Days" },
                         { label: "60 Days (2 Months)", value: "60 Days" },
                         { label: "90 Days (3 Months)", value: "90 Days" },
+                        { label: "Serving Notice", value: "Serving Notice" },
                       ]}
                       style={{ width: "100%", marginTop: 4 }}
-                    />
+                    >
+                      <Input placeholder="e.g. Immediate, 15 Days, or custom..." style={{ borderRadius: 8 }} />
+                    </AutoComplete>
                   </Col>
                 </Row>
 
@@ -493,7 +513,7 @@ export function ProfileBuilderModal({
                       onPressEnter={handleAddSkill}
                     />
                     <Tooltip title="Add Skill">
-                      <Button type="primary" icon={<PlusOutlined />} onClick={handleAddSkill} />
+                      <Button type="primary" icon={<Plus className="w-3.5 h-3.5" />} onClick={handleAddSkill} />
                     </Tooltip>
                   </Space.Compact>
                 </div>
@@ -532,7 +552,7 @@ export function ProfileBuilderModal({
                           type="text"
                           danger
                           size="small"
-                          icon={<DeleteOutlined />}
+                          icon={<Trash2 className="w-3.5 h-3.5" />}
                           onClick={() => setItSkills(itSkills.filter((_, i) => i !== idx))}
                           style={{ fontWeight: 600 }}
                         >
@@ -581,7 +601,7 @@ export function ProfileBuilderModal({
                       <Button
                         type="primary"
                         size="small"
-                        icon={<PlusOutlined />}
+                        icon={<Plus className="w-3.5 h-3.5" />}
                         onClick={handleAddItSkill}
                         style={{ fontWeight: 600, borderRadius: 6 }}
                       >
@@ -603,7 +623,7 @@ export function ProfileBuilderModal({
                   <Button
                     type="primary"
                     size="small"
-                    icon={<PlusOutlined />}
+                    icon={<Plus className="w-3.5 h-3.5" />}
                     onClick={() =>
                       setExperienceHistory([
                         ...experienceHistory,
@@ -624,15 +644,31 @@ export function ProfileBuilderModal({
                   >
                     <Row gutter={[8, 8]}>
                       <Col xs={24} sm={11}>
-                        <Input
-                          placeholder="Designation / Role"
+                        <AutoComplete
+                          placeholder="Designation / Profession (Select or type custom)"
                           value={exp.role}
-                          onChange={(e) => {
+                          onChange={(val) => {
                             const updated = [...experienceHistory];
-                            updated[idx].role = e.target.value;
+                            updated[idx].role = val;
                             setExperienceHistory(updated);
                           }}
-                        />
+                          options={[
+                            { label: "Software Engineer", value: "Software Engineer" },
+                            { label: "Frontend Developer", value: "Frontend Developer" },
+                            { label: "Backend Developer", value: "Backend Developer" },
+                            { label: "Full Stack Engineer", value: "Full Stack Engineer" },
+                            { label: "Product Manager", value: "Product Manager" },
+                            { label: "UI/UX Designer", value: "UI/UX Designer" },
+                            { label: "Data Analyst", value: "Data Analyst" },
+                            { label: "Business Development Executive", value: "Business Development Executive" },
+                            { label: "Accountant", value: "Accountant" },
+                            { label: "HR Recruiter", value: "HR Recruiter" },
+                            { label: "Digital Marketing Specialist", value: "Digital Marketing Specialist" },
+                          ]}
+                          style={{ width: "100%" }}
+                        >
+                          <Input placeholder="Designation / Role (type custom or select...)" />
+                        </AutoComplete>
                       </Col>
                       <Col xs={20} sm={11}>
                         <Input
@@ -650,7 +686,7 @@ export function ProfileBuilderModal({
                           type="text"
                           danger
                           size="small"
-                          icon={<DeleteOutlined />}
+                          icon={<Trash2 className="w-3.5 h-3.5" />}
                           onClick={() =>
                             setExperienceHistory(experienceHistory.filter((_, i) => i !== idx))
                           }
@@ -697,7 +733,7 @@ export function ProfileBuilderModal({
                   <Button
                     type="primary"
                     size="small"
-                    icon={<PlusOutlined />}
+                    icon={<Plus className="w-3.5 h-3.5" />}
                     onClick={() =>
                       setEducation([
                         ...education,
@@ -718,19 +754,37 @@ export function ProfileBuilderModal({
                   >
                     <Row gutter={[8, 8]}>
                       <Col xs={24} sm={11}>
-                        <Input
-                          placeholder="Degree / Course (e.g. B.Tech CS, MBA, B.Com)"
+                        <AutoComplete
+                          placeholder="Degree / Course (Select or type custom)"
                           value={edu.degree}
-                          onChange={(e) => {
+                          onChange={(val) => {
                             const updated = [...education];
-                            updated[idx].degree = e.target.value;
+                            updated[idx].degree = val;
                             setEducation(updated);
                           }}
-                        />
+                          options={[
+                            { label: "B.Tech / B.E. (Computer Science)", value: "B.Tech Computer Science" },
+                            { label: "B.Tech / B.E. (Information Tech)", value: "B.Tech IT" },
+                            { label: "B.Tech / B.E. (Mechanical / Civil / Electrical)", value: "B.Tech Engineering" },
+                            { label: "BCA (Computer Applications)", value: "BCA" },
+                            { label: "MCA (Master of Computer Applications)", value: "MCA" },
+                            { label: "B.Sc (Computer Science / IT)", value: "B.Sc CS" },
+                            { label: "M.Tech / M.E.", value: "M.Tech" },
+                            { label: "MBA / PGDM", value: "MBA" },
+                            { label: "B.Com / M.Com (Finance & Accounts)", value: "B.Com" },
+                            { label: "BBA / BMS", value: "BBA" },
+                            { label: "BA / MA", value: "BA" },
+                            { label: "Diploma / Polytechnic", value: "Diploma" },
+                            { label: "12th Standard / Higher Secondary", value: "Higher Secondary (12th)" },
+                          ]}
+                          style={{ width: "100%" }}
+                        >
+                          <Input placeholder="Degree / Course (type custom or select...)" />
+                        </AutoComplete>
                       </Col>
                       <Col xs={20} sm={11}>
                         <Input
-                          placeholder="College / Institute Name"
+                          placeholder="College / Institute / University Name"
                           value={edu.institution}
                           onChange={(e) => {
                             const updated = [...education];
@@ -744,7 +798,7 @@ export function ProfileBuilderModal({
                           type="text"
                           danger
                           size="small"
-                          icon={<DeleteOutlined />}
+                          icon={<Trash2 className="w-3.5 h-3.5" />}
                           onClick={() => setEducation(education.filter((_, i) => i !== idx))}
                           style={{ fontWeight: 600 }}
                         >
@@ -799,7 +853,7 @@ export function ProfileBuilderModal({
                   <Col xs={24} sm={8}>
                     <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Portfolio Website</label>
                     <Input
-                      prefix={<GlobalOutlined style={{ color: "#94a3b8" }} />}
+                      prefix={<Globe className="w-3.5 h-3.5 text-slate-400" />}
                       placeholder="https://myportfolio.com"
                       value={portfolioUrl}
                       onChange={(e) => setPortfolioUrl(e.target.value)}
@@ -809,7 +863,7 @@ export function ProfileBuilderModal({
                   <Col xs={24} sm={8}>
                     <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>GitHub Profile</label>
                     <Input
-                      prefix={<GithubOutlined style={{ color: "#94a3b8" }} />}
+                      prefix={<LinkIcon className="w-3.5 h-3.5 text-slate-400" />}
                       placeholder="https://github.com/username"
                       value={githubUrl}
                       onChange={(e) => setGithubUrl(e.target.value)}
@@ -819,7 +873,7 @@ export function ProfileBuilderModal({
                   <Col xs={24} sm={8}>
                     <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>LinkedIn Profile</label>
                     <Input
-                      prefix={<LinkedinOutlined style={{ color: "#94a3b8" }} />}
+                      prefix={<LinkIcon className="w-3.5 h-3.5 text-slate-400" />}
                       placeholder="https://linkedin.com/in/username"
                       value={linkedinUrl}
                       onChange={(e) => setLinkedinUrl(e.target.value)}
@@ -835,7 +889,7 @@ export function ProfileBuilderModal({
                   <Button
                     type="primary"
                     size="small"
-                    icon={<PlusOutlined />}
+                    icon={<Plus className="w-3.5 h-3.5" />}
                     onClick={() =>
                       setProjects([
                         ...projects,
@@ -882,7 +936,7 @@ export function ProfileBuilderModal({
                           type="text"
                           danger
                           size="small"
-                          icon={<DeleteOutlined />}
+                          icon={<Trash2 className="w-3.5 h-3.5" />}
                           onClick={() => setProjects(projects.filter((_, i) => i !== idx))}
                           style={{ fontWeight: 600 }}
                         >
@@ -914,12 +968,30 @@ export function ProfileBuilderModal({
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <Row gutter={[12, 12]}>
                   <Col xs={24} sm={12}>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Desired Role</label>
-                    <Input
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                      Desired Role / Profession (Type custom or select)
+                    </label>
+                    <AutoComplete
                       value={desiredRole}
-                      onChange={(e) => setDesiredRole(e.target.value)}
-                      style={{ marginTop: 4, borderRadius: 8 }}
-                    />
+                      onChange={(val) => setDesiredRole(val)}
+                      options={[
+                        { label: "Software Engineer", value: "Software Engineer" },
+                        { label: "Full Stack Developer", value: "Full Stack Developer" },
+                        { label: "Frontend Developer", value: "Frontend Developer" },
+                        { label: "Backend Developer", value: "Backend Developer" },
+                        { label: "Product Manager", value: "Product Manager" },
+                        { label: "Data Scientist", value: "Data Scientist" },
+                        { label: "UI/UX Designer", value: "UI/UX Designer" },
+                        { label: "DevOps Engineer", value: "DevOps Engineer" },
+                        { label: "Business Analyst", value: "Business Analyst" },
+                        { label: "Chartered Accountant", value: "Chartered Accountant" },
+                        { label: "HR Manager", value: "HR Manager" },
+                        { label: "Operations Manager", value: "Operations Manager" },
+                      ]}
+                      style={{ width: "100%", marginTop: 4 }}
+                    >
+                      <Input placeholder="e.g. AI Engineer, Doctor, Architect, or custom..." style={{ borderRadius: 8 }} />
+                    </AutoComplete>
                   </Col>
                   <Col xs={24} sm={12}>
                     <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Hometown</label>
@@ -931,8 +1003,8 @@ export function ProfileBuilderModal({
                       style={{ width: "100%", marginTop: 4 }}
                     >
                       <Input
-                        prefix={<EnvironmentOutlined style={{ color: "#94a3b8" }} />}
-                        placeholder="Search hometown city..."
+                        prefix={<MapPin className="w-3.5 h-3.5 text-slate-400" />}
+                        placeholder="Search hometown city or type custom..."
                         style={{ borderRadius: 8 }}
                       />
                     </AutoComplete>

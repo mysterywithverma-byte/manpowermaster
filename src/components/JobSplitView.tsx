@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { MockJob } from "@/lib/mock-data";
 import { useAuth } from "@/context/AuthContext";
-import { formatSalary, timeAgo } from "@/lib/utils";
+import { formatSalary } from "@/lib/utils";
 import { JobCard } from "@/components/JobCard";
 import {
   Card,
@@ -16,29 +16,19 @@ import {
   Skeleton,
   Empty,
   Progress,
-  Divider,
   Drawer,
-  Badge,
 } from "antd";
 import {
-  BookOutlined,
-  BookFilled,
-  ShareAltOutlined,
-  WhatsAppOutlined,
-  ArrowRightOutlined,
-  CheckCircleFilled,
-  EnvironmentOutlined,
-  DollarOutlined,
-  ClockCircleOutlined,
-  EyeOutlined,
-  FireFilled,
-  StarFilled,
-  BankOutlined,
-  CheckOutlined,
-  ReloadOutlined,
-  ThunderboltFilled,
-  SafetyCertificateFilled,
-} from "@ant-design/icons";
+  Bookmark,
+  BookmarkCheck,
+  Share2,
+  Check,
+  RotateCcw,
+  Sparkles,
+  Star,
+  ArrowRight,
+  MessageCircle,
+} from "lucide-react";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 const { Text, Title, Paragraph } = Typography;
@@ -188,7 +178,7 @@ export function JobSplitView({
         >
           <Button
             type="primary"
-            icon={<ReloadOutlined />}
+            icon={<RotateCcw className="w-3.5 h-3.5" />}
             onClick={onResetFilters}
             style={{ fontWeight: 600, marginTop: 12 }}
           >
@@ -203,35 +193,26 @@ export function JobSplitView({
 
   // Detail Panel Component reused for desktop side card and mobile drawer
   const DetailPanelContent = ({ job }: { job: MockJob }) => (
-    <div>
+    <div className="relative">
+      {/* Mobile Drag Indicator Bar */}
+      <div className="lg:hidden flex justify-center py-2 bg-slate-50 border-b border-slate-100">
+        <div className="w-10 h-1.5 rounded-full bg-slate-300" />
+      </div>
+
       {/* Top Header Card */}
-      <div
-        style={{
-          padding: "18px 20px",
-          borderBottom: "1px solid #f1f5f9",
-          backgroundColor: "#ffffff",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: 14,
-            marginBottom: 14,
-          }}
-        >
-          <Space align="start" size={14} style={{ flex: 1, minWidth: 0 }}>
+      <div className="p-4 sm:p-5 border-b border-slate-100 bg-white">
+        <div className="flex items-start justify-between gap-3 mb-3.5">
+          <Space align="start" size={12} style={{ flex: 1, minWidth: 0 }}>
             <Avatar
               shape="square"
-              size={54}
+              size={48}
               src={job.companyLogo}
               style={{
                 backgroundColor: "#f8fafc",
                 border: "1px solid #e2e8f0",
                 color: "#ea580c",
                 fontWeight: 800,
-                fontSize: 20,
+                fontSize: 18,
                 borderRadius: 12,
                 flexShrink: 0,
               }}
@@ -239,17 +220,17 @@ export function JobSplitView({
               {job.company.charAt(0)}
             </Avatar>
             <div style={{ minWidth: 0 }}>
-              <Title level={3} style={{ fontSize: 18, margin: 0, color: "#0f172a" }}>
+              <Title level={3} style={{ fontSize: 17, margin: 0, color: "#0f172a", lineHeight: 1.3 }}>
                 {job.title}
               </Title>
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
+                  gap: 6,
                   flexWrap: "wrap",
-                  marginTop: 4,
-                  fontSize: 13,
+                  marginTop: 3,
+                  fontSize: 12,
                 }}
               >
                 <Text strong style={{ color: "#475569" }}>
@@ -257,10 +238,9 @@ export function JobSplitView({
                 </Text>
                 <VerifiedBadge size="xs" />
                 <span style={{ color: "#cbd5e1" }}>•</span>
-                <span style={{ fontSize: 12, color: "#94a3b8", display: "inline-flex", alignItems: "center", gap: 3 }}>
-                  <StarFilled style={{ color: "#eab308", fontSize: 11 }} />
+                <span style={{ fontSize: 11, color: "#94a3b8", display: "inline-flex", alignItems: "center", gap: 3 }}>
+                  <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                   <span>{recruiterInfo?.rating || "4.2"}</span>
-                  <span>({recruiterInfo?.reviewsCount} reviews)</span>
                 </span>
               </div>
             </div>
@@ -269,11 +249,13 @@ export function JobSplitView({
           <Space size={6}>
             <Tooltip title={isJobSaved(job._id) ? "Saved" : "Save Job"}>
               <Button
+                type="text"
+                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-100"
                 icon={
                   isJobSaved(job._id) ? (
-                    <BookFilled style={{ color: "#ea580c" }} />
+                    <BookmarkCheck className="w-4 h-4 text-primary fill-primary" />
                   ) : (
-                    <BookOutlined />
+                    <Bookmark className="w-4 h-4 text-slate-500" />
                   )
                 }
                 onClick={() => toggleSaveJob(job._id)}
@@ -281,94 +263,87 @@ export function JobSplitView({
             </Tooltip>
             <Tooltip title={copied ? "Link Copied!" : "Share Job"}>
               <Button
-                icon={copied ? <CheckOutlined style={{ color: "#16a34a" }} /> : <ShareAltOutlined />}
+                type="text"
+                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-100"
+                icon={copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4 text-slate-500" />}
                 onClick={() => handleShare(job)}
               />
             </Tooltip>
           </Space>
         </div>
 
-        {/* 3-Pillar Metadata Row */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
-            gap: 10,
-            padding: "10px 14px",
-            borderRadius: 10,
-            backgroundColor: "#f8fafc",
-            border: "1px solid #e2e8f0",
-            marginBottom: 14,
-          }}
-        >
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>
+        {/* 3-Pillar Metadata Row - 3 Columns on Mobile */}
+        <div className="grid grid-cols-3 gap-2 p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200 mb-3.5 text-center sm:text-left">
+          <div className="min-w-0">
+            <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
               Experience
             </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>
+            <div className="text-xs font-semibold text-slate-900 truncate mt-0.5">
               {job.experienceLevel || "Mid-Level"}
             </div>
           </div>
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>
+          <div className="min-w-0 border-x border-slate-200 px-1">
+            <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
               Annual CTC
             </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#16a34a" }}>
+            <div className="text-xs font-bold text-emerald-600 truncate mt-0.5">
               {formatSalary(job.salaryMin, job.salaryMax)}
             </div>
           </div>
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>
+          <div className="min-w-0">
+            <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
               Location
             </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>
-              {job.location} ({job.workplaceType})
+            <div className="text-xs font-semibold text-slate-900 truncate mt-0.5">
+              {job.location}
             </div>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <Space size={10} style={{ width: "100%" }}>
+        {/* Action Buttons for Desktop / Header */}
+        <div className="hidden sm:flex items-center gap-2.5">
           <Button
             type="primary"
             size="large"
-            icon={<ArrowRightOutlined />}
+            icon={<ArrowRight className="w-4 h-4" />}
             onClick={() => onApplyJob(job)}
-            style={{ fontWeight: 700, borderRadius: 10, flex: 1 }}
+            style={{ fontWeight: 600, borderRadius: 8, flex: 1 }}
           >
             Apply Now
           </Button>
 
-          <Button
-            size="large"
-            icon={<WhatsAppOutlined style={{ color: "#16a34a", fontSize: 18 }} />}
-            onClick={() => handleWhatsApp(job)}
-            style={{
-              borderColor: "#bbf7d0",
-              backgroundColor: "#f0fdf4",
-              fontWeight: 600,
-              borderRadius: 10,
-            }}
-          >
-            WhatsApp HR
-          </Button>
-        </Space>
+          <Tooltip title="Chat with HR on WhatsApp">
+            <Button
+              size="large"
+              icon={<MessageCircle className="w-4 h-4 text-emerald-600" />}
+              onClick={() => handleWhatsApp(job)}
+              style={{
+                borderColor: "#bbf7d0",
+                backgroundColor: "#f0fdf4",
+                fontWeight: 600,
+                borderRadius: 8,
+              }}
+            >
+              WhatsApp HR
+            </Button>
+          </Tooltip>
+        </div>
       </div>
 
       {/* Detail Content Sections */}
-      <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="p-4 sm:p-5 flex flex-col gap-4 sm:gap-5 pb-24 lg:pb-6">
         {/* ATS Resume Scanner Section */}
         <Card
           size="small"
           style={{
-            borderRadius: 12,
+            borderRadius: 10,
             border: "1px solid #fed7aa",
             backgroundColor: "#fff7ed",
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <Space align="center" size={6}>
-              <ThunderboltFilled style={{ color: "#ea580c" }} />
+              <Sparkles className="w-4 h-4 text-primary" />
               <Text strong style={{ fontSize: 13, color: "#9a3412" }}>
                 AI Match &amp; ATS Score
               </Text>
@@ -376,7 +351,7 @@ export function JobSplitView({
             <Button
               size="small"
               type="primary"
-              icon={<ThunderboltFilled />}
+              icon={<Sparkles className="w-3 h-3" />}
               loading={atsLoading}
               onClick={handleRunAts}
               style={{
@@ -567,8 +542,40 @@ export function JobSplitView({
         open={mobileDrawerOpen}
         onClose={() => setMobileDrawerOpen(false)}
         placement="bottom"
-        height="85%"
+        height="90%"
         styles={{ body: { padding: 0 } }}
+        footer={
+          selectedJob ? (
+            <div className="flex items-center gap-2.5 pb-safe">
+              <Button
+                size="large"
+                icon={<MessageCircle className="w-4 h-4 text-emerald-600" />}
+                onClick={() => handleWhatsApp(selectedJob)}
+                className="flex-1 font-semibold rounded-lg active:scale-95"
+                style={{
+                  borderColor: "#bbf7d0",
+                  backgroundColor: "#f0fdf4",
+                  height: 42,
+                }}
+              >
+                WhatsApp HR
+              </Button>
+              <Button
+                type="primary"
+                size="large"
+                icon={<ArrowRight className="w-4 h-4" />}
+                onClick={() => {
+                  setMobileDrawerOpen(false);
+                  onApplyJob(selectedJob);
+                }}
+                className="flex-1 font-semibold rounded-lg shadow-xs active:scale-95"
+                style={{ height: 42 }}
+              >
+                Apply Now
+              </Button>
+            </div>
+          ) : null
+        }
       >
         {selectedJob && <DetailPanelContent job={selectedJob} />}
       </Drawer>

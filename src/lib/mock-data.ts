@@ -17,12 +17,12 @@ export interface MockUser {
   name: string;
   email: string;
   role: "seeker" | "employer" | "admin";
-  headline: string;
-  bio: string;
-  phone: string;
-  location: string;
-  skills: string[];
-  resumeUrl: string;
+  headline?: string;
+  bio?: string;
+  phone?: string;
+  location?: string;
+  skills?: string[];
+  resumeUrl?: string;
   resumeFileName?: string;
   avatar?: string;
   savedJobs: string[];
@@ -41,17 +41,42 @@ export interface MockUser {
   personalDetails?: any;
   employerDetails?: {
     companyName?: string;
+    brandName?: string;
+    tagline?: string;
+    companyLogo?: string;
     companyType?: string;
     industry?: string;
-    recruiterDesignation?: string;
+    companySize?: string;
+    yearFounded?: string;
     website?: string;
     gstin?: string;
     cin?: string;
-    companySize?: string;
     officeAddress?: string;
     city?: string;
     state?: string;
+    pincode?: string;
+    workplacePolicy?: string;
+    workingDays?: string;
+    workingHours?: string;
+    perksAndBenefits?: string[];
+    aboutCompany?: string;
+    recruiterDesignation?: string;
+    linkedinUrl?: string;
+    twitterUrl?: string;
     hiringRoles?: string[];
+    branches?: {
+      id: string;
+      branchName: string;
+      branchType: string;
+      address: string;
+      city: string;
+      state: string;
+      pincode: string;
+      contactPerson?: string;
+      contactPhone?: string;
+      contactEmail?: string;
+      isHeadquarters?: boolean;
+    }[];
   };
   portfolioUrl?: string;
   githubUrl?: string;
@@ -121,6 +146,120 @@ export const INITIAL_USERS: MockUser[] = [
     location: "Jalandhar, Punjab, India",
     skills: ["Platform Management", "Recruiter Verification", "Job Moderation"],
     resumeUrl: "",
+    savedJobs: [],
+    isVerified: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    _id: "user-employer-1",
+    name: "Priya Sharma",
+    email: "priya.sharma@techcorp.in",
+    role: "employer",
+    companyName: "TechCorp Global Technologies Pvt. Ltd.",
+    companyLogo: "https://images.unsplash.com/photo-1549923746-c502d488b3ea?w=120&auto=format&fit=crop&q=80",
+    phone: "+91 98765 43210",
+    location: "Bengaluru, Karnataka",
+    headline: "Head of Talent Acquisition & People Operations",
+    bio: "Head of Talent Acquisition with 10+ years of corporate hiring experience.",
+    skills: ["Talent Acquisition", "Technical Recruiting", "Executive Search"],
+    resumeUrl: "",
+    isVerified: true,
+    profileCompleted: true,
+    employerDetails: {
+      companyName: "TechCorp Global Technologies Pvt. Ltd.",
+      brandName: "TechCorp",
+      tagline: "Building next-generation cloud native systems & AI assistants",
+      companyLogo: "https://images.unsplash.com/photo-1549923746-c502d488b3ea?w=120&auto=format&fit=crop&q=80",
+      companyType: "Private Limited",
+      industry: "IT & Software Services",
+      companySize: "201-500 Employees",
+      yearFounded: "2018",
+      website: "https://techcorpglobal.com",
+      gstin: "29AABCT1332M1ZG",
+      cin: "U72200KA2018PTC112345",
+      officeAddress: "Tower B, 7th Floor, Embassy TechVillage, Outer Ring Road",
+      city: "Bengaluru",
+      state: "Karnataka",
+      pincode: "560103",
+      workplacePolicy: "Hybrid",
+      workingDays: "5 Days (Mon - Fri)",
+      workingHours: "9:30 AM - 6:30 PM (Flexible)",
+      perksAndBenefits: [
+        "Comprehensive Health Insurance (₹7 Lakhs)",
+        "Performance Bonus & ESOPs",
+        "Free Gourmet Meals & Snacks",
+        "Company Cab Facility",
+        "Annual ₹50,000 Learning Allowance",
+        "Wellness & Gym Reimbursement",
+      ],
+      aboutCompany:
+        "TechCorp Global is a premier engineering solutions company architecting modern cloud-native systems and AI assistants for Fortune 500 enterprises across US, Europe, and Asia-Pacific.",
+      recruiterDesignation: "Head of Talent Acquisition",
+      linkedinUrl: "https://linkedin.com/company/techcorpglobal",
+      twitterUrl: "https://x.com/techcorpglobal",
+      hiringRoles: [
+        "Senior React / Next.js Engineer",
+        "Backend Python & Golang Developer",
+        "DevOps & AWS Cloud Architect",
+        "Product Designer (UI/UX)",
+      ],
+      branches: [
+        {
+          id: "br-hq-blr",
+          branchName: "Corporate Headquarters - Bengaluru",
+          branchType: "Headquarters",
+          address: "Tower B, 7th Floor, Embassy TechVillage, Outer Ring Road",
+          city: "Bengaluru",
+          state: "Karnataka",
+          pincode: "560103",
+          contactPerson: "Priya Sharma",
+          contactPhone: "+91 98765 43210",
+          contactEmail: "blr.recruiting@techcorpglobal.com",
+          isHeadquarters: true,
+        },
+        {
+          id: "br-ncr-ggn",
+          branchName: "North India Innovation Hub - Gurugram",
+          branchType: "Regional HQ",
+          address: "Building 10C, 5th Floor, DLF Cyber City, Phase 2",
+          city: "Gurugram",
+          state: "Haryana",
+          pincode: "122002",
+          contactPerson: "Rohan Kapoor",
+          contactPhone: "+91 98112 34567",
+          contactEmail: "ncr.talent@techcorpglobal.com",
+          isHeadquarters: false,
+        },
+        {
+          id: "br-mum-bkc",
+          branchName: "Western Financial Center - Mumbai",
+          branchType: "Branch Office",
+          address: "The Capital, Level 9, Bandra Kurla Complex (BKC), Bandra East",
+          city: "Mumbai",
+          state: "Maharashtra",
+          pincode: "400051",
+          contactPerson: "Sneha Nair",
+          contactPhone: "+91 98201 98765",
+          contactEmail: "mumbai.careers@techcorpglobal.com",
+          isHeadquarters: false,
+        },
+      ],
+    },
+    savedJobs: [],
+    createdAt: new Date().toISOString(),
+  },
+  {
+    _id: "user-seeker-1",
+    name: "Rohit Verma",
+    email: "rohitverma@example.com",
+    role: "seeker",
+    phone: "+91 98726 20706",
+    location: "Bengaluru, Karnataka",
+    headline: "Full Stack Engineer (React, Node.js, Next.js, TypeScript)",
+    bio: "Full Stack Engineer specializing in TypeScript, Next.js and high-performance cloud applications.",
+    resumeUrl: "",
+    skills: ["React.js", "Next.js", "Node.js", "TypeScript", "Tailwind CSS", "MongoDB"],
+    profileCompleted: true,
     savedJobs: [],
     isVerified: true,
     createdAt: new Date().toISOString(),

@@ -6,18 +6,17 @@ import { useAuth } from "@/context/AuthContext";
 import { formatSalary, timeAgo } from "@/lib/utils";
 import { Card, Tag, Button, Avatar, Space, Typography, Tooltip, Badge } from "antd";
 import {
-  BookOutlined,
-  BookFilled,
-  EnvironmentOutlined,
-  ClockCircleOutlined,
-  ThunderboltFilled,
-  FireFilled,
-  CheckCircleFilled,
-  WhatsAppOutlined,
-  ArrowRightOutlined,
-  StarFilled,
-  BankOutlined,
-} from "@ant-design/icons";
+  Bookmark,
+  MapPin,
+  Clock,
+  Zap,
+  Flame,
+  CheckCircle2,
+  ArrowRight,
+  Star,
+  Building2,
+  MessageCircle,
+} from "lucide-react";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 const { Text, Title } = Typography;
@@ -37,7 +36,7 @@ function getJobTags(job: MockJob) {
     tags.push({
       label: "Hot Job",
       color: "error",
-      icon: <FireFilled />,
+      icon: <Flame className="w-3 h-3 text-red-500 mr-0.5 inline" />,
     });
   }
 
@@ -51,9 +50,9 @@ function getJobTags(job: MockJob) {
 
   if (seed >= 7) {
     tags.push({
-      label: "Urgent Hiring",
+      label: "Urgent",
       color: "warning",
-      icon: <ThunderboltFilled />,
+      icon: <Zap className="w-3 h-3 text-amber-500 mr-0.5 inline" />,
     });
   }
 
@@ -61,7 +60,7 @@ function getJobTags(job: MockJob) {
     tags.push({
       label: "Easy Apply",
       color: "processing",
-      icon: <CheckCircleFilled />,
+      icon: <CheckCircle2 className="w-3 h-3 text-blue-500 mr-0.5 inline" />,
     });
   }
 
@@ -92,6 +91,7 @@ export function JobCard({ job, onSelectJob, onApplyJob, isSelected }: JobCardPro
   return (
     <Card
       hoverable
+      className="mobile-compact-card"
       onClick={() => onSelectJob(job)}
       styles={{
         body: { padding: "16px 18px" },
@@ -125,7 +125,7 @@ export function JobCard({ job, onSelectJob, onApplyJob, isSelected }: JobCardPro
               flexShrink: 0,
             }}
           >
-            {job.company ? job.company.charAt(0) : <BankOutlined />}
+            {job.company ? job.company.charAt(0) : <Building2 className="w-5 h-5 text-orange-600" />}
           </Avatar>
 
           <div style={{ minWidth: 0 }}>
@@ -135,7 +135,7 @@ export function JobCard({ job, onSelectJob, onApplyJob, isSelected }: JobCardPro
               </Text>
               <VerifiedBadge size="xs" />
               <span style={{ fontSize: 11, color: "#94a3b8", display: "inline-flex", alignItems: "center", gap: 2 }}>
-                <StarFilled style={{ color: "#eab308", fontSize: 10 }} />
+                <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                 <span>{rating}</span>
                 <span>({reviewsCount})</span>
               </span>
@@ -166,12 +166,13 @@ export function JobCard({ job, onSelectJob, onApplyJob, isSelected }: JobCardPro
             <Button
               type="text"
               size="small"
+              shape="circle"
               icon={
-                saved ? (
-                  <BookFilled style={{ color: "#ea580c", fontSize: 16 }} />
-                ) : (
-                  <BookOutlined style={{ color: "#94a3b8", fontSize: 16 }} />
-                )
+                <Bookmark
+                  className={`w-4 h-4 ${
+                    saved ? "text-orange-600 fill-orange-600" : "text-slate-400"
+                  }`}
+                />
               }
               onClick={(e) => {
                 e.stopPropagation();
@@ -197,53 +198,51 @@ export function JobCard({ job, onSelectJob, onApplyJob, isSelected }: JobCardPro
         </Tag>
       </div>
 
-      {/* Salary & Location */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 8,
-          marginTop: 12,
-          paddingTop: 10,
-          borderTop: "1px dashed #f1f5f9",
-        }}
-      >
-        <Space size={14} split={<span style={{ color: "#cbd5e1" }}>•</span>}>
-          <Text strong style={{ fontSize: 14, color: "#16a34a" }}>
+      {/* Salary & Location Row */}
+      <div className="mt-3 pt-2.5 border-t border-dashed border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs">
+          <span className="font-extrabold text-sm text-emerald-600">
             {formatSalary(job.salaryMin, job.salaryMax)}
-          </Text>
-          <span style={{ fontSize: 12, color: "#64748b", display: "inline-flex", alignItems: "center", gap: 4 }}>
-            <EnvironmentOutlined />
-            <span>{job.location}</span>
           </span>
-          <span style={{ fontSize: 11, color: "#94a3b8", display: "inline-flex", alignItems: "center", gap: 4 }}>
-            <ClockCircleOutlined />
+          <span className="text-slate-300 hidden xs:inline">•</span>
+          <span className="text-slate-600 inline-flex items-center gap-1 font-medium">
+            <MapPin className="w-3.5 h-3.5 text-slate-400" />
+            <span className="truncate max-w-[140px]">{job.location}</span>
+          </span>
+          <span className="text-slate-300 hidden xs:inline">•</span>
+          <span className="text-slate-400 text-[11px] inline-flex items-center gap-1">
+            <Clock className="w-3 h-3 text-slate-400" />
             <span>{timeAgo(job.createdAt)}</span>
           </span>
-        </Space>
+        </div>
 
         {/* Action Buttons */}
-        <Space size={8} onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex items-center gap-2 w-full sm:w-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Button
-            size="small"
-            icon={<WhatsAppOutlined style={{ color: "#16a34a" }} />}
+            size="middle"
+            icon={<MessageCircle className="w-3.5 h-3.5 text-emerald-600" />}
             onClick={handleWhatsAppClick}
-            style={{ borderColor: "#bbf7d0", backgroundColor: "#f0fdf4", fontWeight: 600, borderRadius: 6 }}
+            className="flex-1 sm:flex-initial h-9 sm:h-7 text-xs font-semibold rounded-xl sm:rounded-lg active:scale-95"
+            style={{
+              borderColor: "#bbf7d0",
+              backgroundColor: "#f0fdf4",
+            }}
           >
             WhatsApp
           </Button>
           <Button
             type="primary"
-            size="small"
-            icon={<ArrowRightOutlined />}
+            size="middle"
+            icon={<ArrowRight className="w-3.5 h-3.5" />}
             onClick={() => onApplyJob(job)}
-            style={{ fontWeight: 600, borderRadius: 6 }}
+            className="flex-1 sm:flex-initial h-9 sm:h-7 text-xs font-bold rounded-xl sm:rounded-lg active:scale-95 shadow-xs"
           >
-            Apply Now
+            Apply
           </Button>
-        </Space>
+        </div>
       </div>
     </Card>
   );

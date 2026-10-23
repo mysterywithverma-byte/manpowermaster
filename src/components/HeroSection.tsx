@@ -1,15 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Input, Button, Tag, Space, Select, AutoComplete, Tooltip } from "antd";
-import {
-  SearchOutlined,
-  EnvironmentOutlined,
-  GlobalOutlined,
-  FireOutlined,
-  CheckCircleFilled,
-  ThunderboltFilled,
-} from "@ant-design/icons";
+import React from "react";
+import { Input, Button, Tag, Space, Select, Tooltip } from "antd";
+import { Search, MapPin, Globe, Sparkles, TrendingUp, Zap } from "lucide-react";
 
 interface HeroSectionProps {
   searchQuery: string;
@@ -56,35 +49,35 @@ export function HeroSection({
 }: HeroSectionProps) {
   const locationOptions = [
     {
-      label: "Special Options",
+      label: "Locations",
       options: [
         {
           value: "All",
           label: (
-            <Space>
-              <GlobalOutlined style={{ color: "#1677ff" }} />
-              <span>All Locations (India)</span>
+            <Space size={6}>
+              <Globe className="w-3.5 h-3.5 text-blue-500" />
+              <span>All Locations</span>
             </Space>
           ),
         },
         {
           value: "Remote",
           label: (
-            <Space>
-              <ThunderboltFilled style={{ color: "#16a34a" }} />
-              <span>Remote / Work From Home</span>
+            <Space size={6}>
+              <Zap className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Remote / WFH</span>
             </Space>
           ),
         },
       ],
     },
     {
-      label: "Major Cities",
+      label: "Cities",
       options: POPULAR_CITIES.filter((c) => c !== "All Locations").map((city) => ({
         value: city,
         label: (
-          <Space>
-            <EnvironmentOutlined style={{ color: "#94a3b8" }} />
+          <Space size={6}>
+            <MapPin className="w-3.5 h-3.5 text-slate-400" />
             <span>{city}</span>
           </Space>
         ),
@@ -93,175 +86,82 @@ export function HeroSection({
   ];
 
   return (
-    <section
-      style={{
-        background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-        borderBottom: "1px solid #e2e8f0",
-        padding: "36px 16px 40px",
-      }}
-    >
-      <div style={{ maxWidth: 960, margin: "0 auto", textAlign: "center" }}>
-        {/* Trust Badge */}
-        <div style={{ display: "inline-block", marginBottom: 14 }}>
-          <Tag
-            color="orange"
-            style={{
-              padding: "4px 12px",
-              borderRadius: 20,
-              fontSize: 12,
-              fontWeight: 600,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              border: "1px solid #fed7aa",
-            }}
-          >
-            <CheckCircleFilled style={{ color: "#ea580c" }} />
-            <span>India&apos;s Verified Direct Hiring &amp; Placement Network</span>
-          </Tag>
+    <section className="bg-white border-b border-slate-200/80 px-4 py-8 sm:px-6 sm:py-10">
+      <div className="max-w-4xl mx-auto text-center">
+        {/* Compact Zoho-style Status Pill */}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600 text-xs font-medium mb-4">
+          <Sparkles className="w-3.5 h-3.5 text-primary" />
+          <span>
+            {totalJobsCount > 0 ? totalJobsCount : "1,200"}+ active corporate openings
+          </span>
         </div>
 
-        {/* Hero Title */}
-        <h1
-          style={{
-            fontSize: "clamp(26px, 4.5vw, 44px)",
-            fontWeight: 800,
-            color: "#0f172a",
-            letterSpacing: "-0.03em",
-            lineHeight: 1.2,
-            margin: "0 0 10px",
-          }}
-        >
-          Find your dream job with verified corporate employers
+        {/* Clean Hero Title */}
+        <h1 className="text-2xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-6">
+          Find your next career move
         </h1>
 
-        <p
-          style={{
-            fontSize: 15,
-            color: "#64748b",
-            maxWidth: 620,
-            margin: "0 auto 28px",
-            lineHeight: 1.5,
-          }}
-        >
-          <strong style={{ color: "#0f172a" }}>
-            {totalJobsCount > 0 ? totalJobsCount : "1,200"}+ verified openings
-          </strong>{" "}
-          across India with transparent CTC in ₹ LPA & direct HR interview calls.
-        </p>
-
-        {/* Ant Design Unified Search Bar */}
-        <div
-          style={{
-            maxWidth: 820,
-            margin: "0 auto",
-            backgroundColor: "#ffffff",
-            borderRadius: 16,
-            border: "1px solid #cbd5e1",
-            boxShadow: "0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04)",
-            padding: "8px",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 8,
-            alignItems: "center",
-          }}
-        >
+        {/* Sleek Zoho-Style Unified Search Bar */}
+        <div className="max-w-2xl mx-auto bg-white rounded-xl border border-slate-200 shadow-xs hover:border-slate-300 transition-colors p-1.5 flex flex-col sm:flex-row gap-1.5 items-stretch sm:items-center">
           {/* Query input */}
-          <div style={{ flex: "1 1 280px" }}>
+          <div className="flex-1 min-w-0">
             <Input
               size="large"
               variant="borderless"
-              prefix={<SearchOutlined style={{ color: "#94a3b8", fontSize: 16, marginRight: 6 }} />}
-              placeholder="Designation, skills, or company name..."
+              prefix={<Search className="w-4 h-4 text-slate-400 mr-1.5 shrink-0" />}
+              placeholder="Role, skill, or company..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onPressEnter={onSearch}
               allowClear
-              style={{ fontSize: 14 }}
+              className="text-sm font-normal"
             />
           </div>
 
           {/* Divider */}
-          <div
-            className="hidden sm:block"
-            style={{ width: 1, height: 28, backgroundColor: "#e2e8f0" }}
-          />
+          <div className="hidden sm:block w-px h-6 bg-slate-200" />
+          <div className="block sm:hidden h-px w-full bg-slate-100" />
 
           {/* Location Select */}
-          <div style={{ flex: "1 1 220px", display: "flex", alignItems: "center" }}>
+          <div className="w-full sm:w-48 shrink-0">
             <Select
               size="large"
               variant="borderless"
               showSearch
-              placeholder="Select or type city..."
+              placeholder="City..."
               value={selectedLocation === "All" ? undefined : selectedLocation}
               onChange={(val) => setSelectedLocation(val || "All")}
               options={locationOptions}
-              style={{ width: "100%", fontSize: 14 }}
-              suffixIcon={<EnvironmentOutlined style={{ color: "#94a3b8" }} />}
+              className="w-full text-sm"
+              suffixIcon={<MapPin className="w-3.5 h-3.5 text-slate-400 pointer-events-none" />}
               allowClear
             />
           </div>
 
-          {/* Search Button */}
-          <Button
-            type="primary"
-            size="large"
-            icon={<SearchOutlined style={{ fontSize: 16 }} />}
-            onClick={onSearch}
-            style={{
-              height: 44,
-              padding: "0 24px",
-              borderRadius: 12,
-              fontWeight: 700,
-              boxShadow: "0 2px 8px rgba(234, 88, 12, 0.25)",
-            }}
-          >
-            Search Jobs
-          </Button>
+          {/* Sleek Zoho Icon Button */}
+          <Tooltip title="Search Jobs" placement="top">
+            <Button
+              type="primary"
+              size="large"
+              icon={<Search className="w-4 h-4" />}
+              onClick={onSearch}
+              aria-label="Search"
+              className="w-full sm:w-10 h-10 rounded-lg shrink-0 flex items-center justify-center shadow-xs"
+            />
+          </Tooltip>
         </div>
 
         {/* Popular Tags */}
-        <div
-          style={{
-            marginTop: 18,
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#64748b",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              marginRight: 4,
-            }}
-          >
-            <FireOutlined style={{ color: "#ea580c" }} /> Popular:
+        <div className="mt-4 flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-1 justify-start sm:justify-center">
+          <span className="text-xs text-slate-400 shrink-0 inline-flex items-center gap-1 mr-1">
+            <TrendingUp className="w-3.5 h-3.5 text-slate-500" /> Trending:
           </span>
 
           {POPULAR_SEARCH_TAGS.map((tag) => (
             <Tag
               key={tag}
               onClick={() => onTagClick(tag)}
-              style={{
-                cursor: "pointer",
-                borderRadius: 20,
-                padding: "2px 10px",
-                fontSize: 12,
-                fontWeight: 500,
-                color: "#334155",
-                backgroundColor: "#ffffff",
-                border: "1px solid #e2e8f0",
-                transition: "all 0.2s",
-              }}
-              className="hover:border-orange-500 hover:text-orange-600"
+              className="cursor-pointer rounded-md px-2.5 py-0.5 text-xs font-normal text-slate-600 bg-slate-50 border-slate-200 hover:border-primary hover:text-primary transition-colors shrink-0 m-0"
             >
               {tag}
             </Tag>

@@ -6,7 +6,7 @@ import { TextLogo } from "@/components/TextLogo";
 
 export function Footer() {
   return (
-    <footer className="w-full border-t border-slate-200 bg-white text-slate-600 py-10 sm:py-14">
+    <footer className="w-full border-t border-slate-200 bg-white text-slate-600 pt-8 pb-24 sm:py-14">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           {/* Brand Info & Govt Registration */}

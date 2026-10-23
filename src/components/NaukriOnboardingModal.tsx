@@ -6,6 +6,7 @@ import confetti from "canvas-confetti";
 import {
   Modal,
   Steps,
+  Segmented,
   Radio,
   Input,
   Select,
@@ -36,9 +37,30 @@ import {
   SafetyCertificateOutlined,
   GlobalOutlined,
   PlusOutlined,
+  DeleteOutlined,
+  ShopOutlined,
+  ClockCircleOutlined,
+  FileTextOutlined,
+  LinkedinOutlined,
+  TwitterOutlined,
+  PlusCircleOutlined,
 } from "@ant-design/icons";
 
 const { Text, Title, Paragraph } = Typography;
+
+export interface BranchItem {
+  id: string;
+  branchName: string;
+  branchType: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  contactPerson?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  isHeadquarters?: boolean;
+}
 
 interface NaukriOnboardingModalProps {
   isOpen: boolean;
@@ -172,20 +194,59 @@ export function NaukriOnboardingModal({
   const [resumeFileName, setResumeFileName] = useState(user?.resumeFileName || "");
   const [uploadingResume, setUploadingResume] = useState(false);
 
-  // Employer Specific Fields
+  // Employer Specific Fields - Complete Zoho Corporate Profile
   const [companyName, setCompanyName] = useState(user?.companyName || "");
-  const [companyType, setCompanyType] = useState("Corporate");
+  const [brandName, setBrandName] = useState("");
+  const [tagline, setTagline] = useState("");
+  const [companyLogo, setCompanyLogo] = useState(user?.companyLogo || "");
+  const [companyType, setCompanyType] = useState("Private Limited");
   const [industry, setIndustry] = useState("IT & Software Services");
   const [companySize, setCompanySize] = useState("51-200 Employees");
+  const [yearFounded, setYearFounded] = useState("2020");
   const [companyWebsite, setCompanyWebsite] = useState("");
-  const [officeAddress, setOfficeAddress] = useState("");
   const [gstin, setGstin] = useState("");
-  const [recruiterDesignation, setRecruiterDesignation] = useState("HR Manager");
+  const [cin, setCin] = useState("");
+
+  // Corporate HQ
+  const [officeAddress, setOfficeAddress] = useState("");
+  const [hqState, setHqState] = useState("");
+  const [hqPincode, setHqPincode] = useState("");
+
+  // Multi-Branch Network State
+  const [branches, setBranches] = useState<BranchItem[]>([]);
+  const [showAddBranch, setShowAddBranch] = useState(false);
+  const [newBranchName, setNewBranchName] = useState("");
+  const [newBranchType, setNewBranchType] = useState("Branch Office");
+  const [newBranchCity, setNewBranchCity] = useState("");
+  const [newBranchState, setNewBranchState] = useState("");
+  const [newBranchPincode, setNewBranchPincode] = useState("");
+  const [newBranchAddress, setNewBranchAddress] = useState("");
+  const [newBranchContactPerson, setNewBranchContactPerson] = useState("");
+  const [newBranchContactPhone, setNewBranchContactPhone] = useState("");
+  const [newBranchContactEmail, setNewBranchContactEmail] = useState("");
+
+  // Workplace Policy, Working Hours & Perks
+  const [workplacePolicy, setWorkplacePolicy] = useState("Hybrid");
+  const [workingDays, setWorkingDays] = useState("5 Days (Mon - Fri)");
+  const [workingHours, setWorkingHours] = useState("9:30 AM - 6:30 PM (Flexible)");
+  const [aboutCompany, setAboutCompany] = useState("");
+  const [selectedPerks, setSelectedPerks] = useState<string[]>([
+    "Comprehensive Health Insurance",
+    "EPF & Gratuity Compliance",
+    "Performance Bonuses & Incentives",
+    "Free Gourmet Meals & Daily Snacks",
+  ]);
+
+  // Recruiter Details & Contacts
+  const [recruiterDesignation, setRecruiterDesignation] = useState("Head of Talent Acquisition");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [twitterUrl, setTwitterUrl] = useState("");
   const [hiringRoles, setHiringRoles] = useState<string[]>([
     "Frontend Developer",
     "Backend Developer",
   ]);
   const [customHiringRole, setCustomHiringRole] = useState("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   // Submission & Loading state
   const [submitting, setSubmitting] = useState(false);
@@ -274,12 +335,117 @@ export function NaukriOnboardingModal({
       if (user.location) setCity(user.location);
       if (user.role) setRole(user.role === "employer" ? "employer" : "seeker");
       if (user.companyName) setCompanyName(user.companyName);
+      if (user.companyLogo) setCompanyLogo(user.companyLogo);
       if (user.resumeUrl) setResumeUrl(user.resumeUrl);
       if (user.resumeFileName) setResumeFileName(user.resumeFileName);
       if (user.headline) setHeadline(user.headline);
       if (user.skills && user.skills.length > 0) setSelectedSkills(user.skills);
+
+      if (user.employerDetails) {
+        const emp = user.employerDetails;
+        if (emp.companyName) setCompanyName(emp.companyName);
+        if (emp.brandName) setBrandName(emp.brandName);
+        if (emp.tagline) setTagline(emp.tagline);
+        if (emp.companyLogo) setCompanyLogo(emp.companyLogo);
+        if (emp.companyType) setCompanyType(emp.companyType);
+        if (emp.industry) setIndustry(emp.industry);
+        if (emp.companySize) setCompanySize(emp.companySize);
+        if (emp.yearFounded) setYearFounded(emp.yearFounded);
+        if (emp.website) setCompanyWebsite(emp.website);
+        if (emp.gstin) setGstin(emp.gstin);
+        if (emp.cin) setCin(emp.cin);
+        if (emp.officeAddress) setOfficeAddress(emp.officeAddress);
+        if (emp.city) setCity(emp.city);
+        if (emp.state) setHqState(emp.state);
+        if (emp.pincode) setHqPincode(emp.pincode);
+        if (emp.workplacePolicy) setWorkplacePolicy(emp.workplacePolicy);
+        if (emp.workingDays) setWorkingDays(emp.workingDays);
+        if (emp.workingHours) setWorkingHours(emp.workingHours);
+        if (emp.aboutCompany) setAboutCompany(emp.aboutCompany);
+        if (emp.perksAndBenefits && emp.perksAndBenefits.length > 0) {
+          setSelectedPerks(emp.perksAndBenefits);
+        }
+        if (emp.recruiterDesignation) setRecruiterDesignation(emp.recruiterDesignation);
+        if (emp.linkedinUrl) setLinkedinUrl(emp.linkedinUrl);
+        if (emp.twitterUrl) setTwitterUrl(emp.twitterUrl);
+        if (emp.hiringRoles && emp.hiringRoles.length > 0) {
+          setHiringRoles(emp.hiringRoles);
+        }
+        if (emp.branches && emp.branches.length > 0) {
+          setBranches(emp.branches);
+        }
+      }
     }
   }, [user, isOpen]);
+
+  const togglePerk = (perk: string) => {
+    if (selectedPerks.includes(perk)) {
+      setSelectedPerks(selectedPerks.filter((p) => p !== perk));
+    } else {
+      setSelectedPerks([...selectedPerks, perk]);
+    }
+  };
+
+  const handleAddBranch = () => {
+    if (!newBranchName.trim()) {
+      setError("Please provide a Branch Name (e.g., Gurugram Cyber City Tech Hub).");
+      return;
+    }
+    if (!newBranchCity.trim()) {
+      setError("Please specify the Branch City.");
+      return;
+    }
+    setError("");
+    const branchItem: BranchItem = {
+      id: `br-${Date.now()}`,
+      branchName: newBranchName.trim(),
+      branchType: newBranchType,
+      address: newBranchAddress.trim() || newBranchCity.trim(),
+      city: newBranchCity.trim(),
+      state: newBranchState.trim(),
+      pincode: newBranchPincode.trim(),
+      contactPerson: newBranchContactPerson.trim() || name,
+      contactPhone: newBranchContactPhone.trim() || phone,
+      contactEmail: newBranchContactEmail.trim() || email,
+      isHeadquarters: false,
+    };
+
+    setBranches((prev) => [...prev, branchItem]);
+    setNewBranchName("");
+    setNewBranchCity("");
+    setNewBranchState("");
+    setNewBranchPincode("");
+    setNewBranchAddress("");
+    setNewBranchContactPerson("");
+    setNewBranchContactPhone("");
+    setNewBranchContactEmail("");
+    setShowAddBranch(false);
+  };
+
+  const handleDeleteBranch = (id: string) => {
+    setBranches((prev) => prev.filter((b) => b.id !== id));
+  };
+
+  const handleLogoUpload = async (file: File) => {
+    setUploadingLogo(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload/image", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setCompanyLogo(data.url);
+      } else {
+        setError(data.error || "Logo upload failed");
+      }
+    } catch {
+      setError("Error uploading company logo");
+    } finally {
+      setUploadingLogo(false);
+    }
+    return false;
+  };
 
   // Auto-generate resume headline recommendation
   useEffect(() => {
@@ -427,22 +593,57 @@ export function NaukriOnboardingModal({
           },
         };
       } else {
-        // Employer payload
+        // Employer payload - Complete Zoho Corporate Profile & Multi-Branch Network
+        let resolvedBranches = [...branches];
+        if (resolvedBranches.length === 0 && (city || officeAddress)) {
+          resolvedBranches = [
+            {
+              id: "br-headquarters",
+              branchName: `${brandName || companyName || "Corporate"} - Head Office`,
+              branchType: "Headquarters",
+              address: officeAddress || city,
+              city: city || "Corporate Location",
+              state: hqState,
+              pincode: hqPincode,
+              contactPerson: name,
+              contactPhone: phone,
+              contactEmail: email,
+              isHeadquarters: true,
+            },
+          ];
+        }
+
         profilePayload = {
           ...profilePayload,
-          companyName,
-          headline: `${recruiterDesignation} at ${companyName}`,
+          companyName: companyName.trim(),
+          companyLogo,
+          headline: `${recruiterDesignation} at ${brandName || companyName}`,
           employerDetails: {
-            companyName,
+            companyName: companyName.trim(),
+            brandName: (brandName || companyName).trim(),
+            tagline: tagline.trim(),
+            companyLogo,
             companyType,
             industry,
-            recruiterDesignation,
-            website: companyWebsite,
-            gstin,
             companySize,
-            officeAddress,
-            city,
+            yearFounded,
+            website: companyWebsite.trim(),
+            gstin: gstin.trim().toUpperCase(),
+            cin: cin.trim().toUpperCase(),
+            officeAddress: officeAddress.trim(),
+            city: city.trim(),
+            state: hqState.trim(),
+            pincode: hqPincode.trim(),
+            workplacePolicy,
+            workingDays,
+            workingHours,
+            perksAndBenefits: selectedPerks,
+            aboutCompany: aboutCompany.trim(),
+            recruiterDesignation,
+            linkedinUrl: linkedinUrl.trim(),
+            twitterUrl: twitterUrl.trim(),
             hiringRoles,
+            branches: resolvedBranches,
           },
         };
       }
@@ -482,17 +683,18 @@ export function NaukriOnboardingModal({
     }
   };
 
-  // Steps definition for Seeker vs Employer
+  // Steps definition for Employee vs Employer
   const seekerStepItems = [
-    { title: "Account Type" },
+    { title: "Work Status" },
     { title: "Basic Info" },
-    { title: workStatus === "experienced" ? "Experience & Edu" : "Education" },
+    { title: workStatus === "experienced" ? "Work & Education" : "Education" },
     { title: "Skills & Goals" },
   ];
 
   const employerStepItems = [
-    { title: "Account Type" },
-    { title: "Company Info" },
+    { title: "Company Identity" },
+    { title: "Branch Network" },
+    { title: "Culture & Perks" },
     { title: "Recruiter & Hiring" },
   ];
 
@@ -504,15 +706,15 @@ export function NaukriOnboardingModal({
       open={isOpen}
       onCancel={onClose}
       footer={null}
-      width={720}
+      width={760}
       centered
-      maskClosable={false}
+      mask={{ closable: false }}
       styles={{
-        body: { padding: "28px 32px" },
+        body: { padding: "26px 28px" },
       }}
     >
       {/* Modal Header */}
-      <div style={{ textAlign: "center", marginBottom: 20 }}>
+      <div style={{ textAlign: "center", marginBottom: 18 }}>
         <div
           style={{
             display: "inline-flex",
@@ -530,11 +732,46 @@ export function NaukriOnboardingModal({
           {role === "seeker" ? <UserOutlined /> : <BankOutlined />}
         </div>
         <Title level={3} style={{ margin: "4px 0 2px 0", color: "#0f172a" }}>
-          Complete Your Profile Details
+          {role === "seeker" ? "Complete Your Employee Profile" : "Complete Your Employer Profile"}
         </Title>
         <Text type="secondary" style={{ fontSize: 13 }}>
-          Naukri 360° Profile setup ensures accurate job recommendations and verified recruiter outreach.
+          {role === "seeker"
+            ? "Setup your verified candidate profile to get direct HR callbacks & 1-click applications."
+            : "Setup your verified company console to start publishing vacancies & hiring talent."}
         </Text>
+
+        {/* Quick Role Switcher (Employer Left, Employee Right) */}
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 14 }}>
+          <Segmented
+            size="middle"
+            value={role}
+            onChange={(val) => {
+              setRole(val as "seeker" | "employer");
+              setCurrentStep(0);
+              setError("");
+            }}
+            options={[
+              {
+                label: (
+                  <Space size={6} style={{ padding: "2px 10px" }}>
+                    <BankOutlined style={{ color: role === "employer" ? "#ea580c" : undefined }} />
+                    <span style={{ fontWeight: 700 }}>Employer</span>
+                  </Space>
+                ),
+                value: "employer",
+              },
+              {
+                label: (
+                  <Space size={6} style={{ padding: "2px 10px" }}>
+                    <UserOutlined style={{ color: role === "seeker" ? "#ea580c" : undefined }} />
+                    <span style={{ fontWeight: 700 }}>Employee</span>
+                  </Space>
+                ),
+                value: "seeker",
+              },
+            ]}
+          />
+        </div>
       </div>
 
       {/* Steps Header */}
@@ -555,139 +792,106 @@ export function NaukriOnboardingModal({
       )}
 
       {/* ============================================================== */}
-      {/* STEP 0: SELECT ROLE (EMPLOYEE VS EMPLOYER) & FRESHER/EXP      */}
+      {/* STEP 0: EMPLOYEE WORK STATUS (NO REDUNDANT ROLE QUESTION)      */}
       {/* ============================================================== */}
-      {currentStep === 0 && (
+      {role === "seeker" && currentStep === 0 && (
         <div>
-          <Title level={5} style={{ color: "#334155", marginBottom: 12 }}>
-            Tell us who you are:
-          </Title>
+          <div style={{ textAlign: "center", marginBottom: 20 }}>
+            <Title level={4} style={{ color: "#0f172a", margin: "0 0 6px" }}>
+              What is your current work status?
+            </Title>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              Select your career level to personalize your job feed and resume recommendations.
+            </Text>
+          </div>
 
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12}>
               <div
-                onClick={() => setRole("seeker")}
+                onClick={() => setWorkStatus("fresher")}
                 style={{
-                  border: role === "seeker" ? "2px solid #ea580c" : "1px solid #e2e8f0",
-                  backgroundColor: role === "seeker" ? "#fff7ed" : "#ffffff",
+                  border: workStatus === "fresher" ? "2px solid #ea580c" : "1px solid #e2e8f0",
+                  backgroundColor: workStatus === "fresher" ? "#fff7ed" : "#ffffff",
                   borderRadius: 14,
-                  padding: "18px 16px",
+                  padding: "20px 18px",
                   cursor: "pointer",
                   transition: "all 0.2s ease",
-                  textAlign: "center",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
                 }}
+                className="hover:border-orange-400 active:scale-98"
               >
                 <div
                   style={{
-                    fontSize: 28,
-                    color: role === "seeker" ? "#ea580c" : "#64748b",
-                    marginBottom: 6,
+                    width: 48,
+                    height: 48,
+                    borderRadius: 12,
+                    backgroundColor: workStatus === "fresher" ? "#ea580c" : "#f1f5f9",
+                    color: workStatus === "fresher" ? "#ffffff" : "#64748b",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 22,
+                    flexShrink: 0,
                   }}
                 >
-                  <UserOutlined />
+                  <BookOutlined />
                 </div>
-                <Text strong style={{ fontSize: 15, display: "block", color: "#0f172a" }}>
-                  I am a Job Seeker (Employee)
-                </Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  Looking for internships, fresher jobs, or corporate career opportunities.
-                </Text>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 16, color: "#0f172a" }}>
+                    I am a Fresher
+                  </div>
+                  <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                    Student or recently graduated college (0 years experience)
+                  </div>
+                </div>
               </div>
             </Col>
 
             <Col xs={24} sm={12}>
               <div
-                onClick={() => setRole("employer")}
+                onClick={() => setWorkStatus("experienced")}
                 style={{
-                  border: role === "employer" ? "2px solid #ea580c" : "1px solid #e2e8f0",
-                  backgroundColor: role === "employer" ? "#fff7ed" : "#ffffff",
+                  border: workStatus === "experienced" ? "2px solid #ea580c" : "1px solid #e2e8f0",
+                  backgroundColor: workStatus === "experienced" ? "#fff7ed" : "#ffffff",
                   borderRadius: 14,
-                  padding: "18px 16px",
+                  padding: "20px 18px",
                   cursor: "pointer",
                   transition: "all 0.2s ease",
-                  textAlign: "center",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
                 }}
+                className="hover:border-orange-400 active:scale-98"
               >
                 <div
                   style={{
-                    fontSize: 28,
-                    color: role === "employer" ? "#ea580c" : "#64748b",
-                    marginBottom: 6,
+                    width: 48,
+                    height: 48,
+                    borderRadius: 12,
+                    backgroundColor: workStatus === "experienced" ? "#ea580c" : "#f1f5f9",
+                    color: workStatus === "experienced" ? "#ffffff" : "#64748b",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 22,
+                    flexShrink: 0,
                   }}
                 >
-                  <BankOutlined />
+                  <SolutionOutlined />
                 </div>
-                <Text strong style={{ fontSize: 15, display: "block", color: "#0f172a" }}>
-                  I am a Recruiter / Company (Employer)
-                </Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  Looking to post job vacancies and hire candidates for our organization.
-                </Text>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 16, color: "#0f172a" }}>
+                    I am Experienced
+                  </div>
+                  <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                    Have work experience or currently working at an organization
+                  </div>
+                </div>
               </div>
             </Col>
           </Row>
-
-          {/* Sub-Selection for Seekers: Fresher vs Experienced */}
-          {role === "seeker" && (
-            <div style={{ marginTop: 24, paddingTop: 18, borderTop: "1px dashed #e2e8f0" }}>
-              <Title level={5} style={{ color: "#334155", marginBottom: 12 }}>
-                What is your current work status?
-              </Title>
-              <Row gutter={[16, 16]}>
-                <Col xs={24} sm={12}>
-                  <div
-                    onClick={() => setWorkStatus("fresher")}
-                    style={{
-                      border: workStatus === "fresher" ? "2px solid #ea580c" : "1px solid #e2e8f0",
-                      backgroundColor: workStatus === "fresher" ? "#fff7ed" : "#ffffff",
-                      borderRadius: 12,
-                      padding: "14px 16px",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                    }}
-                  >
-                    <BookOutlined style={{ fontSize: 22, color: workStatus === "fresher" ? "#ea580c" : "#64748b" }} />
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>
-                        I am a Fresher
-                      </div>
-                      <div style={{ fontSize: 12, color: "#64748b" }}>
-                        Student or recently graduated with 0 years experience
-                      </div>
-                    </div>
-                  </div>
-                </Col>
-
-                <Col xs={24} sm={12}>
-                  <div
-                    onClick={() => setWorkStatus("experienced")}
-                    style={{
-                      border: workStatus === "experienced" ? "2px solid #ea580c" : "1px solid #e2e8f0",
-                      backgroundColor: workStatus === "experienced" ? "#fff7ed" : "#ffffff",
-                      borderRadius: 12,
-                      padding: "14px 16px",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                    }}
-                  >
-                    <SolutionOutlined style={{ fontSize: 22, color: workStatus === "experienced" ? "#ea580c" : "#64748b" }} />
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>
-                        I am Experienced
-                      </div>
-                      <div style={{ fontSize: 12, color: "#64748b" }}>
-                        Have worked previously or currently working in a company
-                      </div>
-                    </div>
-                  </div>
-                </Col>
-              </Row>
-            </div>
-          )}
         </div>
       )}
 
@@ -1067,47 +1271,144 @@ export function NaukriOnboardingModal({
       )}
 
       {/* ============================================================== */}
-      {/* EMPLOYER STEP 1: COMPANY INFO                                   */}
+      {/* EMPLOYER STEP 0: COMPANY IDENTITY & LEGAL DETAILS              */}
       {/* ============================================================== */}
-      {role === "employer" && currentStep === 1 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <Row gutter={[12, 12]}>
-            <Col xs={24} sm={12}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                Company / Organization Name <span style={{ color: "#ea580c" }}>*</span>
+      {role === "employer" && currentStep === 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div
+            style={{
+              padding: "12px 16px",
+              backgroundColor: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 8,
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>
+                Company Identity &amp; Legal Entity
+              </div>
+              <div style={{ fontSize: 12, color: "#64748b" }}>
+                Zoho-grade verified company setup for publishing jobs and managing team hiring.
+              </div>
+            </div>
+            <Tag color="orange" style={{ borderRadius: 6, fontWeight: 700 }}>
+              Step 1 of 4
+            </Tag>
+          </div>
+
+          <Row gutter={[14, 14]}>
+            <Col xs={24} sm={14}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Company Legal Registered Name <span style={{ color: "#ea580c" }}>*</span>
               </label>
               <Input
                 size="large"
                 prefix={<BankOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="e.g. Acme Tech Solutions Ltd"
+                placeholder="e.g. Acme Global Technologies Private Limited"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                style={{ marginTop: 4, borderRadius: 10 }}
+                style={{ marginTop: 4, borderRadius: 8 }}
               />
             </Col>
-            <Col xs={24} sm={12}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                Company Type
+            <Col xs={24} sm={10}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Brand / Trade Name
               </label>
-              <Select
-                showSearch
+              <Input
                 size="large"
-                placeholder="Search company type (e.g. MNC, Startup, Pvt Ltd)..."
-                value={companyType}
-                onChange={(val) => setCompanyType(val)}
-                onSearch={searchCompanyTypes}
-                filterOption={false}
-                loading={loadingCompanyTypes}
-                options={companyTypeOptions}
-                style={{ width: "100%", marginTop: 4 }}
+                prefix={<ShopOutlined style={{ color: "#94a3b8" }} />}
+                placeholder="e.g. Acme Corp"
+                value={brandName}
+                onChange={(e) => setBrandName(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 8 }}
               />
             </Col>
           </Row>
 
-          <Row gutter={[12, 12]}>
+          {/* Logo & Tagline Row */}
+          <Row gutter={[14, 14]}>
             <Col xs={24} sm={12}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                Industry Domain
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Company Logo URL or Upload
+              </label>
+              <Space.Compact style={{ width: "100%", marginTop: 4 }}>
+                <Input
+                  placeholder="https://example.com/logo.png"
+                  value={companyLogo}
+                  onChange={(e) => setCompanyLogo(e.target.value)}
+                  style={{ borderRadius: "8px 0 0 8px" }}
+                />
+                <Upload
+                  beforeUpload={handleLogoUpload}
+                  showUploadList={false}
+                  accept="image/*"
+                >
+                  <Button
+                    icon={<UploadOutlined />}
+                    loading={uploadingLogo}
+                    style={{ borderRadius: "0 8px 8px 0" }}
+                  >
+                    Upload
+                  </Button>
+                </Upload>
+              </Space.Compact>
+              {companyLogo && (
+                <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8 }}>
+                  <img
+                    src={companyLogo}
+                    alt="Logo Preview"
+                    style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 6, border: "1px solid #e2e8f0" }}
+                    onError={(e) => ((e.target as HTMLElement).style.display = "none")}
+                  />
+                  <span style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>
+                    Logo linked successfully
+                  </span>
+                </div>
+              )}
+            </Col>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Company Tagline / Mission
+              </label>
+              <Input
+                placeholder="e.g. Delivering intelligent cloud & AI infrastructure"
+                value={tagline}
+                onChange={(e) => setTagline(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 8 }}
+              />
+            </Col>
+          </Row>
+
+          <Row gutter={[14, 14]}>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Entity / Company Type
+              </label>
+              <Select
+                size="large"
+                value={companyType}
+                onChange={(val) => setCompanyType(val)}
+                options={[
+                  { label: "Private Limited Company (Pvt Ltd)", value: "Private Limited" },
+                  { label: "Public Limited Company", value: "Public Limited" },
+                  { label: "Limited Liability Partnership (LLP)", value: "LLP" },
+                  { label: "Partnership Firm", value: "Partnership" },
+                  { label: "Sole Proprietorship", value: "Sole Proprietorship" },
+                  { label: "Startup (DPIIT Recognized)", value: "Startup" },
+                  { label: "Multinational Corporation (MNC)", value: "MNC" },
+                  { label: "Non-Profit / Trust / Section 8", value: "Non-Profit" },
+                ]}
+                style={{ width: "100%", marginTop: 4 }}
+              />
+            </Col>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Industry Sector
               </label>
               <Select
                 showSearch
@@ -1118,12 +1419,27 @@ export function NaukriOnboardingModal({
                 onSearch={searchIndustries}
                 filterOption={false}
                 loading={loadingIndustries}
-                options={industryOptions}
+                options={
+                  industryOptions.length > 0
+                    ? industryOptions
+                    : [
+                        { label: "IT & Software Services", value: "IT & Software Services" },
+                        { label: "Fintech & Banking", value: "Fintech & Banking" },
+                        { label: "E-Commerce & Retail", value: "E-Commerce & Retail" },
+                        { label: "Healthcare & Pharmaceuticals", value: "Healthcare & Pharmaceuticals" },
+                        { label: "Manufacturing & Automotive", value: "Manufacturing & Automotive" },
+                        { label: "EdTech & Education", value: "EdTech & Education" },
+                        { label: "Logistics & Supply Chain", value: "Logistics & Supply Chain" },
+                      ]
+                }
                 style={{ width: "100%", marginTop: 4 }}
               />
             </Col>
-            <Col xs={24} sm={12}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+          </Row>
+
+          <Row gutter={[14, 14]}>
+            <Col xs={24} sm={8}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
                 Company Size
               </label>
               <Select
@@ -1131,100 +1447,620 @@ export function NaukriOnboardingModal({
                 value={companySize}
                 onChange={(val) => setCompanySize(val)}
                 options={[
-                  { label: "1-10 Employees", value: "1-10 Employees" },
-                  { label: "11-50 Employees", value: "11-50 Employees" },
-                  { label: "51-200 Employees", value: "51-200 Employees" },
-                  { label: "201-500 Employees", value: "201-500 Employees" },
-                  { label: "500+ Employees", value: "500+ Employees" },
+                  { label: "1-10 Employees (Seed / Early)", value: "1-10 Employees" },
+                  { label: "11-50 Employees (Small Business)", value: "11-50 Employees" },
+                  { label: "51-200 Employees (Mid Size)", value: "51-200 Employees" },
+                  { label: "201-500 Employees (Growth)", value: "201-500 Employees" },
+                  { label: "501-1000 Employees (Large)", value: "501-1000 Employees" },
+                  { label: "1000+ Employees (Enterprise)", value: "1000+ Employees" },
                 ]}
                 style={{ width: "100%", marginTop: 4 }}
               />
             </Col>
-          </Row>
-
-          <Row gutter={[12, 12]}>
-            <Col xs={24} sm={12}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                Company Website
+            <Col xs={24} sm={8}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Year Founded
+              </label>
+              <Select
+                size="large"
+                value={yearFounded}
+                onChange={(val) => setYearFounded(val)}
+                options={PASSING_YEARS.slice(0, 45).map((yr) => ({ label: yr, value: yr }))}
+                style={{ width: "100%", marginTop: 4 }}
+              />
+            </Col>
+            <Col xs={24} sm={8}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Official Website
               </label>
               <Input
+                size="large"
                 prefix={<GlobalOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="https://example.com"
+                placeholder="https://company.com"
                 value={companyWebsite}
                 onChange={(e) => setCompanyWebsite(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 8 }}
               />
             </Col>
+          </Row>
+
+          {/* Legal / Tax Identification */}
+          <Row gutter={[14, 14]}>
             <Col xs={24} sm={12}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                Headquarter City
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                GSTIN (15 Digits Tax Number)
+              </label>
+              <Input
+                placeholder="e.g. 29AABCT1332M1ZG"
+                value={gstin}
+                maxLength={15}
+                onChange={(e) => setGstin(e.target.value.toUpperCase())}
+                style={{ marginTop: 4, borderRadius: 8, textTransform: "uppercase", letterSpacing: 0.5 }}
+              />
+            </Col>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                CIN / Registration / MSME UDYAM No.
+              </label>
+              <Input
+                placeholder="e.g. U72200KA2018PTC112345 or UDYAM-XX-00-0000000"
+                value={cin}
+                onChange={(e) => setCin(e.target.value.toUpperCase())}
+                style={{ marginTop: 4, borderRadius: 8, textTransform: "uppercase" }}
+              />
+            </Col>
+          </Row>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* EMPLOYER STEP 1: MULTI-BRANCH NETWORK & LOCATIONS               */}
+      {/* ============================================================== */}
+      {role === "employer" && currentStep === 1 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div
+            style={{
+              padding: "12px 16px",
+              backgroundColor: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 8,
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>
+                Multi-Branch Office Network &amp; Locations
+              </div>
+              <div style={{ fontSize: 12, color: "#64748b" }}>
+                Add all your office branches so you can assign job openings to specific branch locations.
+              </div>
+            </div>
+            <Tag color="orange" style={{ borderRadius: 6, fontWeight: 700 }}>
+              Step 2 of 4
+            </Tag>
+          </div>
+
+          {/* Primary Headquarters Box */}
+          <div
+            style={{
+              border: "1px solid #fed7aa",
+              backgroundColor: "#fffaf5",
+              borderRadius: 10,
+              padding: 14,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <BankOutlined style={{ color: "#ea580c", fontSize: 16 }} />
+              <strong style={{ fontSize: 13, color: "#9a3412" }}>
+                Corporate Headquarters (Primary Office)
+              </strong>
+            </div>
+
+            <Row gutter={[12, 12]}>
+              <Col xs={24} sm={10}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
+                  Headquarter City <span style={{ color: "#ea580c" }}>*</span>
+                </label>
+                <Select
+                  showSearch
+                  placeholder="Search City (e.g. Bengaluru, Delhi NCR, Mumbai)..."
+                  value={city || undefined}
+                  onChange={(val) => setCity(val)}
+                  onSearch={searchCities}
+                  filterOption={false}
+                  loading={loadingCities}
+                  options={cityOptions}
+                  style={{ width: "100%", marginTop: 4 }}
+                />
+              </Col>
+              <Col xs={24} sm={8}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
+                  State
+                </label>
+                <Input
+                  placeholder="e.g. Karnataka / Haryana / Maharashtra"
+                  value={hqState}
+                  onChange={(e) => setHqState(e.target.value)}
+                  style={{ marginTop: 4, borderRadius: 6 }}
+                />
+              </Col>
+              <Col xs={24} sm={6}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
+                  Pincode
+                </label>
+                <Input
+                  placeholder="e.g. 560103"
+                  maxLength={6}
+                  value={hqPincode}
+                  onChange={(e) => setHqPincode(e.target.value)}
+                  style={{ marginTop: 4, borderRadius: 6 }}
+                />
+              </Col>
+              <Col xs={24}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
+                  HQ Street Address / Tech Park / Floor <span style={{ color: "#ea580c" }}>*</span>
+                </label>
+                <Input
+                  placeholder="e.g. Tower B, 7th Floor, Embassy TechVillage, Outer Ring Road"
+                  value={officeAddress}
+                  onChange={(e) => setOfficeAddress(e.target.value)}
+                  style={{ marginTop: 4, borderRadius: 6 }}
+                />
+              </Col>
+            </Row>
+          </div>
+
+          {/* Additional Branches Header & List */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>
+                Registered Branch Offices ({branches.length})
+              </span>
+              {!showAddBranch && (
+                <Button
+                  size="small"
+                  type="primary"
+                  icon={<PlusCircleOutlined />}
+                  onClick={() => setShowAddBranch(true)}
+                  style={{ fontWeight: 600, borderRadius: 6 }}
+                >
+                  Add Another Branch
+                </Button>
+              )}
+            </div>
+
+            {branches.length === 0 && !showAddBranch && (
+              <div
+                style={{
+                  padding: "16px",
+                  border: "1px dashed #cbd5e1",
+                  borderRadius: 10,
+                  textAlign: "center",
+                  backgroundColor: "#f8fafc",
+                }}
+              >
+                <EnvironmentOutlined style={{ fontSize: 24, color: "#94a3b8", marginBottom: 6 }} />
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>
+                  No extra branches added yet.
+                </div>
+                <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
+                  If your company has regional offices in other cities (e.g. Noida, Pune, Mumbai, Hyderabad), add them here.
+                </div>
+                <Button
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={() => setShowAddBranch(true)}
+                  style={{ marginTop: 10, borderRadius: 6 }}
+                >
+                  Add Branch Office
+                </Button>
+              </div>
+            )}
+
+            {/* List of Branches */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {branches.map((b) => (
+                <div
+                  key={b.id}
+                  style={{
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 8,
+                    padding: "10px 14px",
+                    backgroundColor: "#ffffff",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <strong style={{ fontSize: 13, color: "#1e293b" }}>{b.branchName}</strong>
+                      <Tag color="blue" style={{ borderRadius: 4, fontSize: 10, padding: "0 6px" }}>
+                        {b.branchType}
+                      </Tag>
+                    </div>
+                    <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>
+                      <EnvironmentOutlined style={{ color: "#ea580c", marginRight: 4 }} />
+                      {b.address}, {b.city} {b.state ? `, ${b.state}` : ""} {b.pincode ? `- ${b.pincode}` : ""}
+                    </div>
+                    {(b.contactPerson || b.contactPhone) && (
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>
+                        Contact: {b.contactPerson} {b.contactPhone ? `(${b.contactPhone})` : ""}
+                      </div>
+                    )}
+                  </div>
+
+                  <Button
+                    type="text"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => handleDeleteBranch(b.id)}
+                    size="small"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Add Branch Inline Form */}
+          {showAddBranch && (
+            <div
+              style={{
+                border: "1px solid #cbd5e1",
+                backgroundColor: "#f8fafc",
+                borderRadius: 10,
+                padding: 14,
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: 12, color: "#0f172a" }}>
+                Add New Branch Office Details:
+              </div>
+
+              <Row gutter={[10, 10]}>
+                <Col xs={24} sm={14}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
+                    Branch Display Name <span style={{ color: "#ea580c" }}>*</span>
+                  </label>
+                  <Input
+                    placeholder="e.g. North India Regional Hub - Gurugram"
+                    value={newBranchName}
+                    onChange={(e) => setNewBranchName(e.target.value)}
+                    style={{ marginTop: 2, borderRadius: 6 }}
+                  />
+                </Col>
+                <Col xs={24} sm={10}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
+                    Branch Type
+                  </label>
+                  <Select
+                    value={newBranchType}
+                    onChange={(val) => setNewBranchType(val)}
+                    options={[
+                      { label: "Branch Office", value: "Branch Office" },
+                      { label: "Regional HQ", value: "Regional HQ" },
+                      { label: "R&D / Tech Center", value: "R&D Center" },
+                      { label: "Warehouse / Plant", value: "Warehouse / Plant" },
+                      { label: "Sales & Marketing Hub", value: "Sales Hub" },
+                    ]}
+                    style={{ width: "100%", marginTop: 2 }}
+                  />
+                </Col>
+
+                <Col xs={24} sm={10}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
+                    Branch City <span style={{ color: "#ea580c" }}>*</span>
+                  </label>
+                  <Input
+                    placeholder="e.g. Gurugram / Mumbai / Hyderabad"
+                    value={newBranchCity}
+                    onChange={(e) => setNewBranchCity(e.target.value)}
+                    style={{ marginTop: 2, borderRadius: 6 }}
+                  />
+                </Col>
+                <Col xs={24} sm={8}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
+                    State
+                  </label>
+                  <Input
+                    placeholder="e.g. Haryana"
+                    value={newBranchState}
+                    onChange={(e) => setNewBranchState(e.target.value)}
+                    style={{ marginTop: 2, borderRadius: 6 }}
+                  />
+                </Col>
+                <Col xs={24} sm={6}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
+                    Pincode
+                  </label>
+                  <Input
+                    placeholder="e.g. 122002"
+                    maxLength={6}
+                    value={newBranchPincode}
+                    onChange={(e) => setNewBranchPincode(e.target.value)}
+                    style={{ marginTop: 2, borderRadius: 6 }}
+                  />
+                </Col>
+
+                <Col xs={24}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
+                    Branch Street Address
+                  </label>
+                  <Input
+                    placeholder="e.g. Building 10C, 5th Floor, DLF Cyber City, Phase 2"
+                    value={newBranchAddress}
+                    onChange={(e) => setNewBranchAddress(e.target.value)}
+                    style={{ marginTop: 2, borderRadius: 6 }}
+                  />
+                </Col>
+
+                <Col xs={24} sm={8}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
+                    Branch Contact Person
+                  </label>
+                  <Input
+                    placeholder="e.g. Rohan Kapoor"
+                    value={newBranchContactPerson}
+                    onChange={(e) => setNewBranchContactPerson(e.target.value)}
+                    style={{ marginTop: 2, borderRadius: 6 }}
+                  />
+                </Col>
+                <Col xs={24} sm={8}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
+                    Contact Phone
+                  </label>
+                  <Input
+                    placeholder="+91 98112 34567"
+                    value={newBranchContactPhone}
+                    onChange={(e) => setNewBranchContactPhone(e.target.value)}
+                    style={{ marginTop: 2, borderRadius: 6 }}
+                  />
+                </Col>
+                <Col xs={24} sm={8}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
+                    Branch Email
+                  </label>
+                  <Input
+                    placeholder="gurugram@company.com"
+                    value={newBranchContactEmail}
+                    onChange={(e) => setNewBranchContactEmail(e.target.value)}
+                    style={{ marginTop: 2, borderRadius: 6 }}
+                  />
+                </Col>
+              </Row>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 4 }}>
+                <Button size="small" onClick={() => setShowAddBranch(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  size="small"
+                  type="primary"
+                  onClick={handleAddBranch}
+                  style={{ fontWeight: 600 }}
+                >
+                  Save Branch
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* EMPLOYER STEP 2: CULTURE, WORKPLACE POLICY & PERKS             */}
+      {/* ============================================================== */}
+      {role === "employer" && currentStep === 2 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div
+            style={{
+              padding: "12px 16px",
+              backgroundColor: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 8,
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>
+                Workplace Culture, Policy &amp; Employee Benefits
+              </div>
+              <div style={{ fontSize: 12, color: "#64748b" }}>
+                Candidates evaluate perks, shift timings, and work environment before applying.
+              </div>
+            </div>
+            <Tag color="orange" style={{ borderRadius: 6, fontWeight: 700 }}>
+              Step 3 of 4
+            </Tag>
+          </div>
+
+          <Row gutter={[14, 14]}>
+            <Col xs={24} sm={8}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Work Model
               </label>
               <Select
-                showSearch
                 size="large"
-                placeholder="Search Headquarter City across India..."
-                value={city || undefined}
-                onChange={(val) => setCity(val)}
-                onSearch={searchCities}
-                filterOption={false}
-                loading={loadingCities}
-                options={cityOptions}
+                value={workplacePolicy}
+                onChange={(val) => setWorkplacePolicy(val)}
+                options={[
+                  { label: "Hybrid (Office + WFH)", value: "Hybrid" },
+                  { label: "On-site (Work From Office)", value: "On-site" },
+                  { label: "Remote-First (Permanent WFH)", value: "Remote-First" },
+                ]}
                 style={{ width: "100%", marginTop: 4 }}
+              />
+            </Col>
+            <Col xs={24} sm={8}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Working Days Policy
+              </label>
+              <Select
+                size="large"
+                value={workingDays}
+                onChange={(val) => setWorkingDays(val)}
+                options={[
+                  { label: "5 Days (Monday - Friday)", value: "5 Days (Mon - Fri)" },
+                  { label: "5.5 Days (Alternate Saturdays)", value: "5.5 Days (Alternate Sat)" },
+                  { label: "6 Days (Monday - Saturday)", value: "6 Days (Mon - Sat)" },
+                  { label: "Rotational / Flexible Shifts", value: "Flexible Shifts" },
+                ]}
+                style={{ width: "100%", marginTop: 4 }}
+              />
+            </Col>
+            <Col xs={24} sm={8}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Standard Timings
+              </label>
+              <Input
+                size="large"
+                prefix={<ClockCircleOutlined style={{ color: "#94a3b8" }} />}
+                placeholder="e.g. 9:30 AM - 6:30 PM (Flexible)"
+                value={workingHours}
+                onChange={(e) => setWorkingHours(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 8 }}
               />
             </Col>
           </Row>
 
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-              Corporate Office Address &amp; GSTIN / CIN (Optional)
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+              About the Company &amp; Culture (Shown on Job Openings)
             </label>
-            <Input
-              placeholder="e.g. 5th Floor, Cyber City, Gurugram • GSTIN: 07AAAAA0000A1Z5"
-              value={officeAddress}
-              onChange={(e) => setOfficeAddress(e.target.value)}
+            <Input.TextArea
+              rows={3}
+              placeholder="Tell top candidates about your organization, mission, team size, growth story, and what makes working at your company rewarding..."
+              value={aboutCompany}
+              onChange={(e) => setAboutCompany(e.target.value)}
               style={{ marginTop: 4, borderRadius: 8 }}
             />
+          </div>
+
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#334155", display: "block", marginBottom: 6 }}>
+              Key Employee Perks &amp; Benefits Provided (Click to select)
+            </label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {[
+                "Comprehensive Health Insurance",
+                "EPF & Gratuity Compliance",
+                "Performance Bonuses & Incentives",
+                "ESOPs / Company Stock Options",
+                "Free Gourmet Meals & Daily Snacks",
+                "Cab / Transport Facility",
+                "Learning & Certification Budget",
+                "Paid Vacation & Sick Leaves",
+                "Maternity & Paternity Benefits",
+                "Gym & Wellness Allowances",
+                "Annual Company Retreats",
+                "Flexible Work Hours",
+              ].map((perk) => {
+                const isSelected = selectedPerks.includes(perk);
+                return (
+                  <button
+                    key={perk}
+                    type="button"
+                    onClick={() => togglePerk(perk)}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: 20,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      border: isSelected ? "1px solid #ea580c" : "1px solid #cbd5e1",
+                      backgroundColor: isSelected ? "#fff7ed" : "#ffffff",
+                      color: isSelected ? "#ea580c" : "#475569",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    {isSelected ? <CheckCircleFilled style={{ color: "#ea580c" }} /> : "+"}
+                    <span>{perk}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
 
       {/* ============================================================== */}
-      {/* EMPLOYER STEP 2: RECRUITER & HIRING NEEDS                      */}
+      {/* EMPLOYER STEP 3: RECRUITER & DIRECT HIRING NEEDS               */}
       {/* ============================================================== */}
-      {role === "employer" && currentStep === 2 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <Row gutter={[12, 12]}>
+      {role === "employer" && currentStep === 3 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div
+            style={{
+              padding: "12px 16px",
+              backgroundColor: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 8,
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>
+                Lead Recruiter &amp; Hiring Communication
+              </div>
+              <div style={{ fontSize: 12, color: "#64748b" }}>
+                Primary contact details for receiving candidate applications and scheduling interviews.
+              </div>
+            </div>
+            <Tag color="green" style={{ borderRadius: 6, fontWeight: 700 }}>
+              Final Step 4 of 4
+            </Tag>
+          </div>
+
+          <Row gutter={[14, 14]}>
             <Col xs={24} sm={12}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                Recruiter / Contact Person Name <span style={{ color: "#ea580c" }}>*</span>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Lead Recruiter / HR Contact Name <span style={{ color: "#ea580c" }}>*</span>
               </label>
               <Input
                 size="large"
                 prefix={<UserOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="e.g. Priya Verma"
+                placeholder="e.g. Priya Sharma"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                style={{ marginTop: 4, borderRadius: 10 }}
+                style={{ marginTop: 4, borderRadius: 8 }}
               />
             </Col>
             <Col xs={24} sm={12}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                Your Official Designation <span style={{ color: "#ea580c" }}>*</span>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Official Designation <span style={{ color: "#ea580c" }}>*</span>
               </label>
               <Input
                 size="large"
                 prefix={<SolutionOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="e.g. Head of Talent Acquisition"
+                placeholder="e.g. Head of Talent Acquisition / HR Manager"
                 value={recruiterDesignation}
                 onChange={(e) => setRecruiterDesignation(e.target.value)}
-                style={{ marginTop: 4, borderRadius: 10 }}
+                style={{ marginTop: 4, borderRadius: 8 }}
               />
             </Col>
           </Row>
 
-          <Row gutter={[12, 12]}>
+          <Row gutter={[14, 14]}>
             <Col xs={24} sm={12}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
                 Official Work Email <span style={{ color: "#ea580c" }}>*</span>
               </label>
               <Input
@@ -1233,27 +2069,55 @@ export function NaukriOnboardingModal({
                 placeholder="priya@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                style={{ marginTop: 4, borderRadius: 10 }}
+                style={{ marginTop: 4, borderRadius: 8 }}
               />
             </Col>
             <Col xs={24} sm={12}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                Contact Mobile Number <span style={{ color: "#ea580c" }}>*</span>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Contact Mobile / WhatsApp Number <span style={{ color: "#ea580c" }}>*</span>
               </label>
               <Input
                 size="large"
                 prefix={<PhoneOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="+91 9876543210"
+                placeholder="+91 98765 43210"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                style={{ marginTop: 4, borderRadius: 10 }}
+                style={{ marginTop: 4, borderRadius: 8 }}
+              />
+            </Col>
+          </Row>
+
+          {/* Social Links */}
+          <Row gutter={[14, 14]}>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                LinkedIn Company Page URL
+              </label>
+              <Input
+                prefix={<LinkedinOutlined style={{ color: "#0077b5" }} />}
+                placeholder="https://linkedin.com/company/example"
+                value={linkedinUrl}
+                onChange={(e) => setLinkedinUrl(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 8 }}
+              />
+            </Col>
+            <Col xs={24} sm={12}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                Twitter / X Company Profile
+              </label>
+              <Input
+                prefix={<TwitterOutlined style={{ color: "#0284c7" }} />}
+                placeholder="https://x.com/example"
+                value={twitterUrl}
+                onChange={(e) => setTwitterUrl(e.target.value)}
+                style={{ marginTop: 4, borderRadius: 8 }}
               />
             </Col>
           </Row>
 
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: "#475569", display: "block", marginBottom: 6 }}>
-              Roles Currently Hiring For (Candidates will be matched with these openings)
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#334155", display: "block", marginBottom: 6 }}>
+              Roles Currently Hiring For (Candidate matching active):
             </label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
               {hiringRoles.map((r, i) => (
@@ -1261,7 +2125,7 @@ export function NaukriOnboardingModal({
                   key={i}
                   closable
                   onClose={() => setHiringRoles(hiringRoles.filter((_, idx) => idx !== i))}
-                  style={{ borderRadius: 12, padding: "2px 8px", backgroundColor: "#fff7ed", borderColor: "#fed7aa" }}
+                  style={{ borderRadius: 12, padding: "3px 10px", backgroundColor: "#fff7ed", borderColor: "#fed7aa" }}
                 >
                   {r}
                 </Tag>
@@ -1329,8 +2193,12 @@ export function NaukriOnboardingModal({
                   setError("Please provide your name and email.");
                   return;
                 }
-                if (currentStep === 1 && role === "employer" && !companyName) {
-                  setError("Please provide your company name.");
+                if (currentStep === 0 && role === "employer" && !companyName) {
+                  setError("Please provide your company registered name.");
+                  return;
+                }
+                if (currentStep === 1 && role === "employer" && (!city || !officeAddress)) {
+                  setError("Please provide your Headquarter City and Corporate Address.");
                   return;
                 }
                 setError("");
@@ -1349,7 +2217,7 @@ export function NaukriOnboardingModal({
               onClick={handleSubmit}
               style={{ fontWeight: 700, borderRadius: 8 }}
             >
-              Complete Profile &amp; Start
+              Save Company Profile &amp; Start
             </Button>
           )}
         </Space>
