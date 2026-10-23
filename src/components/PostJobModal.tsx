@@ -319,7 +319,6 @@ export function PostJobModal({
                 >
                   <Input
                     prefix={<Briefcase className="w-3.5 h-3.5 text-slate-400" />}
-                    placeholder="e.g. Senior Frontend Developer (or type custom...)"
                     style={{ borderRadius: 8 }}
                   />
                 </AutoComplete>
@@ -328,7 +327,6 @@ export function PostJobModal({
                 <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Company Name *</label>
                 <Input
                   prefix={<Building2 className="w-3.5 h-3.5 text-slate-400" />}
-                  placeholder="e.g. Manpower Master Ltd"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                   style={{ marginTop: 4, borderRadius: 8 }}
@@ -384,7 +382,6 @@ export function PostJobModal({
                 >
                   <Input
                     prefix={<MapPin className="w-3.5 h-3.5 text-slate-400" />}
-                    placeholder="Search city across India or type custom..."
                     style={{ borderRadius: 8 }}
                   />
                 </AutoComplete>
@@ -472,7 +469,6 @@ export function PostJobModal({
                 Mandatory Key Skills (Comma separated)
               </label>
               <Input
-                placeholder="e.g. React, Node.js, TypeScript, SQL, MongoDB"
                 value={skills}
                 onChange={(e) => setSkills(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 8 }}

@@ -11,6 +11,7 @@ import {
   Radio,
   Input,
   Select,
+  AutoComplete,
   Tag,
   Button,
   Upload,
@@ -141,6 +142,119 @@ const POPULAR_DEGREES = [
 
 const PASSING_YEARS = Array.from({ length: 2030 - 1985 + 1 }, (_, i) => String(2030 - i));
 
+const COMMON_ROLES = [
+  "Software Engineer",
+  "Frontend Developer",
+  "Backend Developer",
+  "Full Stack Developer",
+  "DevOps Engineer",
+  "Product Manager",
+  "UI/UX Designer",
+  "Data Analyst",
+  "Data Scientist",
+  "Business Development Executive",
+  "Sales Manager",
+  "HR Recruiter / Manager",
+  "Accountant / Finance",
+  "Operations Executive",
+  "Marketing Specialist",
+  "Content Writer",
+  "Customer Support",
+];
+
+const DEFAULT_INDUSTRIES = [
+  "IT & Software Services",
+  "Fintech & Banking",
+  "E-Commerce & Retail",
+  "Healthcare & Pharmaceuticals",
+  "Manufacturing & Automotive",
+  "EdTech & Education",
+  "Logistics & Supply Chain",
+  "Construction & Real Estate",
+  "Hospitality & Tourism",
+  "Renewable Energy & Solar",
+  "Media & Entertainment",
+  "Consulting & Professional Services",
+  "Telecom & Networking",
+  "Agriculture & Dairy",
+  "Textiles & Garments",
+];
+
+const COMPANY_TYPES = [
+  "Private Limited Company (Pvt Ltd)",
+  "Public Limited Company",
+  "Limited Liability Partnership (LLP)",
+  "Partnership Firm",
+  "Sole Proprietorship",
+  "Startup (DPIIT Recognized)",
+  "Multinational Corporation (MNC)",
+  "Non-Profit / Trust / Section 8",
+  "Government / PSU",
+  "Joint Venture",
+];
+
+const COMPANY_SIZES = [
+  "1-10 Employees",
+  "11-50 Employees",
+  "51-200 Employees",
+  "201-500 Employees",
+  "501-1000 Employees",
+  "1000+ Employees",
+];
+
+const WORKPLACE_POLICIES = [
+  "Hybrid (Office + WFH)",
+  "On-site (Work From Office)",
+  "Remote-First (Permanent WFH)",
+  "Flexible / Role Dependent",
+];
+
+const WORKING_DAYS_OPTIONS = [
+  "5 Days (Monday - Friday)",
+  "5.5 Days (Alternate Saturdays)",
+  "6 Days (Monday - Saturday)",
+  "Rotational / Flexible Shifts",
+];
+
+const NOTICE_PERIOD_OPTIONS = [
+  "Immediate Joiner",
+  "15 Days or less",
+  "1 Month (30 Days)",
+  "2 Months (60 Days)",
+  "3 Months (90 Days)",
+  "Currently Serving Notice",
+];
+
+const COURSE_TYPE_OPTIONS = [
+  "Full Time",
+  "Part Time",
+  "Correspondence / Distance",
+  "Executive / Online",
+];
+
+const BRANCH_TYPES = [
+  "Branch Office",
+  "Regional HQ",
+  "R&D / Tech Center",
+  "Warehouse / Plant",
+  "Sales & Marketing Hub",
+  "Co-working Space",
+  "Client Site",
+];
+
+const HR_DESIGNATIONS = [
+  "Head of Talent Acquisition",
+  "HR Manager",
+  "Director of People & Culture",
+  "Lead Technical Recruiter",
+  "Talent Acquisition Specialist",
+  "HR Generalist",
+  "Founder & CEO",
+  "Co-Founder & COO",
+  "Managing Director",
+  "Operations Manager",
+];
+
 export function NaukriOnboardingModal({
   isOpen,
   onClose,
@@ -268,11 +382,13 @@ export function NaukriOnboardingModal({
       setLoadingCities(true);
       const res = await fetch(`/api/locations?q=${encodeURIComponent(q)}`);
       const data = await res.json();
-      if (data.success && data.suggestions) {
+      if (data.success && data.suggestions && data.suggestions.length > 0) {
         setCityOptions(data.suggestions.map((c: string) => ({ label: c, value: c })));
+      } else if (!q) {
+        setCityOptions(POPULAR_LOCATIONS.map((c) => ({ label: c, value: c })));
       }
     } catch {
-      // fallback
+      setCityOptions(POPULAR_LOCATIONS.map((c) => ({ label: c, value: c })));
     } finally {
       setLoadingCities(false);
     }
@@ -913,7 +1029,6 @@ export function NaukriOnboardingModal({
               <Input
                 size="large"
                 prefix={<UserOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="e.g. Rahul Sharma"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 10 }}
@@ -926,7 +1041,6 @@ export function NaukriOnboardingModal({
               <Input
                 size="large"
                 prefix={<PhoneOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="e.g. 9876543210"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 10 }}
@@ -942,7 +1056,6 @@ export function NaukriOnboardingModal({
               <Input
                 size="large"
                 prefix={<MailOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="e.g. rahul@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 10 }}
@@ -952,18 +1065,20 @@ export function NaukriOnboardingModal({
               <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
                 Current City <span style={{ color: "#ea580c" }}>*</span>
               </label>
-              <Select
-                showSearch
-                size="large"
-                placeholder="Search or type your city across India..."
-                value={city || undefined}
+              <AutoComplete
+                value={city}
                 onChange={(val) => setCity(val)}
                 onSearch={searchCities}
-                filterOption={false}
-                loading={loadingCities}
                 options={cityOptions}
+                filterOption={false}
                 style={{ width: "100%", marginTop: 4 }}
-              />
+              >
+                <Input
+                  size="large"
+                  prefix={<EnvironmentOutlined style={{ color: "#94a3b8" }} />}
+                  style={{ borderRadius: 10 }}
+                />
+              </AutoComplete>
             </Col>
           </Row>
         </div>
@@ -995,19 +1110,23 @@ export function NaukriOnboardingModal({
                   <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
                     Current Designation / Role
                   </label>
-                  <Input
-                    placeholder="e.g. Senior Frontend Developer"
+                  <AutoComplete
                     value={currentDesignation}
-                    onChange={(e) => setCurrentDesignation(e.target.value)}
-                    style={{ marginTop: 4, borderRadius: 8 }}
-                  />
+                    onChange={(val) => setCurrentDesignation(val)}
+                    options={COMMON_ROLES.map((r) => ({ label: r, value: r }))}
+                    filterOption={(inputValue, option) =>
+                      (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
+                    }
+                    style={{ width: "100%", marginTop: 4 }}
+                  >
+                    <Input style={{ borderRadius: 8 }} />
+                  </AutoComplete>
                 </Col>
                 <Col xs={24} sm={12}>
                   <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
                     Current Company Name
                   </label>
                   <Input
-                    placeholder="e.g. Infosys, Wipro, Startup Ltd"
                     value={currentCompany}
                     onChange={(e) => setCurrentCompany(e.target.value)}
                     style={{ marginTop: 4, borderRadius: 8 }}
@@ -1046,18 +1165,17 @@ export function NaukriOnboardingModal({
                   <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
                     Notice Period
                   </label>
-                  <Select
+                  <AutoComplete
                     value={noticePeriod}
                     onChange={(val) => setNoticePeriod(val)}
-                    options={[
-                      { label: "Immediate Joiner", value: "Immediate" },
-                      { label: "15 Days or less", value: "15 Days" },
-                      { label: "1 Month (30 Days)", value: "30 Days" },
-                      { label: "2 Months (60 Days)", value: "60 Days" },
-                      { label: "3 Months (90 Days)", value: "90 Days" },
-                    ]}
+                    options={NOTICE_PERIOD_OPTIONS.map((n) => ({ label: n, value: n }))}
+                    filterOption={(inputValue, option) =>
+                      (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
+                    }
                     style={{ width: "100%", marginTop: 4 }}
-                  />
+                  >
+                    <Input style={{ borderRadius: 8 }} />
+                  </AutoComplete>
                 </Col>
               </Row>
             </div>
@@ -1084,21 +1202,23 @@ export function NaukriOnboardingModal({
                 <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
                   Degree / Qualification
                 </label>
-                <Select
-                  showSearch
-                  placeholder="Select Degree"
-                  value={highestDegree || undefined}
+                <AutoComplete
+                  value={highestDegree}
                   onChange={(val) => setHighestDegree(val)}
                   options={POPULAR_DEGREES.map((d) => ({ label: d, value: d }))}
+                  filterOption={(inputValue, option) =>
+                    (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
+                  }
                   style={{ width: "100%", marginTop: 4 }}
-                />
+                >
+                  <Input style={{ borderRadius: 8 }} />
+                </AutoComplete>
               </Col>
               <Col xs={24} sm={12}>
                 <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
                   College / Institute Name
                 </label>
                 <Input
-                  placeholder="e.g. Delhi University / IIT / NIT"
                   value={college}
                   onChange={(e) => setCollege(e.target.value)}
                   style={{ marginTop: 4, borderRadius: 8 }}
@@ -1122,23 +1242,23 @@ export function NaukriOnboardingModal({
                 <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
                   Course Type
                 </label>
-                <Select
+                <AutoComplete
                   value={courseType}
                   onChange={(val) => setCourseType(val)}
-                  options={[
-                    { label: "Full Time", value: "Full Time" },
-                    { label: "Part Time", value: "Part Time" },
-                    { label: "Correspondence / Distance", value: "Distance" },
-                  ]}
+                  options={COURSE_TYPE_OPTIONS.map((c) => ({ label: c, value: c }))}
+                  filterOption={(inputValue, option) =>
+                    (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
+                  }
                   style={{ width: "100%", marginTop: 4 }}
-                />
+                >
+                  <Input style={{ borderRadius: 8 }} />
+                </AutoComplete>
               </Col>
               <Col xs={24} sm={8}>
                 <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
                   Grading (% or CGPA)
                 </label>
                 <Input
-                  placeholder="e.g. 8.5 CGPA or 78%"
                   value={cgpaOrPercent}
                   onChange={(e) => setCgpaOrPercent(e.target.value)}
                   style={{ marginTop: 4, borderRadius: 8 }}
@@ -1183,7 +1303,7 @@ export function NaukriOnboardingModal({
             <Space.Compact style={{ width: "100%" }}>
               <Input
                 size="small"
-                placeholder="Add other skill (e.g. Tailwind, Redux, Spring Boot)"
+                placeholder="Skill name"
                 value={customSkill}
                 onChange={(e) => setCustomSkill(e.target.value)}
                 onPressEnter={handleAddCustomSkill}
@@ -1205,12 +1325,17 @@ export function NaukriOnboardingModal({
               <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
                 Target / Desired Job Role
               </label>
-              <Input
-                placeholder="e.g. Full Stack Engineer, Accountant"
+              <AutoComplete
                 value={desiredRole}
-                onChange={(e) => setDesiredRole(e.target.value)}
-                style={{ marginTop: 4, borderRadius: 8 }}
-              />
+                onChange={(val) => setDesiredRole(val)}
+                options={COMMON_ROLES.map((r) => ({ label: r, value: r }))}
+                filterOption={(inputValue, option) =>
+                  (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
+                }
+                style={{ width: "100%", marginTop: 4 }}
+              >
+                <Input style={{ borderRadius: 8 }} />
+              </AutoComplete>
             </Col>
             <Col xs={24} sm={12}>
               <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
@@ -1268,7 +1393,6 @@ export function NaukriOnboardingModal({
               rows={2}
               value={headline}
               onChange={(e) => setHeadline(e.target.value)}
-              placeholder="Summary headline shown prominently to corporate recruiters"
               style={{ marginTop: 4, borderRadius: 8 }}
             />
           </div>
@@ -1314,7 +1438,6 @@ export function NaukriOnboardingModal({
               <Input
                 size="large"
                 prefix={<BankOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="e.g. Acme Global Technologies Private Limited"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 8 }}
@@ -1327,7 +1450,6 @@ export function NaukriOnboardingModal({
               <Input
                 size="large"
                 prefix={<ShopOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="e.g. Acme Corp"
                 value={brandName}
                 onChange={(e) => setBrandName(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 8 }}
@@ -1343,7 +1465,6 @@ export function NaukriOnboardingModal({
               </label>
               <Space.Compact style={{ width: "100%", marginTop: 4 }}>
                 <Input
-                  placeholder="https://example.com/logo.png"
                   value={companyLogo}
                   onChange={(e) => setCompanyLogo(e.target.value)}
                   style={{ borderRadius: "8px 0 0 8px" }}
@@ -1381,7 +1502,6 @@ export function NaukriOnboardingModal({
                 Company Tagline / Mission
               </label>
               <Input
-                placeholder="e.g. Delivering intelligent cloud & AI infrastructure"
                 value={tagline}
                 onChange={(e) => setTagline(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 8 }}
@@ -1394,51 +1514,38 @@ export function NaukriOnboardingModal({
               <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
                 Entity / Company Type
               </label>
-              <Select
-                size="large"
+              <AutoComplete
                 value={companyType}
                 onChange={(val) => setCompanyType(val)}
-                options={[
-                  { label: "Private Limited Company (Pvt Ltd)", value: "Private Limited" },
-                  { label: "Public Limited Company", value: "Public Limited" },
-                  { label: "Limited Liability Partnership (LLP)", value: "LLP" },
-                  { label: "Partnership Firm", value: "Partnership" },
-                  { label: "Sole Proprietorship", value: "Sole Proprietorship" },
-                  { label: "Startup (DPIIT Recognized)", value: "Startup" },
-                  { label: "Multinational Corporation (MNC)", value: "MNC" },
-                  { label: "Non-Profit / Trust / Section 8", value: "Non-Profit" },
-                ]}
+                options={COMPANY_TYPES.map((t) => ({ label: t, value: t }))}
+                filterOption={(inputValue, option) =>
+                  (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
+                }
                 style={{ width: "100%", marginTop: 4 }}
-              />
+              >
+                <Input size="large" style={{ borderRadius: 8 }} />
+              </AutoComplete>
             </Col>
             <Col xs={24} sm={12}>
               <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
                 Industry Sector
               </label>
-              <Select
-                showSearch
-                size="large"
-                placeholder="Search industry domain (e.g. IT, BFSI, Healthcare)..."
+              <AutoComplete
                 value={industry}
                 onChange={(val) => setIndustry(val)}
                 onSearch={searchIndustries}
-                filterOption={false}
-                loading={loadingIndustries}
                 options={
                   industryOptions.length > 0
                     ? industryOptions
-                    : [
-                        { label: "IT & Software Services", value: "IT & Software Services" },
-                        { label: "Fintech & Banking", value: "Fintech & Banking" },
-                        { label: "E-Commerce & Retail", value: "E-Commerce & Retail" },
-                        { label: "Healthcare & Pharmaceuticals", value: "Healthcare & Pharmaceuticals" },
-                        { label: "Manufacturing & Automotive", value: "Manufacturing & Automotive" },
-                        { label: "EdTech & Education", value: "EdTech & Education" },
-                        { label: "Logistics & Supply Chain", value: "Logistics & Supply Chain" },
-                      ]
+                    : DEFAULT_INDUSTRIES.map((ind) => ({ label: ind, value: ind }))
+                }
+                filterOption={(inputValue, option) =>
+                  (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
                 }
                 style={{ width: "100%", marginTop: 4 }}
-              />
+              >
+                <Input size="large" style={{ borderRadius: 8 }} />
+              </AutoComplete>
             </Col>
           </Row>
 
@@ -1447,20 +1554,17 @@ export function NaukriOnboardingModal({
               <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
                 Company Size
               </label>
-              <Select
-                size="large"
+              <AutoComplete
                 value={companySize}
                 onChange={(val) => setCompanySize(val)}
-                options={[
-                  { label: "1-10 Employees (Seed / Early)", value: "1-10 Employees" },
-                  { label: "11-50 Employees (Small Business)", value: "11-50 Employees" },
-                  { label: "51-200 Employees (Mid Size)", value: "51-200 Employees" },
-                  { label: "201-500 Employees (Growth)", value: "201-500 Employees" },
-                  { label: "501-1000 Employees (Large)", value: "501-1000 Employees" },
-                  { label: "1000+ Employees (Enterprise)", value: "1000+ Employees" },
-                ]}
+                options={COMPANY_SIZES.map((s) => ({ label: s, value: s }))}
+                filterOption={(inputValue, option) =>
+                  (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
+                }
                 style={{ width: "100%", marginTop: 4 }}
-              />
+              >
+                <Input size="large" style={{ borderRadius: 8 }} />
+              </AutoComplete>
             </Col>
             <Col xs={24} sm={8}>
               <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
@@ -1481,7 +1585,6 @@ export function NaukriOnboardingModal({
               <Input
                 size="large"
                 prefix={<GlobalOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="https://company.com"
                 value={companyWebsite}
                 onChange={(e) => setCompanyWebsite(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 8 }}
@@ -1496,7 +1599,6 @@ export function NaukriOnboardingModal({
                 GSTIN (15 Digits Tax Number)
               </label>
               <Input
-                placeholder="e.g. 29AABCT1332M1ZG"
                 value={gstin}
                 maxLength={15}
                 onChange={(e) => setGstin(e.target.value.toUpperCase())}
@@ -1508,7 +1610,6 @@ export function NaukriOnboardingModal({
                 CIN / Registration / MSME UDYAM No.
               </label>
               <Input
-                placeholder="e.g. U72200KA2018PTC112345 or UDYAM-XX-00-0000000"
                 value={cin}
                 onChange={(e) => setCin(e.target.value.toUpperCase())}
                 style={{ marginTop: 4, borderRadius: 8, textTransform: "uppercase" }}
@@ -1570,24 +1671,25 @@ export function NaukriOnboardingModal({
                 <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
                   Headquarter City <span style={{ color: "#ea580c" }}>*</span>
                 </label>
-                <Select
-                  showSearch
-                  placeholder="Search City (e.g. Bengaluru, Delhi NCR, Mumbai)..."
-                  value={city || undefined}
+                <AutoComplete
+                  value={city}
                   onChange={(val) => setCity(val)}
                   onSearch={searchCities}
-                  filterOption={false}
-                  loading={loadingCities}
                   options={cityOptions}
+                  filterOption={false}
                   style={{ width: "100%", marginTop: 4 }}
-                />
+                >
+                  <Input
+                    prefix={<EnvironmentOutlined style={{ color: "#94a3b8" }} />}
+                    style={{ borderRadius: 6 }}
+                  />
+                </AutoComplete>
               </Col>
               <Col xs={24} sm={8}>
                 <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
                   State
                 </label>
                 <Input
-                  placeholder="e.g. Karnataka / Haryana / Maharashtra"
                   value={hqState}
                   onChange={(e) => setHqState(e.target.value)}
                   style={{ marginTop: 4, borderRadius: 6 }}
@@ -1598,7 +1700,6 @@ export function NaukriOnboardingModal({
                   Pincode
                 </label>
                 <Input
-                  placeholder="e.g. 560103"
                   maxLength={6}
                   value={hqPincode}
                   onChange={(e) => setHqPincode(e.target.value)}
@@ -1610,7 +1711,6 @@ export function NaukriOnboardingModal({
                   HQ Street Address / Tech Park / Floor <span style={{ color: "#ea580c" }}>*</span>
                 </label>
                 <Input
-                  placeholder="e.g. Tower B, 7th Floor, Embassy TechVillage, Outer Ring Road"
                   value={officeAddress}
                   onChange={(e) => setOfficeAddress(e.target.value)}
                   style={{ marginTop: 4, borderRadius: 6 }}
@@ -1653,7 +1753,7 @@ export function NaukriOnboardingModal({
                   No extra branches added yet.
                 </div>
                 <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
-                  If your company has regional offices in other cities (e.g. Noida, Pune, Mumbai, Hyderabad), add them here.
+                  If your company has regional offices in other cities, add them here.
                 </div>
                 <Button
                   size="small"
@@ -1736,7 +1836,6 @@ export function NaukriOnboardingModal({
                     Branch Display Name <span style={{ color: "#ea580c" }}>*</span>
                   </label>
                   <Input
-                    placeholder="e.g. North India Regional Hub - Gurugram"
                     value={newBranchName}
                     onChange={(e) => setNewBranchName(e.target.value)}
                     style={{ marginTop: 2, borderRadius: 6 }}
@@ -1746,37 +1845,39 @@ export function NaukriOnboardingModal({
                   <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
                     Branch Type
                   </label>
-                  <Select
+                  <AutoComplete
                     value={newBranchType}
                     onChange={(val) => setNewBranchType(val)}
-                    options={[
-                      { label: "Branch Office", value: "Branch Office" },
-                      { label: "Regional HQ", value: "Regional HQ" },
-                      { label: "R&D / Tech Center", value: "R&D Center" },
-                      { label: "Warehouse / Plant", value: "Warehouse / Plant" },
-                      { label: "Sales & Marketing Hub", value: "Sales Hub" },
-                    ]}
+                    options={BRANCH_TYPES.map((b) => ({ label: b, value: b }))}
+                    filterOption={(inputValue, option) =>
+                      (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
+                    }
                     style={{ width: "100%", marginTop: 2 }}
-                  />
+                  >
+                    <Input style={{ borderRadius: 6 }} />
+                  </AutoComplete>
                 </Col>
 
                 <Col xs={24} sm={10}>
                   <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
                     Branch City <span style={{ color: "#ea580c" }}>*</span>
                   </label>
-                  <Input
-                    placeholder="e.g. Gurugram / Mumbai / Hyderabad"
+                  <AutoComplete
                     value={newBranchCity}
-                    onChange={(e) => setNewBranchCity(e.target.value)}
-                    style={{ marginTop: 2, borderRadius: 6 }}
-                  />
+                    onChange={(val) => setNewBranchCity(val)}
+                    onSearch={searchCities}
+                    options={cityOptions}
+                    filterOption={false}
+                    style={{ width: "100%", marginTop: 2 }}
+                  >
+                    <Input style={{ borderRadius: 6 }} />
+                  </AutoComplete>
                 </Col>
                 <Col xs={24} sm={8}>
                   <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
                     State
                   </label>
                   <Input
-                    placeholder="e.g. Haryana"
                     value={newBranchState}
                     onChange={(e) => setNewBranchState(e.target.value)}
                     style={{ marginTop: 2, borderRadius: 6 }}
@@ -1787,7 +1888,6 @@ export function NaukriOnboardingModal({
                     Pincode
                   </label>
                   <Input
-                    placeholder="e.g. 122002"
                     maxLength={6}
                     value={newBranchPincode}
                     onChange={(e) => setNewBranchPincode(e.target.value)}
@@ -1800,7 +1900,6 @@ export function NaukriOnboardingModal({
                     Branch Street Address
                   </label>
                   <Input
-                    placeholder="e.g. Building 10C, 5th Floor, DLF Cyber City, Phase 2"
                     value={newBranchAddress}
                     onChange={(e) => setNewBranchAddress(e.target.value)}
                     style={{ marginTop: 2, borderRadius: 6 }}
@@ -1812,7 +1911,6 @@ export function NaukriOnboardingModal({
                     Branch Contact Person
                   </label>
                   <Input
-                    placeholder="e.g. Rohan Kapoor"
                     value={newBranchContactPerson}
                     onChange={(e) => setNewBranchContactPerson(e.target.value)}
                     style={{ marginTop: 2, borderRadius: 6 }}
@@ -1823,7 +1921,6 @@ export function NaukriOnboardingModal({
                     Contact Phone
                   </label>
                   <Input
-                    placeholder="+91 98112 34567"
                     value={newBranchContactPhone}
                     onChange={(e) => setNewBranchContactPhone(e.target.value)}
                     style={{ marginTop: 2, borderRadius: 6 }}
@@ -1834,7 +1931,6 @@ export function NaukriOnboardingModal({
                     Branch Email
                   </label>
                   <Input
-                    placeholder="gurugram@company.com"
                     value={newBranchContactEmail}
                     onChange={(e) => setNewBranchContactEmail(e.target.value)}
                     style={{ marginTop: 2, borderRadius: 6 }}
@@ -1896,34 +1992,33 @@ export function NaukriOnboardingModal({
               <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
                 Work Model
               </label>
-              <Select
-                size="large"
+              <AutoComplete
                 value={workplacePolicy}
                 onChange={(val) => setWorkplacePolicy(val)}
-                options={[
-                  { label: "Hybrid (Office + WFH)", value: "Hybrid" },
-                  { label: "On-site (Work From Office)", value: "On-site" },
-                  { label: "Remote-First (Permanent WFH)", value: "Remote-First" },
-                ]}
+                options={WORKPLACE_POLICIES.map((p) => ({ label: p, value: p }))}
+                filterOption={(inputValue, option) =>
+                  (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
+                }
                 style={{ width: "100%", marginTop: 4 }}
-              />
+              >
+                <Input size="large" style={{ borderRadius: 8 }} />
+              </AutoComplete>
             </Col>
             <Col xs={24} sm={8}>
               <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
                 Working Days Policy
               </label>
-              <Select
-                size="large"
+              <AutoComplete
                 value={workingDays}
                 onChange={(val) => setWorkingDays(val)}
-                options={[
-                  { label: "5 Days (Monday - Friday)", value: "5 Days (Mon - Fri)" },
-                  { label: "5.5 Days (Alternate Saturdays)", value: "5.5 Days (Alternate Sat)" },
-                  { label: "6 Days (Monday - Saturday)", value: "6 Days (Mon - Sat)" },
-                  { label: "Rotational / Flexible Shifts", value: "Flexible Shifts" },
-                ]}
+                options={WORKING_DAYS_OPTIONS.map((d) => ({ label: d, value: d }))}
+                filterOption={(inputValue, option) =>
+                  (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
+                }
                 style={{ width: "100%", marginTop: 4 }}
-              />
+              >
+                <Input size="large" style={{ borderRadius: 8 }} />
+              </AutoComplete>
             </Col>
             <Col xs={24} sm={8}>
               <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
@@ -1932,7 +2027,6 @@ export function NaukriOnboardingModal({
               <Input
                 size="large"
                 prefix={<ClockCircleOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="e.g. 9:30 AM - 6:30 PM (Flexible)"
                 value={workingHours}
                 onChange={(e) => setWorkingHours(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 8 }}
@@ -1946,7 +2040,6 @@ export function NaukriOnboardingModal({
             </label>
             <Input.TextArea
               rows={3}
-              placeholder="Tell top candidates about your organization, mission, team size, growth story, and what makes working at your company rewarding..."
               value={aboutCompany}
               onChange={(e) => setAboutCompany(e.target.value)}
               style={{ marginTop: 4, borderRadius: 8 }}
@@ -2042,7 +2135,6 @@ export function NaukriOnboardingModal({
               <Input
                 size="large"
                 prefix={<UserOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="e.g. Priya Sharma"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 8 }}
@@ -2052,14 +2144,21 @@ export function NaukriOnboardingModal({
               <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
                 Official Designation <span style={{ color: "#ea580c" }}>*</span>
               </label>
-              <Input
-                size="large"
-                prefix={<SolutionOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="e.g. Head of Talent Acquisition / HR Manager"
+              <AutoComplete
                 value={recruiterDesignation}
-                onChange={(e) => setRecruiterDesignation(e.target.value)}
-                style={{ marginTop: 4, borderRadius: 8 }}
-              />
+                onChange={(val) => setRecruiterDesignation(val)}
+                options={HR_DESIGNATIONS.map((d) => ({ label: d, value: d }))}
+                filterOption={(inputValue, option) =>
+                  (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
+                }
+                style={{ width: "100%", marginTop: 4 }}
+              >
+                <Input
+                  size="large"
+                  prefix={<SolutionOutlined style={{ color: "#94a3b8" }} />}
+                  style={{ borderRadius: 8 }}
+                />
+              </AutoComplete>
             </Col>
           </Row>
 
@@ -2071,7 +2170,6 @@ export function NaukriOnboardingModal({
               <Input
                 size="large"
                 prefix={<MailOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="priya@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 8 }}
@@ -2084,7 +2182,6 @@ export function NaukriOnboardingModal({
               <Input
                 size="large"
                 prefix={<PhoneOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="+91 98765 43210"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 8 }}
@@ -2100,7 +2197,6 @@ export function NaukriOnboardingModal({
               </label>
               <Input
                 prefix={<LinkedinOutlined style={{ color: "#0077b5" }} />}
-                placeholder="https://linkedin.com/company/example"
                 value={linkedinUrl}
                 onChange={(e) => setLinkedinUrl(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 8 }}
@@ -2112,7 +2208,6 @@ export function NaukriOnboardingModal({
               </label>
               <Input
                 prefix={<TwitterOutlined style={{ color: "#0284c7" }} />}
-                placeholder="https://x.com/example"
                 value={twitterUrl}
                 onChange={(e) => setTwitterUrl(e.target.value)}
                 style={{ marginTop: 4, borderRadius: 8 }}
@@ -2137,12 +2232,20 @@ export function NaukriOnboardingModal({
               ))}
             </div>
             <Space.Compact style={{ width: "100%" }}>
-              <Input
-                placeholder="Add hiring role (e.g. Senior Backend Engineer, Sales Executive)"
+              <AutoComplete
                 value={customHiringRole}
-                onChange={(e) => setCustomHiringRole(e.target.value)}
-                onPressEnter={handleAddHiringRole}
-              />
+                onChange={(val) => setCustomHiringRole(val)}
+                options={COMMON_ROLES.map((r) => ({ label: r, value: r }))}
+                filterOption={(inputValue, option) =>
+                  (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
+                }
+                style={{ flex: 1 }}
+              >
+                <Input
+                  placeholder="Role title"
+                  onPressEnter={handleAddHiringRole}
+                />
+              </AutoComplete>
               <Button
                 type="primary"
                 icon={<PlusOutlined />}

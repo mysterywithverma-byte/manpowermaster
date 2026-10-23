@@ -811,7 +811,6 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
                             })
                           }
                           className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-300 text-xs focus:outline-hidden focus:ring-1 focus:ring-orange-500 font-semibold"
-                          placeholder="e.g. Rohit Verma"
                         />
                       </div>
                     </div>
@@ -834,7 +833,6 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
                             })
                           }
                           className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-300 text-xs focus:outline-hidden focus:ring-1 focus:ring-orange-500 font-medium"
-                          placeholder="e.g. Senior Software Engineer • React | Node | Cloud"
                         />
                       </div>
                     </div>
@@ -858,7 +856,6 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
                               })
                             }
                             className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-300 text-xs focus:outline-hidden focus:ring-1 focus:ring-orange-500 font-medium"
-                            placeholder="e.g. rohit@example.com"
                           />
                         </div>
                       </div>
@@ -881,7 +878,6 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
                               })
                             }
                             className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-300 text-xs focus:outline-hidden focus:ring-1 focus:ring-orange-500 font-medium"
-                            placeholder="e.g. +91 98765 43210"
                           />
                         </div>
                       </div>
@@ -905,7 +901,6 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
                             })
                           }
                           className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-300 text-xs focus:outline-hidden focus:ring-1 focus:ring-orange-500 font-medium"
-                          placeholder="e.g. Bengaluru, Karnataka, India"
                         />
                       </div>
                     </div>
@@ -1374,7 +1369,7 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
                           }
                         }}
                         className="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium focus:outline-hidden focus:ring-1 focus:ring-orange-500 bg-white"
-                        placeholder="e.g. Git, Docker, Postman, Linux, VS Code, Figma"
+                        placeholder="Tool or tech name"
                       />
                       <button
                         type="button"
@@ -1425,7 +1420,7 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
                           }
                         }}
                         className="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium focus:outline-hidden focus:ring-1 focus:ring-orange-500 bg-white"
-                        placeholder="e.g. Problem Solving, Team Leadership, Agile / Scrum"
+                        placeholder="Skill name"
                       />
                       <button
                         type="button"

@@ -435,7 +435,7 @@ export function ProfileBuilderModal({
                       ]}
                       style={{ width: "100%", marginTop: 4 }}
                     >
-                      <Input placeholder="e.g. Immediate, 15 Days, or custom..." style={{ borderRadius: 8 }} />
+                      <Input style={{ borderRadius: 8 }} />
                     </AutoComplete>
                   </Col>
                 </Row>
@@ -990,7 +990,7 @@ export function ProfileBuilderModal({
                       ]}
                       style={{ width: "100%", marginTop: 4 }}
                     >
-                      <Input placeholder="e.g. AI Engineer, Doctor, Architect, or custom..." style={{ borderRadius: 8 }} />
+                      <Input style={{ borderRadius: 8 }} />
                     </AutoComplete>
                   </Col>
                   <Col xs={24} sm={12}>
@@ -1004,7 +1004,6 @@ export function ProfileBuilderModal({
                     >
                       <Input
                         prefix={<MapPin className="w-3.5 h-3.5 text-slate-400" />}
-                        placeholder="Search hometown city or type custom..."
                         style={{ borderRadius: 8 }}
                       />
                     </AutoComplete>
@@ -1053,7 +1052,6 @@ export function ProfileBuilderModal({
                     Languages Known (Comma separated)
                   </label>
                   <Input
-                    placeholder="e.g. English, Hindi, Punjabi, Bengali"
                     value={languages}
                     onChange={(e) => setLanguages(e.target.value)}
                     style={{ marginTop: 4, borderRadius: 8 }}
