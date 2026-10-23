@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import confetti from "canvas-confetti";
+import { ALL_CATALOG_JOB_ROLES } from "@/data/businessCatalog";
 import {
   Modal,
   Form,
@@ -297,22 +298,10 @@ export function PostJobModal({
                   Job Title / Role * (Select or type custom)
                 </label>
                 <AutoComplete
-                  options={[
-                    { label: "Frontend Developer", value: "Frontend Developer" },
-                    { label: "Backend Developer", value: "Backend Developer" },
-                    { label: "Full Stack Engineer", value: "Full Stack Engineer" },
-                    { label: "Senior Software Engineer", value: "Senior Software Engineer" },
-                    { label: "DevOps Engineer", value: "DevOps Engineer" },
-                    { label: "Product Manager", value: "Product Manager" },
-                    { label: "UI/UX Designer", value: "UI/UX Designer" },
-                    { label: "Data Analyst", value: "Data Analyst" },
-                    { label: "Data Scientist", value: "Data Scientist" },
-                    { label: "QA Automation Engineer", value: "QA Automation Engineer" },
-                    { label: "HR Recruiter", value: "HR Recruiter" },
-                    { label: "Sales & Marketing Manager", value: "Sales & Marketing Manager" },
-                    { label: "Accountant / Finance Executive", value: "Accountant" },
-                    { label: "Operations Executive", value: "Operations Executive" },
-                  ]}
+                  options={ALL_CATALOG_JOB_ROLES.map((role) => ({ label: role, value: role }))}
+                  filterOption={(inputValue, option) =>
+                    (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
+                  }
                   value={title}
                   onChange={(val) => setTitle(val)}
                   style={{ width: "100%", marginTop: 4 }}

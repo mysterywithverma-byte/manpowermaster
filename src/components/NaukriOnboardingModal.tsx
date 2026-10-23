@@ -5,6 +5,12 @@ import { useAuth } from "@/context/AuthContext";
 import confetti from "canvas-confetti";
 import { compressImageToWebP } from "@/lib/image-compressor";
 import {
+  FIRM_OWNERSHIP_CATEGORIES,
+  BUSINESS_ORGANIZATION_NAMES,
+  ALL_CATALOG_JOB_ROLES,
+  getRolesForBusiness,
+} from "@/data/businessCatalog";
+import {
   Modal,
   Steps,
   Segmented,
@@ -1328,7 +1334,7 @@ export function NaukriOnboardingModal({
               <AutoComplete
                 value={desiredRole}
                 onChange={(val) => setDesiredRole(val)}
-                options={COMMON_ROLES.map((r) => ({ label: r, value: r }))}
+                options={ALL_CATALOG_JOB_ROLES.map((r) => ({ label: r, value: r }))}
                 filterOption={(inputValue, option) =>
                   (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
                 }
@@ -1512,12 +1518,12 @@ export function NaukriOnboardingModal({
           <Row gutter={[14, 14]}>
             <Col xs={24} sm={12}>
               <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
-                Entity / Company Type
+                Category of Firm by Ownership <span style={{ color: "#ea580c" }}>*</span>
               </label>
               <AutoComplete
                 value={companyType}
                 onChange={(val) => setCompanyType(val)}
-                options={COMPANY_TYPES.map((t) => ({ label: t, value: t }))}
+                options={FIRM_OWNERSHIP_CATEGORIES.map((t) => ({ label: t, value: t }))}
                 filterOption={(inputValue, option) =>
                   (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
                 }
@@ -1528,7 +1534,7 @@ export function NaukriOnboardingModal({
             </Col>
             <Col xs={24} sm={12}>
               <label style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>
-                Industry Sector
+                Industry / Organization Business Type
               </label>
               <AutoComplete
                 value={industry}
@@ -1537,7 +1543,7 @@ export function NaukriOnboardingModal({
                 options={
                   industryOptions.length > 0
                     ? industryOptions
-                    : DEFAULT_INDUSTRIES.map((ind) => ({ label: ind, value: ind }))
+                    : BUSINESS_ORGANIZATION_NAMES.map((name) => ({ label: name, value: name }))
                 }
                 filterOption={(inputValue, option) =>
                   (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
@@ -2231,11 +2237,46 @@ export function NaukriOnboardingModal({
                 </Tag>
               ))}
             </div>
+
+            {getRolesForBusiness(industry).length > 0 && (
+              <div style={{ marginBottom: 10, padding: "8px 12px", backgroundColor: "#f8fafc", borderRadius: 8, border: "1px dashed #cbd5e1" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", marginBottom: 6 }}>
+                  Suggested Roles for {industry || "Your Organization"} (Click to quick-add):
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 110, overflowY: "auto" }}>
+                  {getRolesForBusiness(industry)
+                    .filter((r) => !hiringRoles.includes(r))
+                    .map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setHiringRoles((prev) => [...prev, r])}
+                        style={{
+                          padding: "3px 8px",
+                          borderRadius: 12,
+                          fontSize: 11,
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #cbd5e1",
+                          color: "#334155",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                      >
+                        <PlusOutlined style={{ fontSize: 9, color: "#ea580c" }} />
+                        <span>{r}</span>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
+
             <Space.Compact style={{ width: "100%" }}>
               <AutoComplete
                 value={customHiringRole}
                 onChange={(val) => setCustomHiringRole(val)}
-                options={COMMON_ROLES.map((r) => ({ label: r, value: r }))}
+                options={ALL_CATALOG_JOB_ROLES.map((r) => ({ label: r, value: r }))}
                 filterOption={(inputValue, option) =>
                   (option?.value?.toUpperCase() || "").indexOf(inputValue.toUpperCase()) !== -1
                 }
