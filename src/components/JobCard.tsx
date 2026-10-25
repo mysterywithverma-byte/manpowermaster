@@ -3,7 +3,7 @@
 import React from "react";
 import { MockJob } from "@/lib/mock-data";
 import { useAuth } from "@/context/AuthContext";
-import { formatSalary, timeAgo } from "@/lib/utils";
+import { formatSalary, timeAgo, calculateJobMatchScore } from "@/lib/utils";
 import { Card, Tag, Button, Avatar, Space, Typography, Tooltip, Badge } from "antd";
 import {
   Bookmark,
@@ -93,14 +93,13 @@ function getJobTags(job: MockJob) {
 }
 
 export function JobCard({ job, onSelectJob, onApplyJob, isSelected }: JobCardProps) {
-  const { isJobSaved, toggleSaveJob } = useAuth();
+  const { user, isJobSaved, toggleSaveJob } = useAuth();
   const saved = isJobSaved(job._id);
 
   const seed = (job._id.charCodeAt(job._id.length - 1) || 5) % 10;
   const rating = (4.0 + (seed / 10) * 0.9).toFixed(1);
   const reviewsCount = 20 + seed * 18;
-  const matchSeed = (job._id.charCodeAt(0) || 7) % 30;
-  const matchPct = 65 + matchSeed;
+  const matchInfo = calculateJobMatchScore(user, job);
 
   const handleWhatsAppClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -184,9 +183,27 @@ export function JobCard({ job, onSelectJob, onApplyJob, isSelected }: JobCardPro
 
         {/* Bookmark & Match Badge */}
         <Space size={6} align="center">
-          <Tag color="cyan" style={{ borderRadius: 6, fontWeight: 700, fontSize: 11, margin: 0 }}>
-            {matchPct}% Match
-          </Tag>
+          <Tooltip
+            title={
+              <div style={{ maxWidth: 220, fontSize: 11, padding: "2px 0" }}>
+                <div style={{ fontWeight: 700, marginBottom: 4, color: "#f8fafc" }}>
+                  {matchInfo.level} ({matchInfo.score}%)
+                </div>
+                {matchInfo.reasons.map((r, i) => (
+                  <div key={i} style={{ color: "#cbd5e1", lineHeight: 1.4 }}>
+                    • {r}
+                  </div>
+                ))}
+              </div>
+            }
+          >
+            <Tag
+              color={matchInfo.score >= 80 ? "green" : matchInfo.score >= 65 ? "cyan" : "default"}
+              style={{ borderRadius: 6, fontWeight: 700, fontSize: 11, margin: 0, cursor: "help" }}
+            >
+              🎯 {matchInfo.score}%
+            </Tag>
+          </Tooltip>
           <Tooltip title={saved ? "Remove from saved" : "Save job"}>
             <Button
               type="text"

@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { MockJob } from "@/lib/mock-data";
+import { calculateJobMatchScore } from "@/lib/utils";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
 import { JobFilters } from "@/components/JobFilters";
@@ -55,7 +56,7 @@ export default function HomePage() {
 
   // Filters & Search state
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
-  const [sortBy, setSortBy] = useState<"featured" | "latest" | "salary">("featured");
+  const [sortBy, setSortBy] = useState<"recommended" | "featured" | "latest" | "salary">("recommended");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Jobs data
@@ -176,6 +177,16 @@ export default function HomePage() {
       }
     }
 
+    if (sortBy === "recommended") {
+      return uniqueList.sort((a, b) => {
+        const scoreA = calculateJobMatchScore(user, a).score;
+        const scoreB = calculateJobMatchScore(user, b).score;
+        if (scoreB !== scoreA) return scoreB - scoreA;
+        if (a.featured && !b.featured) return -1;
+        if (!a.featured && b.featured) return 1;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+    }
     if (sortBy === "salary") {
       return uniqueList.sort((a, b) => b.salaryMax - a.salaryMax);
     }
@@ -184,13 +195,13 @@ export default function HomePage() {
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     }
-    // "featured" default
+    // "featured"
     return uniqueList.sort((a, b) => {
       if (a.featured && !b.featured) return -1;
       if (!a.featured && b.featured) return 1;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-  }, [jobs, sortBy]);
+  }, [jobs, sortBy, user]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSelectJobById = (_jobId: string) => {
@@ -284,11 +295,12 @@ export default function HomePage() {
                       <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as any)}
-                        className="px-2.5 py-1.5 text-xs font-bold rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none cursor-pointer shadow-xs max-w-[130px] sm:max-w-none truncate"
+                        className="px-2.5 py-1.5 text-xs font-bold rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none cursor-pointer shadow-xs max-w-[140px] sm:max-w-none truncate"
                       >
-                        <option value="featured">Featured</option>
-                        <option value="latest">Latest</option>
-                        <option value="salary">Highest CTC</option>
+                        <option value="recommended">🎯 Best Match (Recommended)</option>
+                        <option value="featured">⭐ Featured Roles</option>
+                        <option value="latest">🕒 Latest Posted</option>
+                        <option value="salary">💰 Highest Salary</option>
                       </select>
                     </div>
                   </div>

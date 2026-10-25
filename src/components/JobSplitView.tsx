@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { MockJob } from "@/lib/mock-data";
 import { useAuth } from "@/context/AuthContext";
-import { formatSalary, getDaysRemaining } from "@/lib/utils";
+import { formatSalary, getDaysRemaining, calculateJobMatchScore } from "@/lib/utils";
 import { JobCard } from "@/components/JobCard";
 import {
   Card,
@@ -73,7 +73,7 @@ export function JobSplitView({
   onApplyJob,
   onResetFilters,
 }: JobSplitViewProps) {
-  const { isJobSaved, toggleSaveJob } = useAuth();
+  const { user, isJobSaved, toggleSaveJob } = useAuth();
   const [selectedJob, setSelectedJob] = useState<MockJob | null>(null);
   const [atsResult, setAtsResult] = useState<{
     score: number;
@@ -108,15 +108,19 @@ export function JobSplitView({
     if (!selectedJob) return;
     setAtsLoading(true);
     try {
+      const candidateSkills = (user?.skills && user.skills.length > 0)
+        ? user.skills
+        : ["React", "TypeScript", "Node.js", "Next.js", "SQL"];
+      const candidateText = user?.bio || user?.headline || "Experienced professional seeking opportunities in matching domain.";
+
       const res = await fetch("/api/ats-scanner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           jobId: selectedJob._id,
           jobSkills: selectedJob.skills,
-          userSkills: ["React", "TypeScript", "Node.js", "Next.js", "SQL"],
-          userResumeText:
-            "Full Stack Engineer experienced in React, Next.js, and TypeScript.",
+          userSkills: candidateSkills,
+          userResumeText: candidateText,
         }),
       });
       const data = await res.json();
@@ -209,6 +213,7 @@ export function JobSplitView({
     const isExpired = job.status === "expired";
     const isInactive = isFilled || isClosed || isExpired;
     const expiryInfo = getDaysRemaining(job.expiresAt);
+    const matchInfo = calculateJobMatchScore(user, job);
 
     return (
       <div className="relative">
@@ -418,7 +423,7 @@ export function JobSplitView({
                 borderRadius: 6,
               }}
             >
-              Analyze Match
+              Deep ATS Scan
             </Button>
           </div>
 
@@ -440,8 +445,28 @@ export function JobSplitView({
               </div>
             </div>
           ) : (
-            <div style={{ fontSize: 11, color: "#78350f" }}>
-              Click Scan Profile to see how well your resume matches this job before applying.
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
+                <Progress
+                  percent={matchInfo.score}
+                  size="small"
+                  strokeColor={matchInfo.score >= 80 ? "#16a34a" : matchInfo.score >= 65 ? "#0284c7" : "#ea580c"}
+                  style={{ flex: 1, margin: 0 }}
+                />
+                <Text strong style={{ fontSize: 13, color: matchInfo.score >= 80 ? "#16a34a" : matchInfo.score >= 65 ? "#0284c7" : "#c2410c" }}>
+                  {matchInfo.score}% • {matchInfo.level}
+                </Text>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 }}>
+                {matchInfo.reasons.map((r, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center text-[10px] font-semibold bg-orange-100/70 text-orange-900 px-2 py-0.5 rounded-md"
+                  >
+                    ✓ {r}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </Card>
