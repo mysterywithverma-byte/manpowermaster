@@ -41,8 +41,18 @@ export async function PATCH(
     const body = await request.json();
     const db = await connectToDatabase();
 
-    // Allowed updates from Admin (e.g., isVerified / blue tick, role, isBlocked, companyName, name)
-    const allowedFields = ["isVerified", "role", "isBlocked", "companyName", "name", "headline"];
+    // Allowed updates from Admin (e.g., isVerified / blue tick, role, isBlocked, isReported, reportReason, blockedReason)
+    const allowedFields = [
+      "isVerified",
+      "role",
+      "isBlocked",
+      "isReported",
+      "reportReason",
+      "blockedReason",
+      "companyName",
+      "name",
+      "headline",
+    ];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: any = {};
     for (const key of allowedFields) {
@@ -51,17 +61,58 @@ export async function PATCH(
       }
     }
 
+    let deletedJobsCount = 0;
+
     if (db && mongoose.Types.ObjectId.isValid(id)) {
-      const updated = await User.findByIdAndUpdate(id, { $set: updates }, { new: true }).lean();
-      if (updated) {
-        return NextResponse.json({ success: true, source: "mongodb", user: updated });
+      const userDoc = await User.findById(id);
+      if (userDoc) {
+        Object.assign(userDoc, updates);
+        await userDoc.save();
+
+        // If employer is blocked and deleteJobs requested, delete all their posted jobs
+        if (updates.isBlocked === true && body.deleteJobs) {
+          const res = await Job.deleteMany({
+            $or: [
+              { postedBy: id },
+              { postedBy: userDoc.email },
+              { company: userDoc.companyName || "" },
+            ],
+          });
+          deletedJobsCount = res.deletedCount || 0;
+        }
+
+        return NextResponse.json({
+          success: true,
+          source: "mongodb",
+          user: userDoc.toObject(),
+          deletedJobsCount,
+        });
       }
     }
 
     // In-memory fallback
+    const memUser = inMemoryStore.getUser(id);
+    const userEmail = memUser?.email;
+    const userCompany = memUser?.companyName;
+
     const memUpdated = inMemoryStore.updateUser(id, updates);
     if (memUpdated) {
-      return NextResponse.json({ success: true, source: "in-memory", user: memUpdated });
+      if (updates.isBlocked === true && body.deleteJobs) {
+        const initialCount = inMemoryStore.jobs.length;
+        inMemoryStore.jobs = inMemoryStore.jobs.filter((j) => {
+          const matchPoster = j.postedBy === id || (userEmail && j.postedBy === userEmail);
+          const matchCompany = userCompany && j.company?.toLowerCase() === userCompany.toLowerCase();
+          return !matchPoster && !matchCompany;
+        });
+        deletedJobsCount = initialCount - inMemoryStore.jobs.length;
+      }
+
+      return NextResponse.json({
+        success: true,
+        source: "in-memory",
+        user: memUpdated,
+        deletedJobsCount,
+      });
     }
 
     return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });

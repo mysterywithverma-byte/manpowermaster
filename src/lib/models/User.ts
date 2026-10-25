@@ -67,9 +67,11 @@ export interface IUser extends Document {
   savedJobs: string[];
   companyName?: string;
   companyLogo?: string;
-  avatar?: string;
   isVerified?: boolean;
   isBlocked?: boolean;
+  isReported?: boolean;
+  reportReason?: string;
+  blockedReason?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -112,6 +114,9 @@ const UserSchema = new Schema<IUser>(
     avatar: { type: String, default: "" },
     isVerified: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
+    isReported: { type: Boolean, default: false },
+    reportReason: { type: String, default: "" },
+    blockedReason: { type: String, default: "" },
   },
   {
     timestamps: true,

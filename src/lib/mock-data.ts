@@ -86,6 +86,9 @@ export interface MockUser {
   whatsappAlerts?: boolean;
   isVerified?: boolean;
   isBlocked?: boolean;
+  isReported?: boolean;
+  reportReason?: string;
+  blockedReason?: string;
   createdAt: string;
 }
 

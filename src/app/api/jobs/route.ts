@@ -188,13 +188,20 @@ export async function POST(request: NextRequest) {
             ],
           });
           if (userDoc) {
+            if (userDoc.isBlocked) {
+              return NextResponse.json(
+                { success: false, error: "Your account has been blocked or suspended by Admin. You are not allowed to publish job vacancies." },
+                { status: 403 }
+              );
+            }
             resolvedPosterId = userDoc._id.toString();
             if (userDoc.role === "seeker") {
               userDoc.role = "employer";
               await userDoc.save();
             }
           }
-        } catch {
+        } catch (e: any) {
+          if (e?.status === 403) throw e;
           // ignore lookup error
         }
       }
@@ -280,6 +287,14 @@ export async function POST(request: NextRequest) {
     }
 
     // In-memory fallback
+    const memUser = inMemoryStore.getUser(postedBy) || inMemoryStore.getUserByEmail(postedBy);
+    if (memUser && memUser.isBlocked) {
+      return NextResponse.json(
+        { success: false, error: "Your account has been blocked or suspended by Admin. You are not allowed to publish job vacancies." },
+        { status: 403 }
+      );
+    }
+
     const newJob = inMemoryStore.addJob({
       title,
       company,

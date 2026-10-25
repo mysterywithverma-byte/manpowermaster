@@ -380,6 +380,11 @@ export function PostJobModal({
       return;
     }
 
+    if (user.isBlocked) {
+      setError("Your account has been blocked or suspended by Admin. You cannot publish job vacancies.");
+      return;
+    }
+
     if (!title.trim()) {
       setError("Please specify the Job Role / Title.");
       return;
@@ -531,6 +536,17 @@ export function PostJobModal({
         </div>
       }
     >
+      {/* Blocked Account Notice */}
+      {user?.isBlocked && (
+        <Alert
+          type="error"
+          showIcon
+          className="mb-3 rounded-xl text-xs"
+          message="Account Blocked / Suspended by Admin"
+          description="Your account has been restricted by platform moderators. You cannot publish or edit vacancies. Please contact support."
+        />
+      )}
+
       {/* Guest Notice */}
       {!user && (
         <Alert

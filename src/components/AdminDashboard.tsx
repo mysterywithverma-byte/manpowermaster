@@ -28,6 +28,10 @@ import {
   Edit3,
   Clock,
   AlertTriangle,
+  Flag,
+  Ban,
+  X,
+  AlertOctagon,
 } from "lucide-react";
 
 export function AdminDashboard() {
@@ -42,10 +46,32 @@ export function AdminDashboard() {
   // Tab State: "users" | "jobs" | "system"
   const [activeTab, setActiveTab] = useState<"users" | "jobs" | "system">("users");
 
-  // User Filter & Search state (Employers only for Blue Tick verification)
+  // User Filter & Search state (Filter Employers, Employees / Seekers, or Blocked)
   const [userSearch, setUserSearch] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState("all");
   const [userVerifiedFilter, setUserVerifiedFilter] = useState("all");
+
+  // Report Account Modal State
+  const [reportModalUser, setReportModalUser] = useState<MockUser | null>(null);
+  const [reportReason, setReportReason] = useState("Fake Job Vacancies / Scams");
+  const [customReportNote, setCustomReportNote] = useState("");
+  const [reportAlsoBlock, setReportAlsoBlock] = useState(true);
+  const [reportAlsoDeleteJobs, setReportAlsoDeleteJobs] = useState(true);
+
+  // Block Account Modal State
+  const [blockModalUser, setBlockModalUser] = useState<MockUser | null>(null);
+  const [blockDeleteJobs, setBlockDeleteJobs] = useState(true);
+
+  // Count active jobs posted by a user
+  const getUserJobsCount = (u: MockUser) => {
+    const uId = u._id || u.id;
+    return jobs.filter(
+      (j) =>
+        j.postedBy === uId ||
+        (u.email && j.postedBy === u.email) ||
+        (u.companyName && j.company?.toLowerCase() === u.companyName.toLowerCase())
+    ).length;
+  };
 
   // Job Filter & Search state
   const [jobSearch, setJobSearch] = useState("");
@@ -183,6 +209,143 @@ export function AdminDashboard() {
     }
   };
 
+  // Handle Report Account (with option to block and delete jobs)
+  const handleReportAccount = async () => {
+    if (!reportModalUser) return;
+    const userId = reportModalUser._id || reportModalUser.id;
+    if (!userId) return;
+
+    setActionLoadingId(userId);
+    try {
+      const fullReason = customReportNote.trim()
+        ? `${reportReason}: ${customReportNote.trim()}`
+        : reportReason;
+
+      const payload = {
+        isReported: true,
+        reportReason: fullReason,
+        isBlocked: reportAlsoBlock,
+        blockedReason: reportAlsoBlock ? fullReason : undefined,
+        deleteJobs: reportAlsoBlock && reportAlsoDeleteJobs,
+      };
+
+      const res = await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUsers((prev) =>
+          prev.map((u) =>
+            u._id === userId || u.id === userId
+              ? {
+                  ...u,
+                  isReported: true,
+                  reportReason: fullReason,
+                  isBlocked: reportAlsoBlock ? true : u.isBlocked,
+                  blockedReason: reportAlsoBlock ? fullReason : u.blockedReason,
+                }
+              : u
+          )
+        );
+
+        if (reportAlsoBlock && reportAlsoDeleteJobs) {
+          const userEmail = reportModalUser.email;
+          const userCompany = reportModalUser.companyName;
+          setJobs((prev) =>
+            prev.filter(
+              (j) =>
+                j.postedBy !== userId &&
+                (!userEmail || j.postedBy !== userEmail) &&
+                (!userCompany || j.company?.toLowerCase() !== userCompany.toLowerCase())
+            )
+          );
+        }
+
+        showToast(
+          `Account "${reportModalUser.name}" reported!${
+            reportAlsoBlock ? " Account blocked." : ""
+          }${
+            reportAlsoBlock && reportAlsoDeleteJobs && data.deletedJobsCount
+              ? ` (${data.deletedJobsCount} jobs deleted)`
+              : ""
+          }`
+        );
+        setReportModalUser(null);
+        setCustomReportNote("");
+      } else {
+        showToast(data.error || "Failed to submit report");
+      }
+    } catch {
+      showToast("Network error submitting report");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // Handle Toggle Block / Unblock (with optional job purging)
+  const handleToggleBlock = async (user: MockUser, deleteJobs: boolean = false) => {
+    const userId = user._id || user.id;
+    if (!userId) return;
+
+    const willBlock = !user.isBlocked;
+    setActionLoadingId(userId);
+    try {
+      const res = await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          isBlocked: willBlock,
+          blockedReason: willBlock ? "Blocked by Administrator" : "",
+          deleteJobs: willBlock && deleteJobs,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUsers((prev) =>
+          prev.map((u) =>
+            u._id === userId || u.id === userId
+              ? {
+                  ...u,
+                  isBlocked: willBlock,
+                  blockedReason: willBlock ? "Blocked by Administrator" : "",
+                }
+              : u
+          )
+        );
+
+        if (willBlock && deleteJobs) {
+          const userEmail = user.email;
+          const userCompany = user.companyName;
+          setJobs((prev) =>
+            prev.filter(
+              (j) =>
+                j.postedBy !== userId &&
+                (!userEmail || j.postedBy !== userEmail) &&
+                (!userCompany || j.company?.toLowerCase() !== userCompany.toLowerCase())
+            )
+          );
+        }
+
+        showToast(
+          willBlock
+            ? `Account "${user.name}" blocked.${
+                deleteJobs ? ` All posted jobs deleted.` : ""
+              }`
+            : `Account "${user.name}" unblocked successfully.`
+        );
+        setBlockModalUser(null);
+      } else {
+        showToast(data.error || "Failed to update block status");
+      }
+    } catch {
+      showToast("Network error updating block status");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   // Handle Toggle Job Featured
   const handleToggleJobFeatured = async (job: MockJob) => {
     const newFeatured = !job.featured;
@@ -254,23 +417,35 @@ export function AdminDashboard() {
     }
   };
 
-  // Filtered Employers ONLY (As requested: Blue Tick is exclusively for Employers)
+  // Filtered Users (All Users, Employers Only, Employees/Job Seekers Only, or Blocked/Reported)
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
-      // ONLY EMPLOYERS ARE SHOWN FOR BLUE TICK VERIFICATION
-      if (u.role !== "employer") return false;
+      // Role Filter: 'all' | 'employer' | 'seeker' | 'admin' | 'blocked'
+      if (userRoleFilter === "employer" && u.role !== "employer") return false;
+      if (userRoleFilter === "seeker" && u.role !== "seeker") return false;
+      if (userRoleFilter === "admin" && u.role !== "admin") return false;
+      if (userRoleFilter === "blocked" && !u.isBlocked && !u.isReported) return false;
+
+      // Status / Verification Filter
       if (userVerifiedFilter === "verified" && !u.isVerified) return false;
       if (userVerifiedFilter === "unverified" && u.isVerified) return false;
+      if (userVerifiedFilter === "blocked" && !u.isBlocked) return false;
+      if (userVerifiedFilter === "reported" && !u.isReported) return false;
+
+      // Search (Name, email, company, headline, phone, skills)
       if (userSearch) {
         const q = userSearch.toLowerCase();
         const matchesName = u.name?.toLowerCase().includes(q);
         const matchesEmail = u.email?.toLowerCase().includes(q);
         const matchesCompany = u.companyName?.toLowerCase().includes(q);
-        return matchesName || matchesEmail || matchesCompany;
+        const matchesHeadline = u.headline?.toLowerCase().includes(q);
+        const matchesPhone = u.phone?.toLowerCase().includes(q);
+        const matchesSkills = u.skills?.some((s) => s.toLowerCase().includes(q));
+        return matchesName || matchesEmail || matchesCompany || matchesHeadline || matchesPhone || matchesSkills;
       }
       return true;
     });
-  }, [users, userSearch, userVerifiedFilter]);
+  }, [users, userSearch, userRoleFilter, userVerifiedFilter]);
 
   // Filtered Jobs
   const filteredJobs = useMemo(() => {
@@ -292,6 +467,8 @@ export function AdminDashboard() {
   const totalVerifiedUsers = users.filter((u) => u.isVerified).length;
   const totalCandidates = users.filter((u) => u.role === "seeker").length;
   const totalEmployers = users.filter((u) => u.role === "employer").length;
+  const totalAdmins = users.filter((u) => u.role === "admin").length;
+  const totalBlockedUsers = users.filter((u) => u.isBlocked || u.isReported).length;
   const totalFeaturedJobs = jobs.filter((j) => j.featured).length;
 
   return (
@@ -404,8 +581,8 @@ export function AdminDashboard() {
               : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
-          <Building2 className="w-4 h-4" />
-          <span>Employer Directory &amp; Blue Ticks ({filteredUsers.length})</span>
+          <Users className="w-4 h-4" />
+          <span>User &amp; Employer Moderation ({filteredUsers.length})</span>
         </button>
 
         <button
@@ -436,40 +613,87 @@ export function AdminDashboard() {
       {/* TAB 1: USERS & BLUE TICK MANAGEMENT */}
       {activeTab === "users" && (
         <div className="space-y-4">
-          {/* Filter Bar */}
-          <div className="p-4 rounded-2xl bg-white border-2 border-slate-200 flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs">
-            {/* Search Input */}
-            <div className="relative w-full md:w-80">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                placeholder="Search user name, email, or company..."
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600"
-              />
-            </div>
-
-            {/* Filter Pills */}
-            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-200 text-xs font-bold text-orange-800">
-                <span>Category:</span>
-                <span className="font-black">Employers Only (Blue Tick Gate)</span>
+          {/* User Type & Search Filter Bar */}
+          <div className="p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-xs flex flex-col gap-3">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+              {/* Role Filter Pills */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setUserRoleFilter("all")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    userRoleFilter === "all"
+                      ? "bg-slate-900 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  All Accounts ({users.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUserRoleFilter("employer")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    userRoleFilter === "employer"
+                      ? "bg-orange-600 text-white shadow-xs"
+                      : "bg-orange-50 text-orange-800 hover:bg-orange-100 border border-orange-200"
+                  }`}
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>Employers ({totalEmployers})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUserRoleFilter("seeker")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    userRoleFilter === "seeker"
+                      ? "bg-blue-600 text-white shadow-xs"
+                      : "bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200"
+                  }`}
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Employees / Seekers ({totalCandidates})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUserRoleFilter("blocked")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    userRoleFilter === "blocked"
+                      ? "bg-rose-600 text-white shadow-xs"
+                      : "bg-rose-50 text-rose-800 hover:bg-rose-100 border border-rose-200"
+                  }`}
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>Reported / Blocked ({totalBlockedUsers})</span>
+                </button>
               </div>
 
-              {/* Blue Tick Filter */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-bold text-slate-400">Badge:</span>
+              {/* Status Select Filter */}
+              <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
+                <span className="text-[11px] font-bold text-slate-400">Filter By Status:</span>
                 <select
                   value={userVerifiedFilter}
                   onChange={(e) => setUserVerifiedFilter(e.target.value)}
                   className="px-2.5 py-1.5 text-xs font-bold rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none cursor-pointer"
                 >
-                  <option value="all">All Employers</option>
-                  <option value="verified">Verified (Has Blue Tick)</option>
-                  <option value="unverified">Unverified (No Blue Tick)</option>
+                  <option value="all">All Statuses</option>
+                  <option value="verified">Verified (Blue Tick)</option>
+                  <option value="unverified">Unverified</option>
+                  <option value="blocked">Blocked Accounts</option>
+                  <option value="reported">Reported Accounts</option>
                 </select>
               </div>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative w-full">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search user name, email, company, phone, headline, or skills..."
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-orange-600"
+              />
             </div>
           </div>
 
@@ -478,14 +702,14 @@ export function AdminDashboard() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-base sm:text-lg font-black text-slate-900">
-                  Employer Company Directory &amp; Verification
+                  User &amp; Employer Moderation Directory
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Blue Ticks are granted exclusively to verified employer companies and corporate recruiters to guarantee authenticity.
+                  Filter by Employers or Employees, verify authentic corporate accounts with Blue Ticks, and report or block scam accounts.
                 </p>
               </div>
-              <span className="text-xs font-bold text-orange-700 bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200">
-                {filteredUsers.length} Employers
+              <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                {filteredUsers.length} Accounts Displayed
               </span>
             </div>
 
@@ -502,28 +726,29 @@ export function AdminDashboard() {
                       <th className="pb-3 font-black">Account Role</th>
                       <th className="pb-3 font-black">Organization / Affiliation</th>
                       <th className="pb-3 font-black text-center">Blue Tick Status</th>
-                      <th className="pb-3 font-black text-right">Moderation Actions</th>
+                      <th className="pb-3 font-black text-right">Moderation &amp; Safety Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredUsers.map((u) => {
                       const uId = u._id || u.id || "";
                       const isPending = actionLoadingId === uId;
+                      const userJobsCount = getUserJobsCount(u);
 
                       return (
-                        <tr key={uId} className="hover:bg-slate-50/70 transition-colors">
-                          {/* User Avatar + Name + Email */}
+                        <tr key={uId} className={`hover:bg-slate-50/70 transition-colors ${u.isBlocked ? "bg-rose-50/30" : ""}`}>
+                          {/* User Avatar + Name + Email + Status Badges */}
                           <td className="py-3 pr-3">
-                            <div className="flex items-center gap-2.5">
+                            <div className="flex items-start gap-2.5">
                               {u.avatar ? (
                                 /* eslint-disable-next-line @next/next/no-img-element */
                                 <img
                                   src={u.avatar}
                                   alt={u.name}
-                                  className="w-9 h-9 rounded-xl object-cover border border-slate-200 shrink-0"
+                                  className="w-9 h-9 rounded-xl object-cover border border-slate-200 shrink-0 mt-0.5"
                                 />
                               ) : (
-                                <div className="w-9 h-9 rounded-xl bg-orange-600 text-white font-bold flex items-center justify-center shrink-0 text-xs shadow-xs">
+                                <div className="w-9 h-9 rounded-xl bg-orange-600 text-white font-bold flex items-center justify-center shrink-0 text-xs shadow-xs mt-0.5">
                                   {u.name?.charAt(0) || "U"}
                                 </div>
                               )}
@@ -536,6 +761,25 @@ export function AdminDashboard() {
                                 {u.phone && (
                                   <div className="text-[10px] text-slate-400">{u.phone}</div>
                                 )}
+
+                                {/* Status tags for Blocked / Reported */}
+                                <div className="flex flex-wrap items-center gap-1 mt-1">
+                                  {u.isBlocked && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                                      <Ban className="w-2.5 h-2.5" />
+                                      <span>Blocked (Cannot Post)</span>
+                                    </span>
+                                  )}
+                                  {u.isReported && (
+                                    <span
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200"
+                                      title={u.reportReason}
+                                    >
+                                      <Flag className="w-2.5 h-2.5" />
+                                      <span>Reported: {u.reportReason || "Policy Violation"}</span>
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </td>
@@ -551,57 +795,113 @@ export function AdminDashboard() {
                                   : "bg-blue-100 text-blue-800 border border-blue-200"
                               }`}
                             >
-                              {u.role === "employer" ? "Employer" : u.role === "admin" ? "Admin" : "Job Seeker"}
+                              {u.role === "employer" ? "Employer" : u.role === "admin" ? "Admin" : "Job Seeker / Employee"}
                             </span>
                           </td>
 
                           {/* Company / Headline */}
                           <td className="py-3 pr-3">
                             {u.role === "employer" ? (
-                              <div className="flex items-center gap-1.5 font-semibold text-slate-800">
-                                <Building2 className="w-3.5 h-3.5 text-orange-600 shrink-0" />
-                                <span>{u.companyName || "Independent Employer"}</span>
+                              <div>
+                                <div className="flex items-center gap-1.5 font-semibold text-slate-800">
+                                  <Building2 className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+                                  <span>{u.companyName || "Independent Employer"}</span>
+                                </div>
+                                <div className="text-[10px] text-slate-500 font-medium mt-0.5">
+                                  {userJobsCount > 0 ? (
+                                    <span className="text-orange-700 font-bold">{userJobsCount} Active Job Vacancies</span>
+                                  ) : (
+                                    "0 Active Jobs"
+                                  )}
+                                </div>
                               </div>
                             ) : (
-                              <div className="text-[11px] text-slate-600 line-clamp-1 max-w-xs">
-                                {u.headline || "Job Candidate"}
+                              <div>
+                                <div className="text-[11px] text-slate-800 font-medium line-clamp-1 max-w-xs">
+                                  {u.headline || "Job Candidate"}
+                                </div>
+                                {u.location && (
+                                  <div className="text-[10px] text-slate-400 mt-0.5">
+                                    {u.location}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </td>
 
-                          {/* Blue Tick Badge & One-Click Toggle */}
+                          {/* Blue Tick Badge & One-Click Toggle (Employers Only) */}
                           <td className="py-3 text-center">
-                            <button
-                              onClick={() => handleToggleBlueTick(u)}
-                              disabled={isPending}
-                              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50 ${
-                                u.isVerified
-                                  ? "bg-sky-50 text-sky-700 border-2 border-sky-300 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300"
-                                  : "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-sky-50 hover:text-sky-700 hover:border-sky-300"
-                              }`}
-                              title={
-                                u.isVerified
-                                  ? "Click to revoke Blue Tick verification"
-                                  : "Click to grant Blue Tick verified badge"
-                              }
-                            >
-                              {u.isVerified ? (
-                                <>
-                                  <VerifiedBadge size="xs" />
-                                  <span>Verified (Revoke)</span>
-                                </>
-                              ) : (
-                                <>
-                                  <span className="w-3.5 h-3.5 rounded-full border border-slate-400"></span>
-                                  <span>Give Blue Tick</span>
-                                </>
-                              )}
-                            </button>
+                            {u.role === "employer" ? (
+                              <button
+                                onClick={() => handleToggleBlueTick(u)}
+                                disabled={isPending}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50 ${
+                                  u.isVerified
+                                    ? "bg-sky-50 text-sky-700 border-2 border-sky-300 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300"
+                                    : "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-sky-50 hover:text-sky-700 hover:border-sky-300"
+                                }`}
+                                title={
+                                  u.isVerified
+                                    ? "Click to revoke Blue Tick verification"
+                                    : "Click to grant Blue Tick verified badge"
+                                }
+                              >
+                                {u.isVerified ? (
+                                  <>
+                                    <VerifiedBadge size="xs" />
+                                    <span>Verified (Revoke)</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="w-3.5 h-3.5 rounded-full border border-slate-400"></span>
+                                    <span>Give Blue Tick</span>
+                                  </>
+                                )}
+                              </button>
+                            ) : (
+                              <span className="text-[11px] text-slate-400 font-semibold px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200">
+                                Employers Only
+                              </span>
+                            )}
                           </td>
 
-                          {/* Moderation Actions (Role switcher & delete) */}
+                          {/* Moderation Actions (Report, Block/Unblock, Role, Delete) */}
                           <td className="py-3 text-right">
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* Report Account Button */}
+                              <button
+                                onClick={() => setReportModalUser(u)}
+                                disabled={isPending}
+                                className="px-2.5 py-1 rounded-lg text-[11px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                                title="Report account for fake jobs, scams, or abuse"
+                              >
+                                <Flag className="w-3 h-3" />
+                                <span>Report</span>
+                              </button>
+
+                              {/* Block / Unblock Button */}
+                              {u.isBlocked ? (
+                                <button
+                                  onClick={() => handleToggleBlock(u)}
+                                  disabled={isPending}
+                                  className="px-2.5 py-1 rounded-lg text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                                  title="Click to unblock account"
+                                >
+                                  <CheckCircle className="w-3 h-3" />
+                                  <span>Unblock</span>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => setBlockModalUser(u)}
+                                  disabled={isPending || u.email === currentAdminUser?.email}
+                                  className="px-2.5 py-1 rounded-lg text-[11px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                                  title="Block this account & optionally delete jobs"
+                                >
+                                  <Ban className="w-3 h-3" />
+                                  <span>Block</span>
+                                </button>
+                              )}
+
                               {/* Quick Role Switcher */}
                               <select
                                 value={u.role}
@@ -619,7 +919,7 @@ export function AdminDashboard() {
                                 onClick={() => handleDeleteUser(u)}
                                 disabled={isPending || u.email === currentAdminUser?.email}
                                 className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-30"
-                                title="Delete account"
+                                title="Delete account completely"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -915,6 +1215,209 @@ export function AdminDashboard() {
           }}
           jobToEdit={editingJob}
         />
+      )}
+
+      {/* Report Account Modal */}
+      {reportModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-3xl bg-white border-2 border-slate-200 shadow-2xl p-6 relative">
+            <button
+              onClick={() => {
+                setReportModalUser(null);
+                setCustomReportNote("");
+              }}
+              className="absolute top-5 right-5 p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                <Flag className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900">
+                  Report &amp; Restrict Account
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Flag account for policy violations, fake vacancies, or suspicious activities.
+                </p>
+              </div>
+            </div>
+
+            {/* Target Account Info */}
+            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 mb-4 flex items-center justify-between">
+              <div>
+                <div className="font-bold text-xs text-slate-900">{reportModalUser.name}</div>
+                <div className="text-[11px] text-slate-500">{reportModalUser.email}</div>
+                {reportModalUser.companyName && (
+                  <div className="text-[10px] text-orange-700 font-semibold mt-0.5">
+                    {reportModalUser.companyName}
+                  </div>
+                )}
+              </div>
+              <span className="px-2.5 py-1 rounded-lg bg-orange-100 text-orange-800 text-[11px] font-black uppercase">
+                {reportModalUser.role}
+              </span>
+            </div>
+
+            {/* Report Reason Dropdown */}
+            <div className="mb-3">
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                Violation / Report Reason
+              </label>
+              <select
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                className="w-full px-3 py-2 text-xs font-semibold rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-amber-500 cursor-pointer"
+              >
+                <option value="Fake Job Vacancies / Scams">Fake Job Vacancies / Scams</option>
+                <option value="Charging Money / Fees from Candidates">Charging Money / Fees from Candidates</option>
+                <option value="Misleading Salary or Information">Misleading Salary or Information</option>
+                <option value="Inappropriate / Abusive Communication">Inappropriate / Abusive Communication</option>
+                <option value="Spam / Duplicate Accounts">Spam / Duplicate Accounts</option>
+                <option value="Other Policy Violation">Other Policy Violation</option>
+              </select>
+            </div>
+
+            {/* Additional Note */}
+            <div className="mb-4">
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                Admin Notes / Investigation Details (Optional)
+              </label>
+              <textarea
+                rows={2}
+                value={customReportNote}
+                onChange={(e) => setCustomReportNote(e.target.value)}
+                placeholder="Specific evidence or complaints received..."
+                className="w-full p-2.5 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            {/* Action Checkboxes */}
+            <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2 mb-5">
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-800">
+                <input
+                  type="checkbox"
+                  checked={reportAlsoBlock}
+                  onChange={(e) => setReportAlsoBlock(e.target.checked)}
+                  className="rounded text-amber-600 focus:ring-amber-500 w-4 h-4 cursor-pointer"
+                />
+                <span>Also Block this account (Cannot post new job vacancies)</span>
+              </label>
+
+              {reportAlsoBlock && (
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-rose-800 ml-6">
+                  <input
+                    type="checkbox"
+                    checked={reportAlsoDeleteJobs}
+                    onChange={(e) => setReportAlsoDeleteJobs(e.target.checked)}
+                    className="rounded text-rose-600 focus:ring-rose-500 w-4 h-4 cursor-pointer"
+                  />
+                  <span>
+                    Delete all ({getUserJobsCount(reportModalUser)}) job openings posted by this employer
+                  </span>
+                </label>
+              )}
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setReportModalUser(null);
+                  setCustomReportNote("");
+                }}
+                className="px-4 py-2 text-xs font-bold rounded-xl text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleReportAccount}
+                disabled={actionLoadingId === (reportModalUser._id || reportModalUser.id)}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-amber-600 text-white hover:bg-amber-700 transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Flag className="w-3.5 h-3.5" />
+                <span>Confirm Report &amp; Restrict</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Block Account Modal */}
+      {blockModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-3xl bg-white border-2 border-slate-200 shadow-2xl p-6 relative">
+            <button
+              onClick={() => setBlockModalUser(null)}
+              className="absolute top-5 right-5 p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+                <Ban className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900">
+                  Block Account: {blockModalUser.name}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Restricts account from creating, modifying, or publishing vacancies.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 mb-4 text-xs">
+              <div className="font-bold text-slate-800">{blockModalUser.email}</div>
+              <div className="text-slate-500 mt-0.5">Role: <span className="font-bold uppercase">{blockModalUser.role}</span></div>
+              {blockModalUser.companyName && (
+                <div className="text-slate-500 mt-0.5">Company: <span className="font-bold">{blockModalUser.companyName}</span></div>
+              )}
+            </div>
+
+            {/* Delete Jobs Option */}
+            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 mb-5">
+              <label className="flex items-start gap-2.5 cursor-pointer text-xs font-bold text-rose-900">
+                <input
+                  type="checkbox"
+                  checked={blockDeleteJobs}
+                  onChange={(e) => setBlockDeleteJobs(e.target.checked)}
+                  className="rounded text-rose-600 focus:ring-rose-500 w-4 h-4 mt-0.5 shrink-0 cursor-pointer"
+                />
+                <div>
+                  <div>Delete all posted jobs ({getUserJobsCount(blockModalUser)} active openings)</div>
+                  <div className="text-[11px] font-normal text-rose-700 mt-0.5">
+                    Instantly purges all vacancies posted by this user from public search.
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setBlockModalUser(null)}
+                className="px-4 py-2 text-xs font-bold rounded-xl text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleBlock(blockModalUser, blockDeleteJobs)}
+                disabled={actionLoadingId === (blockModalUser._id || blockModalUser.id)}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Ban className="w-3.5 h-3.5" />
+                <span>Confirm &amp; Block Account</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
