@@ -108,20 +108,7 @@ export function HeroSection({
             <Input
               size="large"
               variant="borderless"
-              prefix={
-                <div className="flex items-center gap-2 mr-1.5 shrink-0">
-                  <div className="relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/company-profile.jpeg"
-                      alt="Manpower Master"
-                      className="w-7 h-7 rounded-full object-cover border border-orange-500/40 shadow-2xs"
-                    />
-                    <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-white" />
-                  </div>
-                  <Search className="w-4 h-4 text-slate-400" />
-                </div>
-              }
+              prefix={<Search className="w-4 h-4 text-slate-400" />}
               placeholder="Role, skill, or company..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
