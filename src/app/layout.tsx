@@ -81,6 +81,17 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  icons: {
+    icon: [
+      { url: "/company-profile.jpeg" },
+      { url: "/company-profile.jpeg", sizes: "192x192", type: "image/jpeg" },
+      { url: "/company-profile.jpeg", sizes: "512x512", type: "image/jpeg" },
+    ],
+    apple: [
+      { url: "/company-profile.jpeg", sizes: "180x180", type: "image/jpeg" },
+    ],
+    shortcut: ["/company-profile.jpeg"],
+  },
   other: {
     "geo.region": "IN-PB",
     "geo.placename": "Jalandhar, Punjab, India",
@@ -94,8 +105,48 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const organizationStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Manpower Master",
+    url: "https://manpowermaster.com",
+    logo: "https://manpowermaster.com/company-profile.jpeg",
+    image: "https://manpowermaster.com/company-profile.jpeg",
+    description: "Official direct hiring & corporate talent placement portal in India",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Jalandhar",
+      addressRegion: "Punjab",
+      addressCountry: "IN",
+    },
+  };
+
+  const websiteStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Manpower Master",
+    url: "https://manpowermaster.com",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://manpowermaster.com/?search={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <html lang="en" className={`${plusJakartaSans.variable} ${plusJakartaSans.className} h-full antialiased`}>
+      <head>
+        <link rel="icon" href="/company-profile.jpeg" />
+        <link rel="apple-touch-icon" href="/company-profile.jpeg" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationStructuredData) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteStructuredData) }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-white text-slate-900 selection:bg-orange-600 selection:text-white">
         <Suspense fallback={null}>
           <AntdProvider>

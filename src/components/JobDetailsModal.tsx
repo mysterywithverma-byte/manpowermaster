@@ -54,9 +54,9 @@ export function JobDetailsModal({ job, onClose, onApply }: JobDetailsModalProps)
   };
 
   const handleWhatsApp = () => {
-    const phone = "919872620706";
+    const phone = job.recruiterWhatsApp?.replace(/[^0-9]/g, "") || "919872620706";
     const text = encodeURIComponent(
-      `Hello Manpower Master! I am inquiring about the ${job.title} vacancy at ${job.company} on Manpowermaster.com.`
+      `Hello! I am inquiring about the ${job.title} vacancy at ${job.company} on Manpower Master.`
     );
     window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
   };
@@ -99,6 +99,23 @@ export function JobDetailsModal({ job, onClose, onApply }: JobDetailsModalProps)
           <X className="w-5 h-5" />
         </button>
 
+        {/* Status Alerts */}
+        {job.status === "filled" && (
+          <div className="mb-4 p-3 rounded-2xl bg-purple-50 border border-purple-200 text-purple-900 text-xs font-bold flex items-center gap-2">
+            <span>🚫 Position Filled: This job opening has been filled. Applications are no longer accepted.</span>
+          </div>
+        )}
+        {job.status === "closed" && (
+          <div className="mb-4 p-3 rounded-2xl bg-slate-100 border border-slate-300 text-slate-800 text-xs font-bold flex items-center gap-2">
+            <span>🔒 Hiring Closed: The recruiter has closed applications for this position.</span>
+          </div>
+        )}
+        {job.status === "expired" && (
+          <div className="mb-4 p-3 rounded-2xl bg-red-50 border border-red-200 text-red-900 text-xs font-bold flex items-center gap-2">
+            <span>⌛ Job Expired: The application window for this position has ended.</span>
+          </div>
+        )}
+
         {/* Modal Header */}
         <div className="flex flex-col sm:flex-row items-start gap-4 mb-6 pr-10">
           {job.companyLogo ? (
@@ -121,6 +138,11 @@ export function JobDetailsModal({ job, onClose, onApply }: JobDetailsModalProps)
               </span>
               <CheckCircle2 className="w-4 h-4 text-orange-600" />
               <span className="text-xs text-slate-400">• {timeAgo(job.createdAt)}</span>
+              {job.urgentHiring && (
+                <span className="px-2 py-0.5 rounded-md bg-amber-500 text-white font-extrabold text-[10px]">
+                  URGENT HIRING
+                </span>
+              )}
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mb-2">
               {job.title}
@@ -149,9 +171,9 @@ export function JobDetailsModal({ job, onClose, onApply }: JobDetailsModalProps)
         <div className="p-4 sm:p-5 rounded-2xl bg-orange-50 border border-orange-200 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div className="text-[11px] text-orange-700 font-black uppercase tracking-wider">
-              Offered CTC Package
+              Offered Compensation (LPA &amp; Monthly)
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900">
+            <div className="text-xl sm:text-2xl font-black text-slate-900">
               {formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency)}
             </div>
             {inHandSalary && (
@@ -191,17 +213,89 @@ export function JobDetailsModal({ job, onClose, onApply }: JobDetailsModalProps)
               <span>Share</span>
             </button>
 
-            <button
-              onClick={() => {
-                onClose();
-                onApply(job);
-              }}
-              className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-            >
-              <span>1-Click Apply</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
+            {job.status === "filled" ? (
+              <button
+                disabled
+                className="px-4 py-2 rounded-xl bg-slate-200 text-slate-500 font-bold text-xs cursor-not-allowed"
+              >
+                Position Filled
+              </button>
+            ) : job.status === "closed" ? (
+              <button
+                disabled
+                className="px-4 py-2 rounded-xl bg-slate-200 text-slate-500 font-bold text-xs cursor-not-allowed"
+              >
+                Hiring Closed
+              </button>
+            ) : job.status === "expired" ? (
+              <button
+                disabled
+                className="px-4 py-2 rounded-xl bg-slate-200 text-slate-500 font-bold text-xs cursor-not-allowed"
+              >
+                Expired
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  onClose();
+                  onApply(job);
+                }}
+                className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              >
+                <span>1-Click Apply</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
+        </div>
+
+        {/* Operational Highlights Card */}
+        <div className="mb-6 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+          <div className="text-xs font-black uppercase tracking-wider text-slate-600 mb-3">
+            Hiring Specifications &amp; Eligibility
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+            <div className="p-2.5 rounded-xl bg-white border border-slate-200/80">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Vacancies</span>
+              <span className="font-bold text-slate-800">{job.openingsCount ? `${job.openingsCount} Openings` : "Multiple"}</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white border border-slate-200/80">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Min Education</span>
+              <span className="font-bold text-slate-800 truncate block">{job.qualification || "Any Graduate"}</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white border border-slate-200/80">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Shift Timing</span>
+              <span className="font-bold text-slate-800 truncate block">{job.shiftTiming || "Day Shift"}</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white border border-slate-200/80">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Working Days</span>
+              <span className="font-bold text-slate-800 truncate block">{job.workingDays || "6 Days (Sun Off)"}</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white border border-slate-200/80">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">English Level</span>
+              <span className="font-bold text-slate-800 truncate block">{job.englishLevel || "Basic"}</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white border border-slate-200/80">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Interview Mode</span>
+              <span className="font-bold text-slate-800 truncate block">{job.interviewMode || "Walk-in"}</span>
+            </div>
+          </div>
+          {job.interviewAddress && (
+            <div className="mt-2.5 p-2 rounded-xl bg-white border border-slate-200/80 text-xs text-slate-700">
+              <span className="font-bold text-slate-900">Walk-in Location: </span>
+              <span>{job.interviewAddress}</span>
+            </div>
+          )}
+          {job.requiredAssets && job.requiredAssets.length > 0 && (
+            <div className="mt-2.5 flex items-center flex-wrap gap-1.5">
+              <span className="text-[10px] font-bold uppercase text-slate-400">Must Have:</span>
+              {job.requiredAssets.map((asset, i) => (
+                <span key={i} className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 text-[11px] font-semibold border border-blue-200">
+                  {asset}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Free Resume ATS Scanner Widget */}

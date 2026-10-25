@@ -11,12 +11,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // Size limit: 5MB
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { success: false, error: "File size exceeds the 5MB limit. Please upload a smaller file." },
+        { status: 400 }
+      );
+    }
 
-    // Determine target bucket
+    // Determine target bucket & validate type
     const isImage = file.type.startsWith("image/") || bucketType === "image";
     const bucket = isImage ? "images" : "resumes";
+
+    if (!isImage) {
+      const allowedDocTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+      const isAllowedExt = /\.(pdf|docx?)$/i.test(file.name);
+      if (!allowedDocTypes.includes(file.type) && !isAllowedExt) {
+        return NextResponse.json(
+          { success: false, error: "Invalid resume format. Only PDF, DOC, and DOCX files are allowed." },
+          { status: 400 }
+        );
+      }
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
     const uploadResult = await uploadFileToCloud(
       buffer,

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/lib/models/User";
 import { inMemoryStore, INITIAL_USERS } from "@/lib/mock-data";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, name, role = "seeker", companyName } = await request.json();
+    const { email, password, name, role = "seeker", companyName } = await request.json();
 
     if (!email) {
       return NextResponse.json({ success: false, error: "Email is required" }, { status: 400 });
@@ -30,19 +31,36 @@ export async function POST(request: NextRequest) {
     const db = await connectToDatabase();
 
     if (db) {
-      let user = await User.findOne({ email: cleanEmail });
+      let user = await User.findOne({ email: cleanEmail }).select("+password");
       if (user) {
+        // If password is set on the account, verify it securely
+        if (user.password && password) {
+          const isMatch = await bcrypt.compare(password, user.password);
+          if (!isMatch) {
+            return NextResponse.json({ success: false, error: "Invalid password entered." }, { status: 401 });
+          }
+        } else if (user.password && !password) {
+          return NextResponse.json({ success: false, error: "Password is required for this account." }, { status: 401 });
+        }
+
         if (name && name.trim() && user.name !== name.trim()) {
           user.name = name.trim();
           await user.save();
         }
-        return NextResponse.json({ success: true, user });
+
+        const safeUser = user.toObject ? user.toObject() : { ...user };
+        delete safeUser.password;
+        return NextResponse.json({ success: true, user: safeUser });
       }
+
+      // Hash password if supplied on new auto-provisioned user
+      const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
 
       // Create new user in MongoDB directly
       user = await User.create({
         name: displayName,
         email: cleanEmail,
+        password: hashedPassword,
         role: userRole,
         headline: userRole === "employer" ? `Recruiter @ ${companyName || "Company"}` : "Job Seeker",
         companyName: companyName || "",
@@ -51,7 +69,10 @@ export async function POST(request: NextRequest) {
         savedJobs: [],
         isVerified: false,
       });
-      return NextResponse.json({ success: true, user });
+
+      const safeUser = user.toObject ? user.toObject() : { ...user };
+      delete safeUser.password;
+      return NextResponse.json({ success: true, user: safeUser });
     }
 
     // Fallback store

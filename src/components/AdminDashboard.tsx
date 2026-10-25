@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import { MockJob, MockUser } from "@/lib/mock-data";
-import { formatSalary } from "@/lib/utils";
+import { formatSalary, getDaysRemaining } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { PostJobModal } from "@/components/PostJobModal";
 import {
   ShieldCheck,
   Server,
@@ -24,6 +25,9 @@ import {
   Filter,
   ExternalLink,
   ShieldAlert,
+  Edit3,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 
 export function AdminDashboard() {
@@ -33,11 +37,12 @@ export function AdminDashboard() {
   const [jobs, setJobs] = useState<MockJob[]>([]);
   const [users, setUsers] = useState<MockUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingJob, setEditingJob] = useState<MockJob | null>(null);
 
   // Tab State: "users" | "jobs" | "system"
   const [activeTab, setActiveTab] = useState<"users" | "jobs" | "system">("users");
 
-  // User Filter & Search state
+  // User Filter & Search state (Employers only for Blue Tick verification)
   const [userSearch, setUserSearch] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState("all");
   const [userVerifiedFilter, setUserVerifiedFilter] = useState("all");
@@ -203,9 +208,11 @@ export function AdminDashboard() {
     }
   };
 
-  // Handle Toggle Job Status (active/closed)
-  const handleToggleJobStatus = async (job: MockJob) => {
-    const newStatus = job.status === "active" ? "closed" : "active";
+  // Handle Update Job Status (active / filled / closed / expired)
+  const handleUpdateJobStatus = async (
+    job: MockJob,
+    newStatus: "active" | "filled" | "closed" | "expired"
+  ) => {
     setActionLoadingId(job._id);
     try {
       setJobs((prev) =>
@@ -219,7 +226,7 @@ export function AdminDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        showToast(`Job status changed to ${newStatus}.`);
+        showToast(`Job status changed to "${newStatus.toUpperCase()}".`);
       }
     } catch {
       loadAllData();
@@ -247,10 +254,11 @@ export function AdminDashboard() {
     }
   };
 
-  // Filtered Users
+  // Filtered Employers ONLY (As requested: Blue Tick is exclusively for Employers)
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
-      if (userRoleFilter !== "all" && u.role !== userRoleFilter) return false;
+      // ONLY EMPLOYERS ARE SHOWN FOR BLUE TICK VERIFICATION
+      if (u.role !== "employer") return false;
       if (userVerifiedFilter === "verified" && !u.isVerified) return false;
       if (userVerifiedFilter === "unverified" && u.isVerified) return false;
       if (userSearch) {
@@ -262,12 +270,13 @@ export function AdminDashboard() {
       }
       return true;
     });
-  }, [users, userSearch, userRoleFilter, userVerifiedFilter]);
+  }, [users, userSearch, userVerifiedFilter]);
 
   // Filtered Jobs
   const filteredJobs = useMemo(() => {
     return jobs.filter((j) => {
-      if (jobStatusFilter !== "all" && j.status !== jobStatusFilter) return false;
+      if (jobStatusFilter === "featured" && !j.featured) return false;
+      if (jobStatusFilter !== "all" && jobStatusFilter !== "featured" && j.status !== jobStatusFilter) return false;
       if (jobSearch) {
         const q = jobSearch.toLowerCase();
         const matchesTitle = j.title?.toLowerCase().includes(q);
@@ -395,8 +404,8 @@ export function AdminDashboard() {
               : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
-          <UserCheck className="w-4 h-4" />
-          <span>User IDs &amp; Blue Tick Badges ({users.length})</span>
+          <Building2 className="w-4 h-4" />
+          <span>Employer Directory &amp; Blue Ticks ({filteredUsers.length})</span>
         </button>
 
         <button
@@ -408,7 +417,7 @@ export function AdminDashboard() {
           }`}
         >
           <Briefcase className="w-4 h-4" />
-          <span>Job Listings Moderation ({jobs.length})</span>
+          <span>Job Listings &amp; Vacancy Status ({jobs.length})</span>
         </button>
 
         <button
@@ -443,19 +452,9 @@ export function AdminDashboard() {
 
             {/* Filter Pills */}
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
-              {/* Role filter */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-bold text-slate-400">Role:</span>
-                <select
-                  value={userRoleFilter}
-                  onChange={(e) => setUserRoleFilter(e.target.value)}
-                  className="px-2.5 py-1.5 text-xs font-bold rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none cursor-pointer"
-                >
-                  <option value="all">All Roles</option>
-                  <option value="seeker">Job Seekers</option>
-                  <option value="employer">Employers / Recruiters</option>
-                  <option value="admin">Admins</option>
-                </select>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-200 text-xs font-bold text-orange-800">
+                <span>Category:</span>
+                <span className="font-black">Employers Only (Blue Tick Gate)</span>
               </div>
 
               {/* Blue Tick Filter */}
@@ -466,9 +465,9 @@ export function AdminDashboard() {
                   onChange={(e) => setUserVerifiedFilter(e.target.value)}
                   className="px-2.5 py-1.5 text-xs font-bold rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none cursor-pointer"
                 >
-                  <option value="all">All</option>
-                  <option value="verified">Verified (Blue Tick)</option>
-                  <option value="unverified">Unverified Only</option>
+                  <option value="all">All Employers</option>
+                  <option value="verified">Verified (Has Blue Tick)</option>
+                  <option value="unverified">Unverified (No Blue Tick)</option>
                 </select>
               </div>
             </div>
@@ -479,14 +478,14 @@ export function AdminDashboard() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-base sm:text-lg font-black text-slate-900">
-                  User ID Directory &amp; Verification Badges
+                  Employer Company Directory &amp; Verification
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Click &quot;Blue Tick&quot; to instantly grant or revoke official verification badge on candidate or recruiter accounts.
+                  Blue Ticks are granted exclusively to verified employer companies and corporate recruiters to guarantee authenticity.
                 </p>
               </div>
               <span className="text-xs font-bold text-orange-700 bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200">
-                {filteredUsers.length} Users
+                {filteredUsers.length} Employers
               </span>
             </div>
 
@@ -654,15 +653,18 @@ export function AdminDashboard() {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold text-slate-400">Status:</span>
+              <span className="text-[11px] font-bold text-slate-400">Filter By Status:</span>
               <select
                 value={jobStatusFilter}
                 onChange={(e) => setJobStatusFilter(e.target.value)}
                 className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none cursor-pointer"
               >
-                <option value="all">All Statuses</option>
+                <option value="all">All Vacancies</option>
                 <option value="active">Active Only</option>
+                <option value="filled">Position Filled</option>
                 <option value="closed">Closed Only</option>
+                <option value="expired">Expired Only</option>
+                <option value="featured">Featured On Home</option>
               </select>
             </div>
           </div>
@@ -672,14 +674,14 @@ export function AdminDashboard() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-base sm:text-lg font-black text-slate-900">
-                  Active Listings Moderation
+                  Job Vacancy Lifecycle &amp; Moderation
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Toggle Featured status for home spotlight, activate or close openings, or purge spam listings.
+                  Manage vacancy status (Active, Position Filled, Closed, Expired), edit opening details, review validity days, or remove listings.
                 </p>
               </div>
               <span className="text-xs font-bold text-orange-700 bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200">
-                {filteredJobs.length} Positions
+                {filteredJobs.length} Vacancies
               </span>
             </div>
 
@@ -693,17 +695,17 @@ export function AdminDashboard() {
                   <thead>
                     <tr className="border-b border-slate-200 text-slate-500">
                       <th className="pb-3 font-black">Opening &amp; Company</th>
-                      <th className="pb-3 font-black">Location</th>
-                      <th className="pb-3 font-black">Package (₹ LPA)</th>
-                      <th className="pb-3 font-black">Applicants</th>
-                      <th className="pb-3 font-black text-center">Featured Spotlight</th>
-                      <th className="pb-3 font-black text-center">Status</th>
-                      <th className="pb-3 font-black text-right">Delete</th>
+                      <th className="pb-3 font-black">Compensation (Monthly &amp; LPA)</th>
+                      <th className="pb-3 font-black">Vacancies &amp; Expiry</th>
+                      <th className="pb-3 font-black text-center">Featured</th>
+                      <th className="pb-3 font-black text-center">Vacancy Status</th>
+                      <th className="pb-3 font-black text-right">Edit &amp; Delete</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredJobs.map((j) => {
                       const isPending = actionLoadingId === j._id;
+                      const exp = getDaysRemaining(j.expiresAt);
 
                       return (
                         <tr key={j._id} className="hover:bg-slate-50/70 transition-colors">
@@ -712,17 +714,33 @@ export function AdminDashboard() {
                             <div className="flex items-center gap-1 text-[11px] font-bold text-orange-600">
                               <span>{j.company}</span>
                               <VerifiedBadge size="xs" />
+                              <span className="text-slate-300">•</span>
+                              <span className="text-slate-500 font-normal">{j.location}</span>
                             </div>
                           </td>
 
-                          <td className="py-3 pr-3 text-slate-700">{j.location}</td>
-
-                          <td className="py-3 pr-3 font-black text-slate-900">
-                            {formatSalary(j.salaryMin, j.salaryMax)}
+                          {/* Compensation */}
+                          <td className="py-3 pr-3 font-semibold text-slate-900">
+                            <div>{formatSalary(j.salaryMin, j.salaryMax)}</div>
                           </td>
 
-                          <td className="py-3 pr-3 font-bold text-slate-800">
-                            {j.applicantsCount} Applied
+                          {/* Vacancies & Expiry */}
+                          <td className="py-3 pr-3">
+                            <div className="font-bold text-slate-700">
+                              {j.openingsCount || 1} Openings
+                            </div>
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold mt-0.5 ${
+                                exp.isExpired
+                                  ? "bg-rose-100 text-rose-800"
+                                  : exp.days <= 7
+                                  ? "bg-amber-100 text-amber-800"
+                                  : "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              <Clock className="w-2.5 h-2.5" />
+                              {exp.label}
+                            </span>
                           </td>
 
                           {/* Toggle Featured */}
@@ -741,31 +759,53 @@ export function AdminDashboard() {
                             </button>
                           </td>
 
-                          {/* Toggle Status (Active / Closed) */}
+                          {/* Vacancy Status Selector (Active, Position Filled, Closed, Expired) */}
                           <td className="py-3 text-center">
-                            <button
-                              onClick={() => handleToggleJobStatus(j)}
+                            <select
+                              value={j.status}
+                              onChange={(e) =>
+                                handleUpdateJobStatus(
+                                  j,
+                                  e.target.value as "active" | "filled" | "closed" | "expired"
+                                )
+                              }
                               disabled={isPending}
-                              className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                              className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
                                 j.status === "active"
-                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200"
-                                  : "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200"
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-300"
+                                  : j.status === "filled"
+                                  ? "bg-blue-50 text-blue-700 border-blue-300"
+                                  : j.status === "expired"
+                                  ? "bg-rose-50 text-rose-700 border-rose-300"
+                                  : "bg-slate-100 text-slate-600 border-slate-300"
                               }`}
                             >
-                              {j.status === "active" ? "Active" : "Closed"}
-                            </button>
+                              <option value="active">🟢 Active</option>
+                              <option value="filled">💼 Position Filled</option>
+                              <option value="closed">🔒 Closed</option>
+                              <option value="expired">⏳ Expired</option>
+                            </select>
                           </td>
 
-                          {/* Delete Job */}
+                          {/* Actions: Edit & Delete */}
                           <td className="py-3 text-right">
-                            <button
-                              onClick={() => handleDeleteJob(j)}
-                              disabled={isPending}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                              title="Delete job listing"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => setEditingJob(j)}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-orange-600 hover:bg-orange-50 transition-colors cursor-pointer"
+                                title="Edit job details"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteJob(j)}
+                                disabled={isPending}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                title="Delete job listing"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -862,6 +902,19 @@ export function AdminDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Edit Job Modal from Admin Panel */}
+      {editingJob && (
+        <PostJobModal
+          isOpen={!!editingJob}
+          onClose={() => setEditingJob(null)}
+          onJobCreated={() => {
+            setEditingJob(null);
+            loadAllData();
+          }}
+          jobToEdit={editingJob}
+        />
       )}
     </div>
   );

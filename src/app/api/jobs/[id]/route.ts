@@ -40,7 +40,40 @@ export async function PATCH(
     const body = await request.json();
     const db = await connectToDatabase();
 
-    const allowed = ["featured", "status", "isVerified", "title", "company", "location", "salaryMin", "salaryMax"];
+    const allowed = [
+      "featured",
+      "status",
+      "isVerified",
+      "title",
+      "company",
+      "companyLogo",
+      "location",
+      "workplaceType",
+      "salaryMin",
+      "salaryMax",
+      "salaryCurrency",
+      "salaryMonthlyMin",
+      "salaryMonthlyMax",
+      "experienceLevel",
+      "jobType",
+      "description",
+      "requirements",
+      "skills",
+      "benefits",
+      "openingsCount",
+      "qualification",
+      "shiftTiming",
+      "workingDays",
+      "genderPreference",
+      "englishLevel",
+      "requiredAssets",
+      "interviewMode",
+      "interviewAddress",
+      "recruiterWhatsApp",
+      "urgentHiring",
+      "expiryDays",
+      "expiresAt",
+    ];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: any = {};
     for (const key of allowed) {

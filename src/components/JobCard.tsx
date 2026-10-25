@@ -32,7 +32,40 @@ function getJobTags(job: MockJob) {
   const seed = (job._id.charCodeAt(job._id.length - 1) || 5) % 10;
   const tags: Array<{ label: string; color: string; icon?: React.ReactNode }> = [];
 
-  if (job.featured) {
+  // Lifecycle status tags first
+  if (job.status === "filled") {
+    tags.push({
+      label: "Position Filled",
+      color: "purple",
+    });
+  } else if (job.status === "closed") {
+    tags.push({
+      label: "Closed",
+      color: "default",
+    });
+  } else if (job.status === "expired") {
+    tags.push({
+      label: "Expired",
+      color: "error",
+    });
+  }
+
+  if (job.urgentHiring) {
+    tags.push({
+      label: "Urgent Hiring",
+      color: "warning",
+      icon: <Zap className="w-3 h-3 text-amber-500 mr-0.5 inline" />,
+    });
+  }
+
+  if (job.openingsCount && job.openingsCount > 1) {
+    tags.push({
+      label: `${job.openingsCount} Vacancies`,
+      color: "cyan",
+    });
+  }
+
+  if (job.featured && !job.urgentHiring) {
     tags.push({
       label: "Hot Job",
       color: "error",
@@ -41,22 +74,14 @@ function getJobTags(job: MockJob) {
   }
 
   const daysSincePost = (Date.now() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-  if (daysSincePost < 3) {
+  if (daysSincePost < 3 && tags.length < 3) {
     tags.push({
       label: "New",
       color: "success",
     });
   }
 
-  if (seed >= 7) {
-    tags.push({
-      label: "Urgent",
-      color: "warning",
-      icon: <Zap className="w-3 h-3 text-amber-500 mr-0.5 inline" />,
-    });
-  }
-
-  if (seed % 3 === 0) {
+  if (seed % 3 === 0 && tags.length < 3) {
     tags.push({
       label: "Easy Apply",
       color: "processing",
@@ -64,7 +89,7 @@ function getJobTags(job: MockJob) {
     });
   }
 
-  return tags.slice(0, 2);
+  return tags.slice(0, 3);
 }
 
 export function JobCard({ job, onSelectJob, onApplyJob, isSelected }: JobCardProps) {
@@ -233,15 +258,41 @@ export function JobCard({ job, onSelectJob, onApplyJob, isSelected }: JobCardPro
           >
             WhatsApp
           </Button>
-          <Button
-            type="primary"
-            size="middle"
-            icon={<ArrowRight className="w-3.5 h-3.5" />}
-            onClick={() => onApplyJob(job)}
-            className="flex-1 sm:flex-initial h-9 sm:h-7 text-xs font-bold rounded-xl sm:rounded-lg active:scale-95 shadow-xs"
-          >
-            Apply
-          </Button>
+          {job.status === "filled" ? (
+            <Button
+              disabled
+              size="middle"
+              className="flex-1 sm:flex-initial h-9 sm:h-7 text-xs font-bold rounded-xl sm:rounded-lg opacity-75"
+            >
+              Filled
+            </Button>
+          ) : job.status === "closed" ? (
+            <Button
+              disabled
+              size="middle"
+              className="flex-1 sm:flex-initial h-9 sm:h-7 text-xs font-bold rounded-xl sm:rounded-lg opacity-75"
+            >
+              Closed
+            </Button>
+          ) : job.status === "expired" ? (
+            <Button
+              disabled
+              size="middle"
+              className="flex-1 sm:flex-initial h-9 sm:h-7 text-xs font-bold rounded-xl sm:rounded-lg opacity-75"
+            >
+              Expired
+            </Button>
+          ) : (
+            <Button
+              type="primary"
+              size="middle"
+              icon={<ArrowRight className="w-3.5 h-3.5" />}
+              onClick={() => onApplyJob(job)}
+              className="flex-1 sm:flex-initial h-9 sm:h-7 text-xs font-bold rounded-xl sm:rounded-lg active:scale-95 shadow-xs"
+            >
+              Apply
+            </Button>
+          )}
         </div>
       </div>
     </Card>

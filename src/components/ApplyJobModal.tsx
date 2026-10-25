@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { MockJob } from "@/lib/mock-data";
 import { useAuth } from "@/context/AuthContext";
+import { monthlyToLpa, lpaToMonthly, formatMonthlySalary } from "@/lib/utils";
 import confetti from "canvas-confetti";
 import {
   Modal,
@@ -51,6 +52,9 @@ export function ApplyJobModal({
   const [experienceYears, setExperienceYears] = useState("2");
   const [noticePeriod, setNoticePeriod] = useState(user?.noticePeriod || "Immediate");
   const [expectedCtc, setExpectedCtc] = useState(user?.expectedCtc ? String(user.expectedCtc) : "");
+  const [expectedMonthly, setExpectedMonthly] = useState(
+    user?.expectedCtc ? String(lpaToMonthly(Number(user.expectedCtc))) : ""
+  );
   const [currentCompany, setCurrentCompany] = useState(user?.companyName || "");
   const [resumeUrl, setResumeUrl] = useState(user?.resumeUrl || "");
   const [resumeFileName, setResumeFileName] = useState(user?.resumeFileName || "");
@@ -67,7 +71,10 @@ export function ApplyJobModal({
       if (user.email) setEmail(user.email);
       if (user.phone) setPhone(user.phone);
       if (user.noticePeriod) setNoticePeriod(user.noticePeriod);
-      if (user.expectedCtc) setExpectedCtc(String(user.expectedCtc));
+      if (user.expectedCtc) {
+        setExpectedCtc(String(user.expectedCtc));
+        setExpectedMonthly(String(lpaToMonthly(Number(user.expectedCtc))));
+      }
       if (user.companyName) setCurrentCompany(user.companyName);
       if (user.resumeUrl) setResumeUrl(user.resumeUrl);
       if (user.resumeFileName) setResumeFileName(user.resumeFileName);
@@ -398,13 +405,54 @@ export function ApplyJobModal({
 
               <div>
                 <Text strong style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
-                  Expected CTC (₹ LPA)
+                  Expected Monthly (₹/month)
                 </Text>
                 <Input
                   size="middle"
                   type="number"
+                  placeholder="e.g. 35000"
+                  value={expectedMonthly}
+                  onChange={(e) => {
+                    const mo = e.target.value;
+                    setExpectedMonthly(mo);
+                    if (mo && !isNaN(Number(mo))) {
+                      setExpectedCtc(String(monthlyToLpa(Number(mo))));
+                    } else {
+                      setExpectedCtc("");
+                    }
+                  }}
+                  prefix="₹"
+                  suffix="/mo"
+                />
+              </div>
+
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                  <Text strong style={{ fontSize: 12 }}>
+                    Expected Annual CTC
+                  </Text>
+                  {expectedCtc && Number(expectedCtc) > 0 && (
+                    <span style={{ fontSize: 10, color: "#ea580c", fontWeight: 700 }}>
+                      Auto: {expectedCtc} LPA
+                    </span>
+                  )}
+                </div>
+                <Input
+                  size="middle"
+                  type="number"
+                  step="0.1"
+                  placeholder="e.g. 4.2"
                   value={expectedCtc}
-                  onChange={(e) => setExpectedCtc(e.target.value)}
+                  onChange={(e) => {
+                    const lpa = e.target.value;
+                    setExpectedCtc(lpa);
+                    if (lpa && !isNaN(Number(lpa))) {
+                      setExpectedMonthly(String(lpaToMonthly(Number(lpa))));
+                    } else {
+                      setExpectedMonthly("");
+                    }
+                  }}
+                  suffix="LPA"
                 />
               </div>
             </div>

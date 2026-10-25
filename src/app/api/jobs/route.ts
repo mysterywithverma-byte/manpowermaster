@@ -18,31 +18,65 @@ export async function GET(request: NextRequest) {
     const minSalary = searchParams.get("minSalary") ? Number(searchParams.get("minSalary")) : 0;
     const postedBy = searchParams.get("postedBy");
     const company = searchParams.get("company");
+    const allStatuses = searchParams.get("allStatuses") === "true";
+    const status = searchParams.get("status") || "";
 
     const db = await connectToDatabase();
 
     if (db) {
+      // Auto-expire jobs past their expiresAt date in MongoDB
+      const now = new Date();
+      try {
+        await Job.updateMany(
+          { status: "active", expiresAt: { $lt: now } },
+          { $set: { status: "expired" } }
+        );
+      } catch {
+        // ignore auto-expiry error
+      }
+
       // Query MongoDB
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const query: any = { status: "active" };
+      const andConditions: any[] = [];
 
       if (postedBy) {
-        query.status = { $in: ["active", "closed"] }; // Recruiters can view all their jobs
-        query.$or = [
-          { postedBy: postedBy },
-          ...(mongoose.Types.ObjectId.isValid(postedBy) ? [{ postedBy: new mongoose.Types.ObjectId(postedBy) }] : []),
-          ...(company ? [{ company: { $regex: escapeRegex(company), $options: "i" } }] : []),
-        ];
+        // Recruiter can view their jobs in any status
+        andConditions.push({
+          $or: [
+            { postedBy: postedBy },
+            ...(mongoose.Types.ObjectId.isValid(postedBy) ? [{ postedBy: new mongoose.Types.ObjectId(postedBy) }] : []),
+            ...(company ? [{ company: { $regex: escapeRegex(company), $options: "i" } }] : []),
+          ],
+        });
+        if (status && status !== "all") {
+          andConditions.push({ status });
+        }
+      } else if (!allStatuses) {
+        // Public seeker search: only active and non-expired jobs
+        andConditions.push({
+          status: "active",
+          $or: [
+            { expiresAt: { $exists: false } },
+            { expiresAt: null },
+            { expiresAt: { $gt: now } },
+          ],
+        });
+      } else if (status && status !== "all") {
+        andConditions.push({ status });
       }
 
       if (search) {
         const escapedSearch = escapeRegex(search.trim());
-        query.$or = [
-          { title: { $regex: escapedSearch, $options: "i" } },
-          { company: { $regex: escapedSearch, $options: "i" } },
-          { skills: { $in: [new RegExp(escapedSearch, "i")] } },
-        ];
+        andConditions.push({
+          $or: [
+            { title: { $regex: escapedSearch, $options: "i" } },
+            { company: { $regex: escapedSearch, $options: "i" } },
+            { skills: { $in: [new RegExp(escapedSearch, "i")] } },
+          ],
+        });
       }
+
+      const query: any = andConditions.length > 0 ? { $and: andConditions } : {};
 
       if (location && location !== "All") {
         query.location = { $regex: escapeRegex(location.trim()), $options: "i" };
@@ -78,6 +112,8 @@ export async function GET(request: NextRequest) {
       minSalary,
       postedBy: postedBy || undefined,
       company: company || undefined,
+      allStatuses,
+      status: status || undefined,
     });
 
     return NextResponse.json({
@@ -104,12 +140,26 @@ export async function POST(request: NextRequest) {
       salaryMin,
       salaryMax,
       salaryCurrency = "INR",
+      salaryMonthlyMin,
+      salaryMonthlyMax,
       experienceLevel,
       jobType,
       description,
       requirements,
       skills,
       benefits,
+      openingsCount,
+      qualification,
+      shiftTiming,
+      workingDays,
+      genderPreference,
+      englishLevel,
+      requiredAssets,
+      interviewMode,
+      interviewAddress,
+      recruiterWhatsApp,
+      urgentHiring,
+      expiryDays = 30,
       postedBy,
     } = body;
 
@@ -119,6 +169,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const calculatedExpiresAt = new Date(Date.now() + (Number(expiryDays) || 30) * 86400000);
 
     const db = await connectToDatabase();
 
@@ -153,12 +205,27 @@ export async function POST(request: NextRequest) {
         salaryMin: Number(salaryMin),
         salaryMax: Number(salaryMax),
         salaryCurrency,
+        salaryMonthlyMin: salaryMonthlyMin ? Number(salaryMonthlyMin) : undefined,
+        salaryMonthlyMax: salaryMonthlyMax ? Number(salaryMonthlyMax) : undefined,
         experienceLevel: experienceLevel || "Mid-Level",
         jobType: jobType || "Full-time",
         description,
         requirements: Array.isArray(requirements) ? requirements : requirements?.split("\n").filter(Boolean) || [],
         skills: Array.isArray(skills) ? skills : skills?.split(",").map((s: string) => s.trim()).filter(Boolean) || [],
         benefits: Array.isArray(benefits) ? benefits : benefits?.split("\n").filter(Boolean) || [],
+        openingsCount: Number(openingsCount) || 1,
+        qualification: qualification || "Any Graduate",
+        shiftTiming: shiftTiming || "Day Shift",
+        workingDays: workingDays || "6 Days (Mon-Sat)",
+        genderPreference: genderPreference || "Any",
+        englishLevel: englishLevel || "Basic English",
+        requiredAssets: Array.isArray(requiredAssets) ? requiredAssets : [],
+        interviewMode: interviewMode || "Telephonic",
+        interviewAddress: interviewAddress || "",
+        recruiterWhatsApp: recruiterWhatsApp || "",
+        urgentHiring: Boolean(urgentHiring),
+        expiryDays: Number(expiryDays) || 30,
+        expiresAt: calculatedExpiresAt,
         postedBy: resolvedPosterId,
         featured: Boolean(body.featured),
         status: "active",
@@ -216,12 +283,27 @@ export async function POST(request: NextRequest) {
       salaryMin: Number(salaryMin),
       salaryMax: Number(salaryMax),
       salaryCurrency,
+      salaryMonthlyMin: salaryMonthlyMin ? Number(salaryMonthlyMin) : undefined,
+      salaryMonthlyMax: salaryMonthlyMax ? Number(salaryMonthlyMax) : undefined,
       experienceLevel: experienceLevel || "Mid-Level",
       jobType: jobType || "Full-time",
       description,
       requirements: Array.isArray(requirements) ? requirements : requirements?.split("\n").filter(Boolean) || [],
       skills: Array.isArray(skills) ? skills : skills?.split(",").map((s: string) => s.trim()).filter(Boolean) || [],
       benefits: Array.isArray(benefits) ? benefits : benefits?.split("\n").filter(Boolean) || [],
+      openingsCount: Number(openingsCount) || 1,
+      qualification: qualification || "Any Graduate",
+      shiftTiming: shiftTiming || "Day Shift",
+      workingDays: workingDays || "6 Days (Mon-Sat)",
+      genderPreference: genderPreference || "Any",
+      englishLevel: englishLevel || "Basic English",
+      requiredAssets: Array.isArray(requiredAssets) ? requiredAssets : [],
+      interviewMode: interviewMode || "Telephonic",
+      interviewAddress: interviewAddress || "",
+      recruiterWhatsApp: recruiterWhatsApp || "",
+      urgentHiring: Boolean(urgentHiring),
+      expiryDays: Number(expiryDays) || 30,
+      expiresAt: calculatedExpiresAt.toISOString(),
       postedBy: postedBy || "user-employer-1",
       featured: Boolean(body.featured),
     });

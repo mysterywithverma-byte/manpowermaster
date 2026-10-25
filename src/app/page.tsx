@@ -124,14 +124,26 @@ export default function HomePage() {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("authModal") === "true") {
-        setIsAuthOpen(true);
+        if (!user) {
+          setIsAuthOpen(true);
+        }
+        // Clean authModal from URL so it doesn't persist across refreshes
+        const url = new URL(window.location.href);
+        url.searchParams.delete("authModal");
+        window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ""));
       }
     }
-  }, []);
+  }, [user]);
 
+  // Never auto-open registration/onboarding on page refresh!
+  // Only auto-open if explicitly flagged right after a brand-new sign up
   useEffect(() => {
-    if (user && user.profileCompleted === false && !isAuthOpen) {
-      setIsOnboardingOpen(true);
+    if (typeof window !== "undefined" && user && user.profileCompleted === false && !isAuthOpen) {
+      const isFreshSignup = sessionStorage.getItem("fresh_registration_flow");
+      if (isFreshSignup === "true") {
+        sessionStorage.removeItem("fresh_registration_flow");
+        setIsOnboardingOpen(true);
+      }
     }
   }, [user, isAuthOpen]);
 

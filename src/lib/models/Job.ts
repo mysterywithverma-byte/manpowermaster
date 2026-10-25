@@ -9,17 +9,32 @@ export interface IJob extends Document {
   salaryMin: number;
   salaryMax: number;
   salaryCurrency: string;
+  salaryMonthlyMin?: number;
+  salaryMonthlyMax?: number;
   experienceLevel: "Fresher" | "Mid-Level" | "Senior" | "Lead" | "Executive";
   jobType: "Full-time" | "Part-time" | "Contract" | "Internship";
   description: string;
   requirements: string[];
   skills: string[];
   benefits: string[];
+  openingsCount?: number;
+  qualification?: string;
+  shiftTiming?: string;
+  workingDays?: string;
+  genderPreference?: string;
+  englishLevel?: string;
+  requiredAssets?: string[];
+  interviewMode?: string;
+  interviewAddress?: string;
+  recruiterWhatsApp?: string;
+  urgentHiring?: boolean;
+  expiryDays?: number;
+  expiresAt?: Date;
   postedBy: mongoose.Types.ObjectId | string;
   applicantsCount: number;
   featured: boolean;
   isVerified?: boolean;
-  status: "active" | "closed";
+  status: "active" | "closed" | "filled" | "expired";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,6 +53,8 @@ const JobSchema = new Schema<IJob>(
     salaryMin: { type: Number, required: true },
     salaryMax: { type: Number, required: true },
     salaryCurrency: { type: String, default: "INR" },
+    salaryMonthlyMin: { type: Number },
+    salaryMonthlyMax: { type: Number },
     experienceLevel: {
       type: String,
       enum: ["Fresher", "Mid-Level", "Senior", "Lead", "Executive"],
@@ -52,19 +69,28 @@ const JobSchema = new Schema<IJob>(
     requirements: { type: [String], default: [] },
     skills: { type: [String], default: [] },
     benefits: { type: [String], default: [] },
+    openingsCount: { type: Number, default: 1 },
+    qualification: { type: String, default: "Any Graduate" },
+    shiftTiming: { type: String, default: "Day Shift" },
+    workingDays: { type: String, default: "6 Days (Mon-Sat)" },
+    genderPreference: { type: String, default: "Any" },
+    englishLevel: { type: String, default: "Basic English" },
+    requiredAssets: { type: [String], default: [] },
+    interviewMode: { type: String, default: "Telephonic" },
+    interviewAddress: { type: String, default: "" },
+    recruiterWhatsApp: { type: String, default: "" },
+    urgentHiring: { type: Boolean, default: false },
+    expiryDays: { type: Number, default: 30 },
+    expiresAt: { type: Date, index: true },
     postedBy: { type: Schema.Types.Mixed, required: true, index: true },
     applicantsCount: { type: Number, default: 0 },
     featured: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: true },
-    status: { type: String, enum: ["active", "closed"], default: "active" },
+    status: { type: String, enum: ["active", "closed", "filled", "expired"], default: "active", index: true },
   },
   {
     timestamps: true,
   }
 );
-
-if (process.env.NODE_ENV !== "production" && models.Job) {
-  delete (models as Record<string, unknown>).Job;
-}
 
 export const Job = models.Job || model<IJob>("Job", JobSchema);

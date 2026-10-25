@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { Notification } from "@/lib/models/Notification";
+import { User } from "@/lib/models/User";
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,13 +23,23 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Query by userId or email
-    const query: any = {
-      $or: [
-        ...(userId ? [{ userId }] : []),
-        ...(email ? [{ userId: email }] : []),
-      ],
-    };
+    // Query by userId or by candidate email (finding user ID first if needed)
+    let targetIds: string[] = [];
+    if (userId) targetIds.push(userId);
+
+    if (email) {
+      targetIds.push(email);
+      try {
+        const userDoc = await User.findOne({ email }).select("_id").lean();
+        if (userDoc && (userDoc as any)._id) {
+          targetIds.push((userDoc as any)._id.toString());
+        }
+      } catch {
+        // fallback
+      }
+    }
+
+    const query = { userId: { $in: targetIds } };
 
     const notifications = await Notification.find(query)
       .sort({ createdAt: -1 })

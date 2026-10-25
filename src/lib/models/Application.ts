@@ -47,8 +47,4 @@ const ApplicationSchema = new Schema<IApplication>(
 
 ApplicationSchema.index({ jobId: 1, applicantId: 1 }, { unique: true });
 
-if (process.env.NODE_ENV !== "production" && models.Application) {
-  delete (models as Record<string, unknown>).Application;
-}
-
 export const Application = models.Application || model<IApplication>("Application", ApplicationSchema);

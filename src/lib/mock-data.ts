@@ -99,19 +99,34 @@ export interface MockJob {
   salaryMin: number;
   salaryMax: number;
   salaryCurrency: string;
+  salaryMonthlyMin?: number;
+  salaryMonthlyMax?: number;
   experienceLevel: "Fresher" | "Mid-Level" | "Senior" | "Lead" | "Executive";
   jobType: "Full-time" | "Part-time" | "Contract" | "Internship";
   description: string;
   requirements: string[];
   skills: string[];
   benefits: string[];
+  openingsCount?: number;
+  qualification?: string;
+  shiftTiming?: string;
+  workingDays?: string;
+  genderPreference?: string;
+  englishLevel?: string;
+  requiredAssets?: string[];
+  interviewMode?: string;
+  interviewAddress?: string;
   recruiterWhatsApp?: string;
+  urgentHiring?: boolean;
+  expiryDays?: number;
+  expiresAt?: string;
   postedBy: string;
   applicantsCount: number;
   featured: boolean;
   isVerified?: boolean;
-  status: "active" | "closed";
+  status: "active" | "closed" | "filled" | "expired";
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface MockApplication {
@@ -285,7 +300,17 @@ class Store {
     minSalary?: number;
     postedBy?: string;
     company?: string;
+    allStatuses?: boolean;
+    status?: string;
   }) {
+    // Auto-expire jobs past their expiresAt date
+    const now = Date.now();
+    for (const j of this.jobs) {
+      if (j.expiresAt && new Date(j.expiresAt).getTime() < now && j.status === "active") {
+        j.status = "expired";
+      }
+    }
+
     let list = [...this.jobs];
 
     if (filters?.postedBy) {
@@ -294,6 +319,14 @@ class Store {
           j.postedBy === filters.postedBy ||
           (filters.company && j.company.toLowerCase() === filters.company.toLowerCase())
       );
+      if (filters?.status && filters.status !== "all") {
+        list = list.filter((j) => j.status === filters.status);
+      }
+    } else if (!filters?.allStatuses) {
+      // Public seeker search: only active and non-expired jobs
+      list = list.filter((j) => j.status === "active");
+    } else if (filters?.status && filters.status !== "all") {
+      list = list.filter((j) => j.status === filters.status);
     }
 
     if (filters?.search) {

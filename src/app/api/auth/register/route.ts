@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/lib/models/User";
 import { inMemoryStore } from "@/lib/mock-data";
@@ -9,6 +10,7 @@ export async function POST(request: NextRequest) {
     const {
       name,
       email,
+      password,
       role,
       headline,
       companyName,
@@ -28,6 +30,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Name, email and role are required." }, { status: 400 });
     }
 
+    const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
     const db = await connectToDatabase();
 
     if (db) {
@@ -39,6 +42,7 @@ export async function POST(request: NextRequest) {
       const user = await User.create({
         name,
         email: email.toLowerCase(),
+        password: hashedPassword,
         role,
         headline: headline || (role === "employer" ? `Hiring Manager @ ${companyName || "Tech Co"}` : "Job Candidate"),
         companyName: companyName || "",

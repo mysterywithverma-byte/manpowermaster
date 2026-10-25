@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/lib/models/User";
 import { inMemoryStore, INITIAL_USERS } from "@/lib/mock-data";
@@ -6,6 +7,17 @@ import { inMemoryStore, INITIAL_USERS } from "@/lib/mock-data";
 // Canonical Admin Credentials
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "admin@manpowermaster.com").toLowerCase().trim();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@12345";
+
+function safeCompare(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) {
+    // Constant time dummy compare
+    crypto.timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,9 +34,9 @@ export async function POST(request: NextRequest) {
     const cleanEmail = String(email).trim().toLowerCase();
     const cleanPassword = String(password).trim();
 
-    // Validate strictly
+    // Validate strictly using constant-time comparison
     const isEmailValid = cleanEmail === ADMIN_EMAIL || cleanEmail === "admin";
-    const isPasswordValid = cleanPassword === ADMIN_PASSWORD;
+    const isPasswordValid = safeCompare(cleanPassword, ADMIN_PASSWORD);
 
     if (!isEmailValid || !isPasswordValid) {
       return NextResponse.json(

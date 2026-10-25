@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { MockJob, MockApplication } from "@/lib/mock-data";
-import { formatSalary, timeAgo } from "@/lib/utils";
 import {
   Card,
   Statistic,
@@ -33,8 +32,14 @@ import {
   FieldTimeOutlined,
   EditOutlined,
   ShopOutlined,
+  DeleteOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  StopOutlined,
 } from "@ant-design/icons";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { PostJobModal } from "@/components/PostJobModal";
+import { formatSalary, timeAgo, getDaysRemaining } from "@/lib/utils";
 
 const { Text, Title } = Typography;
 
@@ -55,6 +60,7 @@ export function EmployerDashboard({
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
   const [syncingJobs, setSyncingJobs] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
+  const [editingJob, setEditingJob] = useState<MockJob | null>(null);
 
   const fetchData = async () => {
     try {
@@ -127,6 +133,47 @@ export function EmployerDashboard({
       }
     } catch (err) {
       console.error("Status update error", err);
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  };
+
+  const handleUpdateJobStatus = async (
+    jobId: string,
+    newStatus: "active" | "filled" | "closed" | "expired"
+  ) => {
+    setStatusUpdatingId(jobId);
+    try {
+      setJobs((prev) =>
+        prev.map((j) => (j._id === jobId ? { ...j, status: newStatus } : j))
+      );
+      const res = await fetch(`/api/jobs/${jobId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchData();
+      }
+    } catch (err) {
+      console.error("Job status error", err);
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  };
+
+  const handleDeleteJob = async (jobId: string) => {
+    if (!confirm("Are you sure you want to permanently delete this job vacancy?")) return;
+    setStatusUpdatingId(jobId);
+    try {
+      const res = await fetch(`/api/jobs/${jobId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        setJobs((prev) => prev.filter((j) => j._id !== jobId));
+      }
+    } catch (err) {
+      console.error("Delete error", err);
     } finally {
       setStatusUpdatingId(null);
     }
@@ -581,49 +628,193 @@ export function EmployerDashboard({
         )}
       </div>
 
-      {/* Active Posted Jobs Grid */}
+      {/* Active Posted Jobs & Vacancy Lifecycle Controls */}
       <div>
-        <Title level={4} style={{ margin: "0 0 16px", fontSize: 18, color: "#0f172a" }}>
-          Active Open Positions ({jobs.length})
-        </Title>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
-          {jobs.map((job) => (
-            <Card
-              key={job._id}
-              style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
-              styles={{ body: { padding: 18 } }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                <Title level={5} ellipsis style={{ margin: 0, fontSize: 14, color: "#0f172a" }}>
-                  {job.title}
-                </Title>
-                <Tag color="green" style={{ borderRadius: 6, fontWeight: 700 }}>
-                  Active
-                </Tag>
-              </div>
-              <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>
-                {job.company} • {job.location}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#ea580c", marginBottom: 10 }}>
-                {formatSalary(job.salaryMin, job.salaryMax)}
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: 11,
-                  color: "#94a3b8",
-                  paddingTop: 8,
-                  borderTop: "1px solid #f1f5f9",
-                }}
-              >
-                <span>{job.applicantsCount || 0} Applicants</span>
-                <span>{timeAgo(job.createdAt)}</span>
-              </div>
-            </Card>
-          ))}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+          <div>
+            <Title level={4} style={{ margin: 0, fontSize: 18, color: "#0f172a" }}>
+              My Posted Jobs &amp; Vacancy Status ({jobs.length})
+            </Title>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              Control vacancy status (Active, Position Filled, Closed, Expired), edit opening details, or remove filled openings.
+            </Text>
+          </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={onOpenPostJob}
+            style={{ fontWeight: 600, borderRadius: 8 }}
+          >
+            Post New Vacancy
+          </Button>
         </div>
+
+        {jobs.length === 0 ? (
+          <Card style={{ textAlign: "center", padding: 36, borderRadius: 14, border: "1px dashed #cbd5e1" }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: "#0f172a", marginBottom: 6 }}>No job openings posted yet</div>
+            <Text type="secondary" style={{ fontSize: 13, display: "block", marginBottom: 14 }}>
+              Post your direct corporate openings to start receiving verified candidates.
+            </Text>
+            <Button type="primary" icon={<PlusOutlined />} onClick={onOpenPostJob}>
+              Post Your First Opening
+            </Button>
+          </Card>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 14 }}>
+            {jobs.map((job) => {
+              const exp = getDaysRemaining(job.expiresAt);
+              const isPending = statusUpdatingId === job._id;
+
+              return (
+                <Card
+                  key={job._id}
+                  style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
+                  styles={{ body: { padding: 18 } }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6, gap: 8 }}>
+                    <Title level={5} ellipsis style={{ margin: 0, fontSize: 15, color: "#0f172a", flex: 1 }}>
+                      {job.title}
+                    </Title>
+                    <Tag
+                      color={
+                        job.status === "active"
+                          ? "green"
+                          : job.status === "filled"
+                          ? "blue"
+                          : job.status === "expired"
+                          ? "red"
+                          : "default"
+                      }
+                      style={{ borderRadius: 6, fontWeight: 700, margin: 0 }}
+                    >
+                      {job.status === "active"
+                        ? "Active"
+                        : job.status === "filled"
+                        ? "Position Filled"
+                        : job.status === "expired"
+                        ? "Expired"
+                        : "Closed"}
+                    </Tag>
+                  </div>
+
+                  <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>
+                    {job.company} • {job.location} • <strong style={{ color: "#334155" }}>{job.openingsCount || 1} Openings</strong>
+                  </div>
+
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#ea580c", marginBottom: 8 }}>
+                    {formatSalary(job.salaryMin, job.salaryMax)}
+                  </div>
+
+                  {/* Expiry / Days remaining badge */}
+                  <div style={{ marginBottom: 12 }}>
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        padding: "2px 8px",
+                        borderRadius: 6,
+                        backgroundColor: exp.isExpired ? "#fee2e2" : exp.days <= 7 ? "#fef3c7" : "#f1f5f9",
+                        color: exp.isExpired ? "#991b1b" : exp.days <= 7 ? "#92400e" : "#475569",
+                      }}
+                    >
+                      <ClockCircleOutlined />
+                      <span>{exp.label}</span>
+                    </span>
+                  </div>
+
+                  {/* Action Buttons for Employer */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, paddingTop: 10, borderTop: "1px solid #f1f5f9" }}>
+                    {job.status === "active" ? (
+                      <Button
+                        size="small"
+                        icon={<CheckCircleOutlined />}
+                        loading={isPending}
+                        onClick={() => handleUpdateJobStatus(job._id, "filled")}
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          borderRadius: 6,
+                          color: "#1d4ed8",
+                          borderColor: "#bfdbfe",
+                          backgroundColor: "#eff6ff",
+                          flex: 1,
+                        }}
+                      >
+                        Mark as Position Filled
+                      </Button>
+                    ) : (
+                      <Button
+                        size="small"
+                        icon={<ReloadOutlined />}
+                        loading={isPending}
+                        onClick={() => handleUpdateJobStatus(job._id, "active")}
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          borderRadius: 6,
+                          color: "#15803d",
+                          borderColor: "#bbf7d0",
+                          backgroundColor: "#f0fdf4",
+                          flex: 1,
+                        }}
+                      >
+                        Re-open Vacancy
+                      </Button>
+                    )}
+
+                    <Button
+                      size="small"
+                      icon={<EditOutlined />}
+                      onClick={() => setEditingJob(job)}
+                      style={{ fontSize: 11, fontWeight: 600, borderRadius: 6 }}
+                    >
+                      Edit
+                    </Button>
+
+                    <Button
+                      size="small"
+                      danger
+                      icon={<DeleteOutlined />}
+                      loading={isPending}
+                      onClick={() => handleDeleteJob(job._id)}
+                      style={{ fontSize: 11, fontWeight: 600, borderRadius: 6 }}
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: 11,
+                      color: "#94a3b8",
+                      marginTop: 8,
+                    }}
+                  >
+                    <span>{job.applicantsCount || 0} Applicants</span>
+                    <span>{timeAgo(job.createdAt)}</span>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {/* Edit Job Modal */}
+      {editingJob && (
+        <PostJobModal
+          isOpen={!!editingJob}
+          onClose={() => setEditingJob(null)}
+          onJobCreated={() => {
+            setEditingJob(null);
+            fetchData();
+          }}
+          jobToEdit={editingJob}
+        />
+      )}
     </div>
   );
 }

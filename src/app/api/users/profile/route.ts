@@ -25,17 +25,23 @@ async function handleProfileUpdate(request: NextRequest) {
     // 1. Try updating in MongoDB Atlas
     let updatedUser = null;
     if (db) {
+      // Disallow updating critical system fields directly through general profile edit
+      const sanitizedUpdates = { ...profileData };
+      delete sanitizedUpdates.password;
+      delete sanitizedUpdates._id;
+      delete sanitizedUpdates.id;
+
       if (userId && mongoose.Types.ObjectId.isValid(userId)) {
         updatedUser = await User.findByIdAndUpdate(
           userId,
-          { $set: profileData },
-          { new: true, upsert: true }
+          { $set: sanitizedUpdates },
+          { new: true, upsert: false }
         );
       } else if (email) {
         updatedUser = await User.findOneAndUpdate(
           { email },
-          { $set: profileData },
-          { new: true, upsert: true }
+          { $set: sanitizedUpdates },
+          { new: true, upsert: false }
         );
       }
     }
