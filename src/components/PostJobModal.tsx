@@ -55,10 +55,33 @@ const SHIFT_SUGGESTIONS = [
   { value: "General Shift (10:00 AM - 7:00 PM)" },
   { value: "Morning Shift (7:00 AM - 3:30 PM)" },
   { value: "Evening Shift (2:00 PM - 10:30 PM)" },
-  { value: "Night Shift / US Shift (8:00 PM - 5:00 AM)" },
+  { value: "Night Shift (8:00 PM - 5:00 AM)" },
   { value: "Rotational Shift" },
   { value: "Flexible Working Hours" },
-  { value: "Part-time / Hourly Shift" },
+];
+
+const SHIFT_IN_TIME_SUGGESTIONS = [
+  { value: "08:00 AM" },
+  { value: "08:30 AM" },
+  { value: "09:00 AM" },
+  { value: "09:30 AM" },
+  { value: "10:00 AM" },
+  { value: "10:30 AM" },
+  { value: "11:00 AM" },
+  { value: "02:00 PM" },
+  { value: "08:00 PM" },
+];
+
+const SHIFT_OUT_TIME_SUGGESTIONS = [
+  { value: "05:00 PM" },
+  { value: "05:30 PM" },
+  { value: "06:00 PM" },
+  { value: "06:30 PM" },
+  { value: "07:00 PM" },
+  { value: "07:30 PM" },
+  { value: "08:00 PM" },
+  { value: "10:30 PM" },
+  { value: "05:00 AM" },
 ];
 
 const WORKING_DAYS_SUGGESTIONS = [
@@ -70,6 +93,8 @@ const WORKING_DAYS_SUGGESTIONS = [
 
 const EXPERIENCE_SUGGESTIONS = [
   { value: "Fresher" },
+  { value: "Experienced" },
+  { value: "Both (Fresher & Experienced Both)" },
   { value: "0 - 1 Year" },
   { value: "1 - 3 Years" },
   { value: "3 - 5 Years" },
@@ -150,8 +175,28 @@ export function PostJobModal({
   const [experienceLevel, setExperienceLevel] = useState("");
   const [qualification, setQualification] = useState("");
   const [shiftTiming, setShiftTiming] = useState("");
+  const [shiftInTime, setShiftInTime] = useState("");
+  const [shiftOutTime, setShiftOutTime] = useState("");
   const [workingDays, setWorkingDays] = useState("");
   const [expiryDays, setExpiryDays] = useState<string>("");
+
+  const updateShiftInTime = (inVal: string) => {
+    setShiftInTime(inVal);
+    if (inVal && shiftOutTime) {
+      setShiftTiming(`${inVal} - ${shiftOutTime}`);
+    } else if (inVal) {
+      setShiftTiming(`In: ${inVal}`);
+    }
+  };
+
+  const updateShiftOutTime = (outVal: string) => {
+    setShiftOutTime(outVal);
+    if (shiftInTime && outVal) {
+      setShiftTiming(`${shiftInTime} - ${outVal}`);
+    } else if (outVal) {
+      setShiftTiming(`Out: ${outVal}`);
+    }
+  };
 
   // Candidate Criteria & Interview
   const [genderPreference, setGenderPreference] = useState<string>("");
@@ -310,6 +355,15 @@ export function PostJobModal({
         setExpiryDays(jobToEdit.expiryDays ? String(jobToEdit.expiryDays) : "");
         setQualification(jobToEdit.qualification || "");
         setShiftTiming(jobToEdit.shiftTiming || "");
+        if (jobToEdit.shiftTiming && jobToEdit.shiftTiming.includes(" - ")) {
+          const cleanT = jobToEdit.shiftTiming.replace(/.*\(|\).*/g, "");
+          const parts = cleanT.split(" - ");
+          if (parts[0]) setShiftInTime(parts[0].trim());
+          if (parts[1]) setShiftOutTime(parts[1].trim());
+        } else {
+          setShiftInTime("");
+          setShiftOutTime("");
+        }
         setWorkingDays(jobToEdit.workingDays || "");
         setGenderPreference(jobToEdit.genderPreference || "");
         setEnglishLevel(jobToEdit.englishLevel || "");
@@ -343,6 +397,8 @@ export function PostJobModal({
         setExperienceLevel("");
         setQualification("");
         setShiftTiming("");
+        setShiftInTime("");
+        setShiftOutTime("");
         setWorkingDays("");
         setExpiryDays("");
         setGenderPreference("");
@@ -794,17 +850,17 @@ export function PostJobModal({
                 />
               </Col>
 
-              {/* Experience Level (Custom typing supported) */}
+              {/* Experience Level (Fresher, Experienced, Both, or Years) */}
               <Col xs={12} sm={4}>
                 <label className="text-[11px] font-bold text-slate-600 block mb-1">
-                  Experience
+                  Required Experience
                 </label>
                 <AutoComplete
                   size="middle"
                   value={experienceLevel}
                   onChange={(val) => setExperienceLevel(val)}
                   options={EXPERIENCE_SUGGESTIONS}
-                  placeholder="e.g. 1-2 Yrs"
+                  placeholder="Select (Fresher, Experienced, Both)..."
                   className="w-full"
                 />
               </Col>
@@ -812,7 +868,7 @@ export function PostJobModal({
 
             <Row gutter={[10, 10]} className="mt-2.5">
               {/* Minimum Education (Custom typing supported) */}
-              <Col xs={24} sm={8}>
+              <Col xs={24} sm={6}>
                 <label className="text-[11px] font-bold text-slate-600 block mb-1">
                   Min Education
                 </label>
@@ -821,28 +877,13 @@ export function PostJobModal({
                   value={qualification}
                   onChange={(val) => setQualification(val)}
                   options={QUALIFICATION_SUGGESTIONS}
-                  placeholder="Select or type (e.g. 12th Pass, Graduate)..."
-                  className="w-full"
-                />
-              </Col>
-
-              {/* Shift Timing (Custom typing supported) */}
-              <Col xs={12} sm={8}>
-                <label className="text-[11px] font-bold text-slate-600 block mb-1">
-                  Shift Timing
-                </label>
-                <AutoComplete
-                  size="middle"
-                  value={shiftTiming}
-                  onChange={(val) => setShiftTiming(val)}
-                  options={SHIFT_SUGGESTIONS}
-                  placeholder="Select or type (e.g. Day Shift, 10 AM-7 PM)..."
+                  placeholder="Select Min Education..."
                   className="w-full"
                 />
               </Col>
 
               {/* Working Days (Custom typing supported) */}
-              <Col xs={12} sm={8}>
+              <Col xs={24} sm={6}>
                 <label className="text-[11px] font-bold text-slate-600 block mb-1">
                   Working Days
                 </label>
@@ -851,7 +892,51 @@ export function PostJobModal({
                   value={workingDays}
                   onChange={(val) => setWorkingDays(val)}
                   options={WORKING_DAYS_SUGGESTIONS}
-                  placeholder="Select or type (e.g. 6 Days, Mon-Fri)..."
+                  placeholder="Select Working Days (6 Days, Mon-Fri)..."
+                  className="w-full"
+                />
+              </Col>
+
+              {/* Shift Timing: In Time & Out Time */}
+              <Col xs={12} sm={3}>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Shift In Time
+                </label>
+                <AutoComplete
+                  size="middle"
+                  value={shiftInTime}
+                  onChange={updateShiftInTime}
+                  options={SHIFT_IN_TIME_SUGGESTIONS}
+                  placeholder="In (09:30 AM)..."
+                  className="w-full"
+                />
+              </Col>
+
+              <Col xs={12} sm={3}>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Shift Out Time
+                </label>
+                <AutoComplete
+                  size="middle"
+                  value={shiftOutTime}
+                  onChange={updateShiftOutTime}
+                  options={SHIFT_OUT_TIME_SUGGESTIONS}
+                  placeholder="Out (06:30 PM)..."
+                  className="w-full"
+                />
+              </Col>
+
+              {/* Shift Preset / Summary */}
+              <Col xs={24} sm={6}>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Shift Timing / Preset
+                </label>
+                <AutoComplete
+                  size="middle"
+                  value={shiftTiming}
+                  onChange={(val) => setShiftTiming(val)}
+                  options={SHIFT_SUGGESTIONS}
+                  placeholder="Select or type (Day Shift, 9:30-6:30)..."
                   className="w-full"
                 />
               </Col>
