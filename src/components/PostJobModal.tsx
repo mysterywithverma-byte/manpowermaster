@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import confetti from "canvas-confetti";
 import { ALL_CATALOG_JOB_ROLES } from "@/data/businessCatalog";
@@ -9,17 +9,13 @@ import {
   Input,
   Select,
   Button,
-  Upload,
-  Typography,
-  Space,
   Row,
   Col,
   Alert,
-  Tooltip,
   Switch,
   AutoComplete,
   Tag,
-  Divider,
+  Avatar,
 } from "antd";
 import {
   Building2,
@@ -27,9 +23,7 @@ import {
   Check,
   Briefcase,
   Zap,
-  User,
   X,
-  Upload as UploadIcon,
   Calendar,
   Users,
   GraduationCap,
@@ -37,18 +31,77 @@ import {
   FileCheck,
   PhoneCall,
   Sparkles,
+  ShieldCheck,
+  Hourglass,
+  Award,
+  Video,
+  UserCheck,
 } from "lucide-react";
-import { compressImageToWebP } from "@/lib/image-compressor";
 import { monthlyToLpa, lpaToMonthly } from "@/lib/utils";
 
-const { Text, Title } = Typography;
+// Autocomplete suggestion lists (Users can select OR type any custom value)
+const QUALIFICATION_SUGGESTIONS = [
+  { value: "10th Pass / Matric" },
+  { value: "12th Pass / Intermediate" },
+  { value: "Diploma / ITI" },
+  { value: "Any Graduate (BA / B.Com / B.Sc)" },
+  { value: "B.Com / Accounts & Finance" },
+  { value: "B.Tech / BE / BCA / MCA" },
+  { value: "MBA / Post Graduate" },
+];
+
+const SHIFT_SUGGESTIONS = [
+  { value: "Day Shift (9 AM - 6 PM)" },
+  { value: "Day Shift (10 AM - 7 PM)" },
+  { value: "Morning Shift (7 AM - 3 PM)" },
+  { value: "Evening Shift (2 PM - 10 PM)" },
+  { value: "Night Shift (8 PM - 5 AM)" },
+  { value: "Rotational Shift" },
+  { value: "Flexible Hours" },
+];
+
+const WORKING_DAYS_SUGGESTIONS = [
+  { value: "6 Days (Mon - Sat)" },
+  { value: "5 Days (Mon - Fri)" },
+  { value: "Alternate Saturdays Off" },
+  { value: "Rotational Off" },
+];
+
+const EXPERIENCE_SUGGESTIONS = [
+  { value: "Fresher" },
+  { value: "0 - 1 Year" },
+  { value: "1 - 3 Years" },
+  { value: "3 - 5 Years" },
+  { value: "5+ Years" },
+];
+
+const INTERVIEW_MODE_SUGGESTIONS = [
+  { value: "Direct Walk-in Interview" },
+  { value: "Telephonic Interview" },
+  { value: "Online (Google Meet / Zoom)" },
+];
+
+const ENGLISH_SUGGESTIONS = [
+  { value: "No English Required" },
+  { value: "Basic / Conversational" },
+  { value: "Good Working English" },
+  { value: "Fluent English" },
+];
+
+const ASSET_SUGGESTIONS = [
+  { label: "Two Wheeler & DL", value: "Two Wheeler & DL" },
+  { label: "Smartphone", value: "Smartphone" },
+  { label: "Laptop / Computer", value: "Laptop" },
+  { label: "Aadhaar & PAN Card", value: "Aadhaar & PAN" },
+  { label: "Bank Account Passbook / Cheque", value: "Bank Passbook" },
+];
 
 interface PostJobModalProps {
   isOpen: boolean;
   onClose: () => void;
   onJobCreated: () => void;
   onOpenEmployerAuth?: () => void;
-  jobToEdit?: any | null; // Supports editing existing jobs!
+  jobToEdit?: any | null;
 }
 
 export function PostJobModal({
@@ -60,50 +113,52 @@ export function PostJobModal({
 }: PostJobModalProps) {
   const { user, updateUser, loginAsDemo } = useAuth();
 
+  // Employer identity from profile DP (no upload field)
+  const employerName = user?.companyName || user?.name || "Corporate Employer";
+  const employerLogo = user?.avatar || user?.companyLogo || "/company-profile.jpeg";
+
+  // Employer Registered Branches
+  const userBranches = user?.employerDetails?.branches || (user as any)?.branches || [];
+
+  // Form States (Clean & Empty by default - No dummy data)
   const [title, setTitle] = useState("");
-  const [company, setCompany] = useState(user?.companyName || "Manpower Master");
-  const [companyLogo, setCompanyLogo] = useState(
-    user?.companyLogo || "/company-profile.jpeg"
-  );
-  const [location, setLocation] = useState("Jalandhar, Punjab");
+  const [company, setCompany] = useState("");
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("main");
+  const [location, setLocation] = useState("");
   const [workplaceType, setWorkplaceType] = useState<"Remote" | "On-site" | "Hybrid">("On-site");
-  const [experienceLevel, setExperienceLevel] = useState<"Fresher" | "Mid-Level" | "Senior" | "Lead" | "Executive">("Mid-Level");
   const [jobType, setJobType] = useState<"Full-time" | "Part-time" | "Contract" | "Internship">("Full-time");
+  const [openingsCount, setOpeningsCount] = useState("");
+  const [urgentHiring, setUrgentHiring] = useState(false);
 
-  // Monthly Salary and LPA Dual Auto-Calculation
-  const [salaryMonthlyMin, setSalaryMonthlyMin] = useState("25000");
-  const [salaryMonthlyMax, setSalaryMonthlyMax] = useState("40000");
-  const [salaryMin, setSalaryMin] = useState("3.0");
-  const [salaryMax, setSalaryMax] = useState("4.8");
+  // Compensation States (Monthly <-> LPA dual sync)
+  const [salaryMonthlyMin, setSalaryMonthlyMin] = useState("");
+  const [salaryMonthlyMax, setSalaryMonthlyMax] = useState("");
+  const [salaryMin, setSalaryMin] = useState("");
+  const [salaryMax, setSalaryMax] = useState("");
 
-  // Extra Critical Job Details
-  const [openingsCount, setOpeningsCount] = useState("2");
+  // Role Specs (Custom values supported)
+  const [experienceLevel, setExperienceLevel] = useState("");
+  const [qualification, setQualification] = useState("");
+  const [shiftTiming, setShiftTiming] = useState("");
+  const [workingDays, setWorkingDays] = useState("");
   const [expiryDays, setExpiryDays] = useState("30");
-  const [qualification, setQualification] = useState("Any Graduate");
-  const [shiftTiming, setShiftTiming] = useState("Day Shift");
-  const [workingDays, setWorkingDays] = useState("6 Days (Mon-Sat)");
-  const [genderPreference, setGenderPreference] = useState("Any");
-  const [englishLevel, setEnglishLevel] = useState("Basic English");
-  const [requiredAssets, setRequiredAssets] = useState<string[]>(["Aadhaar & PAN"]);
-  const [interviewMode, setInterviewMode] = useState<"Walk-in" | "Telephonic" | "Online (Google Meet / Zoom)">("Telephonic");
-  const [interviewAddress, setInterviewAddress] = useState("");
-  const [recruiterWhatsApp, setRecruiterWhatsApp] = useState(user?.phone || "9872620706");
-  const [urgentHiring, setUrgentHiring] = useState(true);
 
-  const [skills, setSkills] = useState("Tally, MS Office, Accounts, GST, Communication");
-  const [description, setDescription] = useState(
-    "We are seeking a dedicated professional to handle key day-to-day corporate operations, accounts and client correspondence. High growth environment with direct leadership mentoring."
-  );
-  const [requirements, setRequirements] = useState(
-    "1+ years relevant industry experience\nBasic computer literacy and MS Office / Tally knowledge\nGood communication and punctual work ethic"
-  );
-  const [benefits, setBenefits] = useState(
-    "Timely Monthly Salary on 1st\nPerformance Incentives & Bonus\nESI & PF Coverage\nPaid Festival Holidays"
-  );
-  const [featured, setFeatured] = useState(true);
+  // Candidate Criteria & Interview
+  const [genderPreference, setGenderPreference] = useState("Any");
+  const [englishLevel, setEnglishLevel] = useState("");
+  const [requiredAssets, setRequiredAssets] = useState<string[]>([]);
+  const [interviewMode, setInterviewMode] = useState("");
+  const [interviewAddress, setInterviewAddress] = useState("");
+  const [recruiterWhatsApp, setRecruiterWhatsApp] = useState("");
+
+  // Details
+  const [skills, setSkills] = useState("");
+  const [description, setDescription] = useState("");
+  const [requirements, setRequirements] = useState("");
+  const [benefits, setBenefits] = useState("");
+  const [featured, setFeatured] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -121,27 +176,43 @@ export function PostJobModal({
     }
   };
 
-  // Multi-Branch Integration for Employer
-  const userBranches = user?.employerDetails?.branches || [];
-  const [selectedBranchId, setSelectedBranchId] = useState<string>("custom");
-
+  // Branch Selection Handler
   const handleBranchSelect = (branchId: string) => {
     setSelectedBranchId(branchId);
-    if (branchId === "custom") return;
-    const branch = userBranches.find((b: any) => b.id === branchId);
+    if (branchId === "custom") {
+      return;
+    }
+    if (branchId === "main") {
+      const headOffice = userBranches.find((b: any) => b.isHeadquarters);
+      if (headOffice) {
+        const locStr = headOffice.state ? `${headOffice.city}, ${headOffice.state}` : headOffice.city;
+        setLocation(locStr);
+        if (headOffice.address) setInterviewAddress(`${headOffice.address}, ${headOffice.city}`);
+      } else if (user?.location) {
+        setLocation(user.location);
+      }
+      return;
+    }
+
+    const branch = userBranches.find((b: any) => (b.id || b.branchName) === branchId);
     if (branch) {
       const locStr = branch.state ? `${branch.city}, ${branch.state}` : branch.city;
       setLocation(locStr);
+      if (branch.address) {
+        setInterviewAddress(`${branch.address}, ${branch.city}`);
+      }
     }
   };
 
-  // Salary Handlers (Monthly <-> LPA Synchronization)
+  // Synchronized Salary Handlers
   const handleMonthlyMinChange = (val: string) => {
     const clean = val.replace(/[^0-9]/g, "");
     setSalaryMonthlyMin(clean);
     if (clean && Number(clean) > 0) {
       const lpa = monthlyToLpa(Number(clean));
       setSalaryMin(String(lpa));
+    } else {
+      setSalaryMin("");
     }
   };
 
@@ -151,6 +222,8 @@ export function PostJobModal({
     if (clean && Number(clean) > 0) {
       const lpa = monthlyToLpa(Number(clean));
       setSalaryMax(String(lpa));
+    } else {
+      setSalaryMax("");
     }
   };
 
@@ -160,6 +233,8 @@ export function PostJobModal({
     if (clean && Number(clean) > 0) {
       const mo = lpaToMonthly(Number(clean));
       setSalaryMonthlyMin(String(mo));
+    } else {
+      setSalaryMonthlyMin("");
     }
   };
 
@@ -169,84 +244,118 @@ export function PostJobModal({
     if (clean && Number(clean) > 0) {
       const mo = lpaToMonthly(Number(clean));
       setSalaryMonthlyMax(String(mo));
+    } else {
+      setSalaryMonthlyMax("");
     }
   };
 
-  React.useEffect(() => {
+  // Reset or pre-fill on modal open
+  useEffect(() => {
     if (isOpen) {
       fetchCities("");
+      setError("");
+      setSuccess(false);
+
       if (jobToEdit) {
         // Pre-fill for Edit mode
         setTitle(jobToEdit.title || "");
-        setCompany(jobToEdit.company || "");
-        setCompanyLogo(jobToEdit.companyLogo || "/company-profile.jpeg");
-        setLocation(jobToEdit.location || "Jalandhar, Punjab");
+        setCompany(jobToEdit.company || employerName);
+        setLocation(jobToEdit.location || "");
         setWorkplaceType(jobToEdit.workplaceType || "On-site");
-        setExperienceLevel(jobToEdit.experienceLevel || "Mid-Level");
+        setExperienceLevel(jobToEdit.experienceLevel || "");
         setJobType(jobToEdit.jobType || "Full-time");
-        setSalaryMin(String(jobToEdit.salaryMin || "3.0"));
-        setSalaryMax(String(jobToEdit.salaryMax || "4.8"));
-        setSalaryMonthlyMin(String(jobToEdit.salaryMonthlyMin || lpaToMonthly(jobToEdit.salaryMin) || "25000"));
-        setSalaryMonthlyMax(String(jobToEdit.salaryMonthlyMax || lpaToMonthly(jobToEdit.salaryMax) || "40000"));
-        setOpeningsCount(String(jobToEdit.openingsCount || 2));
-        setExpiryDays(String(jobToEdit.expiryDays || 30));
-        setQualification(jobToEdit.qualification || "Any Graduate");
-        setShiftTiming(jobToEdit.shiftTiming || "Day Shift");
-        setWorkingDays(jobToEdit.workingDays || "6 Days (Mon-Sat)");
+        setSalaryMin(jobToEdit.salaryMin ? String(jobToEdit.salaryMin) : "");
+        setSalaryMax(jobToEdit.salaryMax ? String(jobToEdit.salaryMax) : "");
+        setSalaryMonthlyMin(
+          jobToEdit.salaryMonthlyMin
+            ? String(jobToEdit.salaryMonthlyMin)
+            : jobToEdit.salaryMin
+            ? String(lpaToMonthly(jobToEdit.salaryMin))
+            : ""
+        );
+        setSalaryMonthlyMax(
+          jobToEdit.salaryMonthlyMax
+            ? String(jobToEdit.salaryMonthlyMax)
+            : jobToEdit.salaryMax
+            ? String(lpaToMonthly(jobToEdit.salaryMax))
+            : ""
+        );
+        setOpeningsCount(jobToEdit.openingsCount ? String(jobToEdit.openingsCount) : "1");
+        setExpiryDays(jobToEdit.expiryDays ? String(jobToEdit.expiryDays) : "30");
+        setQualification(jobToEdit.qualification || "");
+        setShiftTiming(jobToEdit.shiftTiming || "");
+        setWorkingDays(jobToEdit.workingDays || "");
         setGenderPreference(jobToEdit.genderPreference || "Any");
-        setEnglishLevel(jobToEdit.englishLevel || "Basic English");
-        setRequiredAssets(jobToEdit.requiredAssets || ["Aadhaar & PAN"]);
-        setInterviewMode(jobToEdit.interviewMode || "Telephonic");
+        setEnglishLevel(jobToEdit.englishLevel || "");
+        setRequiredAssets(jobToEdit.requiredAssets || []);
+        setInterviewMode(jobToEdit.interviewMode || "");
         setInterviewAddress(jobToEdit.interviewAddress || "");
-        setRecruiterWhatsApp(jobToEdit.recruiterWhatsApp || user?.phone || "9872620706");
-        setUrgentHiring(jobToEdit.urgentHiring ?? true);
+        setRecruiterWhatsApp(jobToEdit.recruiterWhatsApp || user?.phone || "");
+        setUrgentHiring(Boolean(jobToEdit.urgentHiring));
         setSkills(Array.isArray(jobToEdit.skills) ? jobToEdit.skills.join(", ") : jobToEdit.skills || "");
         setDescription(jobToEdit.description || "");
         setRequirements(Array.isArray(jobToEdit.requirements) ? jobToEdit.requirements.join("\n") : jobToEdit.requirements || "");
         setBenefits(Array.isArray(jobToEdit.benefits) ? jobToEdit.benefits.join("\n") : jobToEdit.benefits || "");
         setFeatured(Boolean(jobToEdit.featured));
+        if (jobToEdit.branchId) setSelectedBranchId(jobToEdit.branchId);
       } else {
-        // Reset or use employer defaults
-        if (user?.companyName) setCompany(user.companyName);
-        if (user?.companyLogo) setCompanyLogo(user.companyLogo);
-        if (user?.phone) setRecruiterWhatsApp(user.phone);
-        if (userBranches.length > 0 && selectedBranchId === "custom") {
-          const firstBranch = userBranches[0];
-          setSelectedBranchId(firstBranch.id);
-          const locStr = firstBranch.state ? `${firstBranch.city}, ${firstBranch.state}` : firstBranch.city;
+        // Clean blank form for fresh posting (No dummy pre-fill)
+        setTitle("");
+        setCompany(user?.companyName || user?.name || "");
+        setLocation(user?.location || "");
+        setWorkplaceType("On-site");
+        setJobType("Full-time");
+        setOpeningsCount("1");
+        setUrgentHiring(false);
+        setSalaryMonthlyMin("");
+        setSalaryMonthlyMax("");
+        setSalaryMin("");
+        setSalaryMax("");
+        setExperienceLevel("");
+        setQualification("");
+        setShiftTiming("");
+        setWorkingDays("");
+        setExpiryDays("30");
+        setGenderPreference("Any");
+        setEnglishLevel("");
+        setRequiredAssets([]);
+        setInterviewMode("");
+        setInterviewAddress("");
+        setRecruiterWhatsApp(user?.phone || "");
+        setSkills("");
+        setDescription("");
+        setRequirements("");
+        setBenefits("");
+        setFeatured(false);
+
+        // Auto select branch if available
+        if (userBranches.length > 0) {
+          const defaultBranch = userBranches.find((b: any) => b.isHeadquarters) || userBranches[0];
+          setSelectedBranchId(defaultBranch.id || defaultBranch.branchName);
+          const locStr = defaultBranch.state ? `${defaultBranch.city}, ${defaultBranch.state}` : defaultBranch.city;
           setLocation(locStr);
+          if (defaultBranch.address) setInterviewAddress(`${defaultBranch.address}, ${defaultBranch.city}`);
+        } else {
+          setSelectedBranchId("main");
         }
       }
     }
-  }, [isOpen, user, jobToEdit]);
-
-  const handleLogoUpload = async (file: File) => {
-    setUploadingLogo(true);
-    try {
-      const compressed = await compressImageToWebP(file, 400, 0.85);
-      const formData = new FormData();
-      formData.append("file", compressed.file);
-      const res = await fetch("/api/upload/image", { method: "POST", body: formData });
-      const data = await res.json();
-      if (data.success && data.url) {
-        setCompanyLogo(data.url);
-      }
-    } catch {
-      // ignore
-    } finally {
-      setUploadingLogo(false);
-    }
-    return false;
-  };
+  }, [isOpen, jobToEdit, user]);
 
   const handleSubmit = async () => {
     if (!user) {
-      setError("Please sign in or register as an employer to publish an opening.");
+      setError("Please sign in or register as an employer to publish a vacancy.");
       return;
     }
 
-    if (!title.trim() || !company.trim()) {
-      setError("Job Title and Company Name are required.");
+    if (!title.trim()) {
+      setError("Please specify the Job Role / Title.");
+      return;
+    }
+
+    const companyToUse = company.trim() || employerName;
+    if (!companyToUse) {
+      setError("Company Name is required.");
       return;
     }
 
@@ -254,40 +363,41 @@ export function PostJobModal({
     setError("");
 
     try {
+      const selectedBranchObj = userBranches.find(
+        (b: any) => (b.id || b.branchName) === selectedBranchId
+      );
+
       const payload = {
-        title,
-        company,
-        companyLogo,
-        location,
-        branchId: selectedBranchId !== "custom" ? selectedBranchId : undefined,
-        branchName:
-          selectedBranchId !== "custom"
-            ? userBranches.find((b: any) => b.id === selectedBranchId)?.branchName
-            : undefined,
+        title: title.trim(),
+        company: companyToUse,
+        companyLogo: employerLogo,
+        location: location.trim() || "India",
+        branchId: selectedBranchId !== "custom" && selectedBranchId !== "main" ? selectedBranchId : undefined,
+        branchName: selectedBranchObj?.branchName || (selectedBranchId === "main" ? "Head Office" : undefined),
         workplaceType,
-        experienceLevel,
+        experienceLevel: experienceLevel.trim() || "Fresher",
         jobType,
-        salaryMin: Number(salaryMin) || monthlyToLpa(Number(salaryMonthlyMin)),
-        salaryMax: Number(salaryMax) || monthlyToLpa(Number(salaryMonthlyMax)),
-        salaryMonthlyMin: Number(salaryMonthlyMin) || lpaToMonthly(Number(salaryMin)),
-        salaryMonthlyMax: Number(salaryMonthlyMax) || lpaToMonthly(Number(salaryMax)),
+        salaryMin: Number(salaryMin) || (salaryMonthlyMin ? monthlyToLpa(Number(salaryMonthlyMin)) : 0),
+        salaryMax: Number(salaryMax) || (salaryMonthlyMax ? monthlyToLpa(Number(salaryMonthlyMax)) : 0),
+        salaryMonthlyMin: Number(salaryMonthlyMin) || (salaryMin ? lpaToMonthly(Number(salaryMin)) : 0),
+        salaryMonthlyMax: Number(salaryMonthlyMax) || (salaryMax ? lpaToMonthly(Number(salaryMax)) : 0),
         salaryCurrency: "INR",
         openingsCount: Number(openingsCount) || 1,
         expiryDays: Number(expiryDays) || 30,
-        qualification,
-        shiftTiming,
-        workingDays,
+        qualification: qualification.trim(),
+        shiftTiming: shiftTiming.trim(),
+        workingDays: workingDays.trim(),
         genderPreference,
-        englishLevel,
+        englishLevel: englishLevel.trim(),
         requiredAssets,
-        interviewMode,
-        interviewAddress,
-        recruiterWhatsApp,
+        interviewMode: interviewMode.trim(),
+        interviewAddress: interviewAddress.trim(),
+        recruiterWhatsApp: recruiterWhatsApp.trim(),
         urgentHiring,
         skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
-        description,
-        requirements: requirements.split("\n").filter(Boolean),
-        benefits: benefits.split("\n").filter(Boolean),
+        description: description.trim(),
+        requirements: requirements.split("\n").map((r) => r.trim()).filter(Boolean),
+        benefits: benefits.split("\n").map((b) => b.trim()).filter(Boolean),
         featured,
         postedBy: user._id || user.id || user.email,
       };
@@ -303,7 +413,7 @@ export function PostJobModal({
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to save job opening");
+        throw new Error(data.error || "Failed to publish job opening");
       }
 
       if (user && user.role !== "employer") {
@@ -311,7 +421,7 @@ export function PostJobModal({
       }
 
       confetti({
-        particleCount: 60,
+        particleCount: 50,
         spread: 60,
         origin: { y: 0.6 },
         colors: ["#ea580c", "#fb923c", "#16a34a"],
@@ -322,7 +432,7 @@ export function PostJobModal({
         setSuccess(false);
         onJobCreated();
         onClose();
-      }, 1000);
+      }, 900);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error publishing job";
       setError(msg);
@@ -337,66 +447,59 @@ export function PostJobModal({
       onCancel={onClose}
       footer={
         success ? null : (
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 12 }}>
-            <Button onClick={onClose} icon={<X className="w-3.5 h-3.5" />}>
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              icon={<Check className="w-3.5 h-3.5" />}
-              loading={loading}
-              onClick={handleSubmit}
-              style={{ fontWeight: 600, borderRadius: 8 }}
-            >
-              {jobToEdit ? "Save Job Changes" : "Publish Job Opening"}
-            </Button>
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+            <div className="text-xs text-slate-500 font-medium">
+              💡 Jobs auto-expire after selected validity period
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="middle" onClick={onClose} icon={<X className="w-3.5 h-3.5" />}>
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                size="middle"
+                icon={<Check className="w-3.5 h-3.5" />}
+                loading={loading}
+                onClick={handleSubmit}
+                className="font-bold shadow-xs active:scale-95"
+              >
+                {jobToEdit ? "Update Opening" : "Publish Opening"}
+              </Button>
+            </div>
           </div>
         )
       }
-      width={760}
+      width={780}
       centered
       title={
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              backgroundColor: "#ea580c",
-              color: "white",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-orange-600 text-white flex items-center justify-center shrink-0">
             <Briefcase className="w-4 h-4" />
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>
-              {jobToEdit ? "Edit Job Vacancy" : "Post a Direct Corporate Job Vacancy"}
+            <div className="font-bold text-base text-slate-900 leading-tight">
+              {jobToEdit ? "Edit Job Vacancy" : "Post Direct Job Opening"}
             </div>
-            <div style={{ fontSize: 11, color: "#64748b", fontWeight: 400 }}>
-              Zero Commission • Direct Candidate Applications • Instant WhatsApp Connect
+            <div className="text-xs text-slate-500 font-normal">
+              Zero commission • Direct candidate applications
             </div>
           </div>
         </div>
       }
     >
-      {/* Guest Warning */}
+      {/* Guest Notice */}
       {!user && (
         <Alert
           type="info"
           showIcon
-          style={{ marginBottom: 16, borderRadius: 8 }}
+          className="mb-3 rounded-xl text-xs"
           message="Post job with 1-Click Recruiter Demo or Sign in"
           description={
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+            <div className="flex items-center gap-2 mt-1">
               <Button
                 size="small"
                 type="primary"
-                onClick={() => {
-                  loginAsDemo("employer");
-                }}
+                onClick={() => loginAsDemo("employer")}
               >
                 1-Click Employer Demo Login
               </Button>
@@ -417,499 +520,510 @@ export function PostJobModal({
           closable
           onClose={() => setError("")}
           message={error}
-          style={{ marginBottom: 16, borderRadius: 8 }}
+          className="mb-3 rounded-xl text-xs"
         />
       )}
 
       {success ? (
-        <div style={{ textAlign: "center", padding: "32px 16px" }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: "50%",
-              backgroundColor: "#dcfce7",
-              color: "#16a34a",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 16,
-            }}
-          >
-            <Check className="w-8 h-8" />
+        <div className="text-center py-12">
+          <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 inline-flex items-center justify-center mb-3">
+            <Check className="w-7 h-7" />
           </div>
-          <Title level={4} style={{ margin: "0 0 6px 0", color: "#0f172a" }}>
+          <div className="font-bold text-lg text-slate-900">
             {jobToEdit ? "Job Updated Successfully!" : "Job Published Live!"}
-          </Title>
-          <Text type="secondary" style={{ fontSize: 13 }}>
-            Candidates can now discover this opening and apply directly.
-          </Text>
+          </div>
+          <div className="text-xs text-slate-500 mt-1">
+            Candidates can now discover this vacancy and apply directly.
+          </div>
         </div>
       ) : (
-        <div style={{ maxHeight: "68vh", overflowY: "auto", paddingRight: 4 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {/* Row 1: Role Title & Openings */}
-            <Row gutter={[12, 12]}>
-              <Col xs={24} sm={16}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                  Job Role / Title <span className="text-red-500">*</span>
-                </label>
-                <AutoComplete
-                  value={title}
-                  onChange={(val) => setTitle(val)}
-                  options={ALL_CATALOG_JOB_ROLES.map((r) => ({ value: r }))}
-                  filterOption={(inputValue, option) =>
-                    option!.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                  }
-                  placeholder="e.g. Senior Accountant / Tally Operator / Sales Exec"
-                  style={{ width: "100%", marginTop: 4 }}
-                />
-              </Col>
-              <Col xs={12} sm={4}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                  Vacancies / Openings
-                </label>
-                <Input
-                  prefix={<Users className="w-3.5 h-3.5 text-slate-400" />}
-                  value={openingsCount}
-                  onChange={(e) => setOpeningsCount(e.target.value.replace(/[^0-9]/g, ""))}
-                  placeholder="2"
-                  style={{ marginTop: 4, borderRadius: 8 }}
-                />
-              </Col>
-              <Col xs={12} sm={4}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                  Urgent Hiring?
-                </label>
-                <div style={{ marginTop: 8 }}>
-                  <Switch
-                    checked={urgentHiring}
-                    onChange={(checked) => setUrgentHiring(checked)}
-                    checkedChildren="Urgent"
-                    unCheckedChildren="Normal"
-                  />
-                </div>
-              </Col>
-            </Row>
+        <div className="max-h-[72vh] overflow-y-auto pr-1 flex flex-col gap-3.5">
+          {/* SECTION 1: Employer Identity & Branch Selection */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-orange-600" />
+                <span>Company &amp; Branch Location</span>
+              </span>
+              <Tag color="green" className="m-0 text-[10px] font-bold">
+                Employer Verified DP
+              </Tag>
+            </div>
 
-            {/* Row 2: Company Name, Logo & Branch */}
-            <Row gutter={[12, 12]}>
-              <Col xs={24} sm={12}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                  Hiring Company / Brand <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  prefix={<Building2 className="w-3.5 h-3.5 text-slate-400" />}
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  placeholder="e.g. Verma Enterprises / ABC Technologies"
-                  style={{ marginTop: 4, borderRadius: 8 }}
-                />
-              </Col>
-
-              <Col xs={24} sm={12}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                  Company Logo
-                </label>
-                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                  <Input
-                    value={companyLogo}
-                    onChange={(e) => setCompanyLogo(e.target.value)}
-                    placeholder="https://... or upload"
-                    style={{ borderRadius: 8, flex: 1 }}
-                  />
-                  <Upload
-                    showUploadList={false}
-                    beforeUpload={handleLogoUpload}
-                    accept="image/*"
+            <Row gutter={[10, 10]} align="middle">
+              {/* Employer DP Display (No file input) */}
+              <Col xs={24} sm={8}>
+                <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white border border-slate-200">
+                  <Avatar
+                    size={38}
+                    shape="square"
+                    src={employerLogo}
+                    className="border border-slate-200 rounded-lg shrink-0"
                   >
-                    <Button
-                      loading={uploadingLogo}
-                      icon={<UploadIcon className="w-3.5 h-3.5" />}
-                      style={{ borderRadius: 8 }}
-                    >
-                      Upload
-                    </Button>
-                  </Upload>
+                    {employerName.charAt(0)}
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-bold text-slate-900 truncate">
+                      {company || employerName}
+                    </div>
+                    <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" />
+                      <span>Company Profile DP</span>
+                    </div>
+                  </div>
                 </div>
               </Col>
-            </Row>
 
-            {/* Row 3: Location & Workplace Type */}
-            <Row gutter={[12, 12]}>
-              <Col xs={24} sm={14}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                  Work Location (City, State) <span className="text-red-500">*</span>
+              {/* Branch Selector (If employer has branches) */}
+              {userBranches.length > 0 && (
+                <Col xs={24} sm={8}>
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                    Select Branch
+                  </label>
+                  <Select
+                    size="middle"
+                    value={selectedBranchId}
+                    onChange={handleBranchSelect}
+                    className="w-full text-xs font-semibold"
+                    options={[
+                      { label: "🏢 Main / Head Office", value: "main" },
+                      ...userBranches.map((b: any) => ({
+                        label: `📍 ${b.branchName} (${b.city})`,
+                        value: b.id || b.branchName,
+                      })),
+                      { label: "➕ Custom Location / Other", value: "custom" },
+                    ]}
+                  />
+                </Col>
+              )}
+
+              {/* Work City / Location (Custom typing supported) */}
+              <Col xs={24} sm={userBranches.length > 0 ? 8 : 16}>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Work City / State <span className="text-red-500">*</span>
                 </label>
                 <AutoComplete
+                  size="middle"
                   value={location}
                   onChange={(val) => setLocation(val)}
                   onSearch={fetchCities}
                   options={cityOptions}
-                  placeholder="e.g. Jalandhar, Punjab / Ludhiana / Chandigarh"
-                  style={{ width: "100%", marginTop: 4 }}
+                  placeholder="Type or select city (e.g. Jalandhar, Punjab)..."
+                  className="w-full"
+                  prefix={<MapPin className="w-3.5 h-3.5 text-slate-400 mr-1 inline" />}
                 />
               </Col>
+            </Row>
 
-              <Col xs={12} sm={5}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Workplace</label>
+            {/* Workplace & Job Type row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2.5 pt-2.5 border-t border-slate-200/70 text-xs">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                  Workplace
+                </span>
                 <Select
+                  size="middle"
                   value={workplaceType}
                   onChange={(val) => setWorkplaceType(val)}
+                  className="w-full"
                   options={[
                     { label: "On-site", value: "On-site" },
                     { label: "Hybrid", value: "Hybrid" },
                     { label: "Remote (WFH)", value: "Remote" },
                   ]}
-                  style={{ width: "100%", marginTop: 4 }}
                 />
-              </Col>
+              </div>
 
-              <Col xs={12} sm={5}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Job Type</label>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                  Job Type
+                </span>
                 <Select
+                  size="middle"
                   value={jobType}
                   onChange={(val) => setJobType(val)}
+                  className="w-full"
                   options={[
                     { label: "Full-time", value: "Full-time" },
                     { label: "Part-time", value: "Part-time" },
                     { label: "Contract", value: "Contract" },
                     { label: "Internship", value: "Internship" },
                   ]}
-                  style={{ width: "100%", marginTop: 4 }}
                 />
-              </Col>
-            </Row>
-
-            {/* 🌟 SALARY SECTION: Monthly Input + Auto LPA Calculator */}
-            <div className="p-3.5 rounded-xl bg-orange-50/70 border border-orange-200">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-orange-600" />
-                  <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                    Salary Compensation (Monthly Wise &amp; Auto LPA)
-                  </span>
-                </div>
-                <Tag color="orange" className="m-0 font-bold text-[11px] rounded-md">
-                  Auto-Calculates LPA
-                </Tag>
               </div>
 
-              <Row gutter={[12, 10]}>
-                {/* Monthly Min */}
-                <Col xs={12} sm={6}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
-                    Min Monthly (₹/month)
-                  </label>
-                  <Input
-                    prefix="₹"
-                    suffix="/mo"
-                    value={salaryMonthlyMin}
-                    onChange={(e) => handleMonthlyMinChange(e.target.value)}
-                    placeholder="25000"
-                    style={{ marginTop: 2, borderRadius: 8, fontWeight: 600 }}
-                  />
-                </Col>
-
-                {/* Monthly Max */}
-                <Col xs={12} sm={6}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
-                    Max Monthly (₹/month)
-                  </label>
-                  <Input
-                    prefix="₹"
-                    suffix="/mo"
-                    value={salaryMonthlyMax}
-                    onChange={(e) => handleMonthlyMaxChange(e.target.value)}
-                    placeholder="40000"
-                    style={{ marginTop: 2, borderRadius: 8, fontWeight: 600 }}
-                  />
-                </Col>
-
-                {/* Calculated LPA Min */}
-                <Col xs={12} sm={6}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
-                    Min Package (₹ LPA)
-                  </label>
-                  <Input
-                    prefix="₹"
-                    suffix="LPA"
-                    value={salaryMin}
-                    onChange={(e) => handleLpaMinChange(e.target.value)}
-                    placeholder="3.0"
-                    style={{ marginTop: 2, borderRadius: 8, fontWeight: 700, color: "#ea580c" }}
-                  />
-                </Col>
-
-                {/* Calculated LPA Max */}
-                <Col xs={12} sm={6}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: "#475569" }}>
-                    Max Package (₹ LPA)
-                  </label>
-                  <Input
-                    prefix="₹"
-                    suffix="LPA"
-                    value={salaryMax}
-                    onChange={(e) => handleLpaMaxChange(e.target.value)}
-                    placeholder="4.8"
-                    style={{ marginTop: 2, borderRadius: 8, fontWeight: 700, color: "#ea580c" }}
-                  />
-                </Col>
-              </Row>
-
-              <div className="mt-2 text-[11px] text-slate-600 flex items-center justify-between flex-wrap gap-1">
-                <span>
-                  💡 <strong>Formula:</strong> ₹{Number(salaryMonthlyMin || 0).toLocaleString("en-IN")}/mo × 12 ={" "}
-                  <strong className="text-orange-700">₹{salaryMin || "0"} LPA</strong>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                  Listing Expiry
                 </span>
-                <span className="text-emerald-700 font-bold">
-                  Shows: ₹{Number(salaryMonthlyMin || 0).toLocaleString("en-IN")} - ₹{Number(salaryMonthlyMax || 0).toLocaleString("en-IN")}/month ({salaryMin} - {salaryMax} LPA)
-                </span>
-              </div>
-            </div>
-
-            {/* Row 4: Job Expiry Validity & Experience Level */}
-            <Row gutter={[12, 12]}>
-              <Col xs={24} sm={12}>
-                <div className="flex items-center justify-between">
-                  <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                    Job Active Validity (Auto-Expires After)
-                  </label>
-                  <span className="text-[11px] font-bold text-orange-600">
-                    Auto-Closes Expired Jobs
-                  </span>
-                </div>
                 <Select
+                  size="middle"
                   value={expiryDays}
                   onChange={(val) => setExpiryDays(val)}
+                  className="w-full"
                   options={[
-                    { label: "7 Days (Urgent / Immediate Walk-in)", value: "7" },
-                    { label: "15 Days (Short Window Hiring)", value: "15" },
-                    { label: "30 Days (Standard 1 Month)", value: "30" },
-                    { label: "45 Days (Extended Hiring)", value: "45" },
-                    { label: "60 Days (2 Months)", value: "60" },
-                    { label: "90 Days (Quarterly Continuous Hiring)", value: "90" },
+                    { label: "7 Days (Urgent)", value: "7" },
+                    { label: "15 Days", value: "15" },
+                    { label: "30 Days (Standard)", value: "30" },
+                    { label: "45 Days", value: "45" },
+                    { label: "60 Days", value: "60" },
+                    { label: "90 Days", value: "90" },
                   ]}
-                  style={{ width: "100%", marginTop: 4 }}
+                />
+              </div>
+
+              <div className="flex flex-col justify-end">
+                <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-slate-200">
+                  <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                    <Zap className="w-3 h-3 text-amber-500" />
+                    <span>Urgent?</span>
+                  </span>
+                  <Switch
+                    size="small"
+                    checked={urgentHiring}
+                    onChange={(checked) => setUrgentHiring(checked)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 2: Role Details & Openings */}
+          <div className="p-3.5 rounded-2xl bg-white border border-slate-200">
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
+              <Briefcase className="w-3.5 h-3.5 text-orange-600" />
+              <span>Role Specifications &amp; Vacancies</span>
+            </span>
+
+            <Row gutter={[10, 10]}>
+              {/* Job Title / Role (Custom typing + Catalog AutoComplete) */}
+              <Col xs={24} sm={16}>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Job Role / Title <span className="text-red-500">*</span>
+                </label>
+                <AutoComplete
+                  size="middle"
+                  value={title}
+                  onChange={(val) => setTitle(val)}
+                  options={ALL_CATALOG_JOB_ROLES.map((r) => ({ value: r }))}
+                  filterOption={(input, option) =>
+                    option!.value.toLowerCase().includes(input.toLowerCase())
+                  }
+                  placeholder="Select or type custom role (e.g. Accountant, Sales Manager, Cook)..."
+                  className="w-full"
                 />
               </Col>
 
-              <Col xs={24} sm={12}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                  Experience Level Required
+              {/* Vacancies / Openings Count */}
+              <Col xs={12} sm={4}>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Vacancies
                 </label>
-                <Select
+                <Input
+                  size="middle"
+                  prefix={<Users className="w-3.5 h-3.5 text-slate-400" />}
+                  value={openingsCount}
+                  onChange={(e) => setOpeningsCount(e.target.value.replace(/[^0-9]/g, ""))}
+                  placeholder="e.g. 2"
+                />
+              </Col>
+
+              {/* Experience Level (Custom typing supported) */}
+              <Col xs={12} sm={4}>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Experience
+                </label>
+                <AutoComplete
+                  size="middle"
                   value={experienceLevel}
                   onChange={(val) => setExperienceLevel(val)}
-                  options={[
-                    { label: "Fresher (0 Years)", value: "Fresher" },
-                    { label: "Mid-Level (1-3 Yrs)", value: "Mid-Level" },
-                    { label: "Senior (3-6 Yrs)", value: "Senior" },
-                    { label: "Lead (6-10 Yrs)", value: "Lead" },
-                    { label: "Executive (10+ Yrs)", value: "Executive" },
-                  ]}
-                  style={{ width: "100%", marginTop: 4 }}
+                  options={EXPERIENCE_SUGGESTIONS}
+                  placeholder="e.g. 1-2 Yrs"
+                  className="w-full"
                 />
               </Col>
             </Row>
 
-            {/* Row 5: Qualification, Shift & Working Days */}
-            <Row gutter={[12, 12]}>
+            <Row gutter={[10, 10]} className="mt-2.5">
+              {/* Minimum Education (Custom typing supported) */}
               <Col xs={24} sm={8}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                  Minimum Education Required
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Min Education
                 </label>
-                <Select
+                <AutoComplete
+                  size="middle"
                   value={qualification}
                   onChange={(val) => setQualification(val)}
-                  options={[
-                    { label: "10th Pass / High School", value: "10th Pass" },
-                    { label: "12th Pass / Intermediate", value: "12th Pass" },
-                    { label: "Diploma / ITI", value: "Diploma / ITI" },
-                    { label: "Any Graduate (BA, B.Com, B.Sc)", value: "Any Graduate" },
-                    { label: "Technical Graduate (B.Tech, BCA, MCA)", value: "B.Tech / BCA / MCA" },
-                    { label: "Post Graduate / MBA", value: "MBA / Post Graduate" },
-                  ]}
-                  style={{ width: "100%", marginTop: 4 }}
+                  options={QUALIFICATION_SUGGESTIONS}
+                  placeholder="Select or type (e.g. 12th Pass, Graduate)..."
+                  className="w-full"
                 />
               </Col>
 
+              {/* Shift Timing (Custom typing supported) */}
               <Col xs={12} sm={8}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Shift Timing</label>
-                <Select
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Shift Timing
+                </label>
+                <AutoComplete
+                  size="middle"
                   value={shiftTiming}
                   onChange={(val) => setShiftTiming(val)}
-                  options={[
-                    { label: "Day Shift (9 AM - 6 PM)", value: "Day Shift" },
-                    { label: "Night Shift (8 PM - 5 AM)", value: "Night Shift" },
-                    { label: "Rotational Shift", value: "Rotational Shift" },
-                    { label: "US / UK Shift", value: "US / UK Shift" },
-                    { label: "Flexible Working Hours", value: "Flexible Hours" },
-                  ]}
-                  style={{ width: "100%", marginTop: 4 }}
+                  options={SHIFT_SUGGESTIONS}
+                  placeholder="Select or type (e.g. Day Shift, 10 AM-7 PM)..."
+                  className="w-full"
                 />
               </Col>
 
+              {/* Working Days (Custom typing supported) */}
               <Col xs={12} sm={8}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Working Days</label>
-                <Select
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Working Days
+                </label>
+                <AutoComplete
+                  size="middle"
                   value={workingDays}
                   onChange={(val) => setWorkingDays(val)}
-                  options={[
-                    { label: "5 Days (Mon - Fri)", value: "5 Days (Mon-Fri)" },
-                    { label: "6 Days (Mon - Sat)", value: "6 Days (Mon-Sat)" },
-                    { label: "Alternate Saturdays Off", value: "Alternate Saturdays Off" },
-                  ]}
-                  style={{ width: "100%", marginTop: 4 }}
+                  options={WORKING_DAYS_SUGGESTIONS}
+                  placeholder="Select or type (e.g. 6 Days, Mon-Fri)..."
+                  className="w-full"
                 />
               </Col>
             </Row>
+          </div>
 
-            {/* Row 6: Gender Preference & English Level */}
-            <Row gutter={[12, 12]}>
+          {/* SECTION 3: Salary Compensation (Monthly <-> LPA Realtime Sync) */}
+          <div className="p-3.5 rounded-2xl bg-orange-50/70 border border-orange-200">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-orange-600" />
+                <span>Salary Compensation (Monthly ₹/mo &amp; Auto LPA)</span>
+              </span>
+              {salaryMin && salaryMax && (
+                <span className="text-[11px] font-bold text-orange-700 bg-white px-2 py-0.5 rounded-md border border-orange-200">
+                  ₹{salaryMin} - ₹{salaryMax} LPA
+                </span>
+              )}
+            </div>
+
+            <Row gutter={[10, 10]}>
               <Col xs={12} sm={6}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Min Monthly (₹/month)
+                </label>
+                <Input
+                  size="middle"
+                  prefix="₹"
+                  suffix="/mo"
+                  value={salaryMonthlyMin}
+                  onChange={(e) => handleMonthlyMinChange(e.target.value)}
+                  placeholder="e.g. 20000"
+                  className="font-semibold"
+                />
+              </Col>
+
+              <Col xs={12} sm={6}>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Max Monthly (₹/month)
+                </label>
+                <Input
+                  size="middle"
+                  prefix="₹"
+                  suffix="/mo"
+                  value={salaryMonthlyMax}
+                  onChange={(e) => handleMonthlyMaxChange(e.target.value)}
+                  placeholder="e.g. 35000"
+                  className="font-semibold"
+                />
+              </Col>
+
+              <Col xs={12} sm={6}>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Min Annual (₹ LPA)
+                </label>
+                <Input
+                  size="middle"
+                  prefix="₹"
+                  suffix="LPA"
+                  value={salaryMin}
+                  onChange={(e) => handleLpaMinChange(e.target.value)}
+                  placeholder="e.g. 2.4"
+                  className="font-bold text-orange-600"
+                />
+              </Col>
+
+              <Col xs={12} sm={6}>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Max Annual (₹ LPA)
+                </label>
+                <Input
+                  size="middle"
+                  prefix="₹"
+                  suffix="LPA"
+                  value={salaryMax}
+                  onChange={(e) => handleLpaMaxChange(e.target.value)}
+                  placeholder="e.g. 4.2"
+                  className="font-bold text-orange-600"
+                />
+              </Col>
+            </Row>
+          </div>
+
+          {/* SECTION 4: Candidate Criteria & Interview */}
+          <div className="p-3.5 rounded-2xl bg-white border border-slate-200">
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
+              <FileCheck className="w-3.5 h-3.5 text-orange-600" />
+              <span>Candidate Criteria &amp; Interview Process</span>
+            </span>
+
+            <Row gutter={[10, 10]}>
+              {/* Gender Preference */}
+              <Col xs={12} sm={6}>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
                   Gender Preference
                 </label>
                 <Select
+                  size="middle"
                   value={genderPreference}
                   onChange={(val) => setGenderPreference(val)}
+                  className="w-full"
                   options={[
-                    { label: "Any (No Preference)", value: "Any" },
+                    { label: "Any Gender", value: "Any" },
                     { label: "Male Only", value: "Male" },
                     { label: "Female Only", value: "Female" },
                   ]}
-                  style={{ width: "100%", marginTop: 4 }}
                 />
               </Col>
 
+              {/* English Level (Custom typing supported) */}
               <Col xs={12} sm={6}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
                   English Requirement
                 </label>
-                <Select
+                <AutoComplete
+                  size="middle"
                   value={englishLevel}
                   onChange={(val) => setEnglishLevel(val)}
-                  options={[
-                    { label: "No English Required", value: "No English Required" },
-                    { label: "Basic / Conversational", value: "Basic English" },
-                    { label: "Good / Fluent English", value: "Fluent English" },
-                  ]}
-                  style={{ width: "100%", marginTop: 4 }}
+                  options={ENGLISH_SUGGESTIONS}
+                  placeholder="Select or type..."
+                  className="w-full"
                 />
               </Col>
 
+              {/* Candidate Mandatory Assets / Docs (mode="tags" allows custom typing!) */}
               <Col xs={24} sm={12}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                  Candidate Mandatory Assets / Documents
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Mandatory Documents / Assets (Select or type custom tag)
                 </label>
                 <Select
-                  mode="multiple"
+                  size="middle"
+                  mode="tags"
                   value={requiredAssets}
                   onChange={(val) => setRequiredAssets(val)}
-                  options={[
-                    { label: "Two Wheeler & DL", value: "Two Wheeler & DL" },
-                    { label: "Smartphone", value: "Smartphone" },
-                    { label: "Laptop / Computer", value: "Laptop" },
-                    { label: "Aadhaar & PAN", value: "Aadhaar & PAN" },
-                    { label: "Bank Account Passbook", value: "Bank Passbook" },
-                  ]}
-                  style={{ width: "100%", marginTop: 4 }}
+                  options={ASSET_SUGGESTIONS}
+                  placeholder="Select or type any custom asset..."
+                  className="w-full"
                 />
               </Col>
             </Row>
 
-            {/* Row 7: Interview Details & WhatsApp */}
-            <Row gutter={[12, 12]}>
+            <Row gutter={[10, 10]} className="mt-2.5">
+              {/* Interview Mode (Custom typing supported) */}
               <Col xs={12} sm={6}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
                   Interview Mode
                 </label>
-                <Select
+                <AutoComplete
+                  size="middle"
                   value={interviewMode}
-                  onChange={(val: any) => setInterviewMode(val)}
-                  options={[
-                    { label: "Telephonic Interview", value: "Telephonic" },
-                    { label: "Direct Walk-in", value: "Walk-in" },
-                    { label: "Online (Google Meet)", value: "Online (Google Meet / Zoom)" },
-                  ]}
-                  style={{ width: "100%", marginTop: 4 }}
+                  onChange={(val) => setInterviewMode(val)}
+                  options={INTERVIEW_MODE_SUGGESTIONS}
+                  placeholder="Walk-in / Telephonic / Online..."
+                  className="w-full"
                 />
               </Col>
 
+              {/* Recruiter WhatsApp */}
               <Col xs={12} sm={6}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                  Recruiter WhatsApp Number
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  HR WhatsApp Number
                 </label>
                 <Input
+                  size="middle"
                   prefix={<PhoneCall className="w-3.5 h-3.5 text-emerald-600" />}
                   value={recruiterWhatsApp}
                   onChange={(e) => setRecruiterWhatsApp(e.target.value.replace(/[^0-9]/g, ""))}
-                  placeholder="9872620706"
-                  style={{ marginTop: 4, borderRadius: 8 }}
+                  placeholder="e.g. 9872620706"
                 />
               </Col>
 
+              {/* Walk-in Venue Address */}
               <Col xs={24} sm={12}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                  Interview Venue / Address (for Walk-In)
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Interview Venue / Office Address
                 </label>
                 <Input
+                  size="middle"
+                  prefix={<MapPin className="w-3.5 h-3.5 text-slate-400" />}
                   value={interviewAddress}
                   onChange={(e) => setInterviewAddress(e.target.value)}
-                  placeholder="e.g. Office #4, Ground Floor, Model Town, Jalandhar"
-                  style={{ marginTop: 4, borderRadius: 8 }}
+                  placeholder="e.g. Floor 2, Verma Complex, Model Town..."
                 />
               </Col>
             </Row>
 
-            {/* Skills & Description */}
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                Mandatory Key Skills (Comma separated)
+            {/* Mandatory Key Skills */}
+            <div className="mt-2.5">
+              <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                Required Key Skills (Comma separated)
               </label>
               <Input
+                size="middle"
                 value={skills}
                 onChange={(e) => setSkills(e.target.value)}
-                placeholder="e.g. Tally, GST, MS Excel, Billing, Client Communication"
-                style={{ marginTop: 4, borderRadius: 8 }}
+                placeholder="e.g. Tally Prime, GST, Billing, Client Communication..."
               />
             </div>
 
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>Job Description</label>
+            {/* Job Description */}
+            <div className="mt-2.5">
+              <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                Job Responsibilities &amp; Overview
+              </label>
               <Input.TextArea
-                rows={3}
+                rows={2}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Detailed job roles and daily responsibilities..."
-                style={{ marginTop: 4, borderRadius: 8 }}
+                placeholder="Briefly state key day-to-day responsibilities..."
+                className="text-xs"
               />
             </div>
 
-            <Row gutter={[12, 12]}>
+            {/* Requirements & Benefits */}
+            <Row gutter={[10, 10]} className="mt-2.5">
               <Col xs={24} sm={12}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                  Key Requirements (One per line)
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Candidate Requirements (One per line)
                 </label>
                 <Input.TextArea
                   rows={2}
                   value={requirements}
                   onChange={(e) => setRequirements(e.target.value)}
-                  placeholder="Specific requirements..."
-                  style={{ marginTop: 4, borderRadius: 8 }}
+                  placeholder="e.g. 1+ year experience&#10;Good communication..."
+                  className="text-xs"
                 />
               </Col>
+
               <Col xs={24} sm={12}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                  Benefits &amp; Perks (One per line)
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                  Perks &amp; Benefits (One per line)
                 </label>
                 <Input.TextArea
                   rows={2}
                   value={benefits}
                   onChange={(e) => setBenefits(e.target.value)}
-                  placeholder="ESI, PF, Bonuses, Free Tea/Coffee..."
-                  style={{ marginTop: 4, borderRadius: 8 }}
+                  placeholder="e.g. PF &amp; ESIC Coverage&#10;Performance Bonus..."
+                  className="text-xs"
                 />
               </Col>
             </Row>
