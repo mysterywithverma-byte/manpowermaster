@@ -65,6 +65,65 @@ export function NaukriProfileView({ onOpenProfileBuilder }: NaukriProfileViewPro
   const [isViewAvatarOpen, setIsViewAvatarOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const resumeFileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const [uploadingResume, setUploadingResume] = useState(false);
+
+  const handleResumeFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedExts = /\.(pdf|docx?)$/i;
+    if (!allowedExts.test(file.name)) {
+      message.error("Please upload a PDF, DOC, or DOCX resume file.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      message.error("Resume file size should be less than 5MB.");
+      return;
+    }
+
+    setUploadingResume(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", "resume");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        updateUser({
+          resumeUrl: data.url,
+          resumeFileName: file.name,
+        });
+
+        await fetch("/api/users/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user?._id || user?.id,
+            email: user?.email,
+            profileData: {
+              resumeUrl: data.url,
+              resumeFileName: file.name,
+            },
+          }),
+        });
+
+        message.success("Resume uploaded and attached to your profile!");
+      } else {
+        message.error(data.error || "Failed to upload resume.");
+      }
+    } catch {
+      message.error("Network error while uploading resume.");
+    } finally {
+      setUploadingResume(false);
+      if (e.target) e.target.value = "";
+    }
+  };
 
   const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -459,20 +518,38 @@ export function NaukriProfileView({ onOpenProfileBuilder }: NaukriProfileViewPro
               style={{ borderRadius: 14, border: "1px solid #e2e8f0" }}
               styles={{ body: { padding: "16px 20px" } }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              {/* Hidden file input for resume upload */}
+              <input
+                type="file"
+                ref={resumeFileInputRef}
+                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                className="hidden"
+                onChange={handleResumeFileChange}
+              />
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <FileText className="w-4 h-4 text-orange-600" />
                   <Title level={5} style={{ margin: 0, color: "#0f172a" }}>Resume Document</Title>
                 </div>
-                <Button
-                  type="primary"
-                  size="small"
-                  icon={<Upload className="w-3.5 h-3.5" />}
-                  onClick={() => setIsResumeBuilderOpen(true)}
-                  style={{ borderRadius: 8, fontWeight: 600 }}
-                >
-                  Upload / Build
-                </Button>
+                <Space size={8}>
+                  <Button
+                    icon={<Upload className="w-3.5 h-3.5" />}
+                    loading={uploadingResume}
+                    onClick={() => resumeFileInputRef.current?.click()}
+                    style={{ borderRadius: 8, fontWeight: 600 }}
+                  >
+                    Upload Resume
+                  </Button>
+                  <Button
+                    type="primary"
+                    icon={<Sparkles className="w-3.5 h-3.5" />}
+                    onClick={() => setIsResumeBuilderOpen(true)}
+                    style={{ borderRadius: 8, fontWeight: 600 }}
+                  >
+                    Build ATS Resume
+                  </Button>
+                </Space>
               </div>
 
               {user?.resumeUrl ? (
@@ -492,8 +569,8 @@ export function NaukriProfileView({ onOpenProfileBuilder }: NaukriProfileViewPro
                   <Space align="center" size={12}>
                     <div
                       style={{
-                        width: 36,
-                        height: 36,
+                        width: 38,
+                        height: 38,
                         borderRadius: 8,
                         backgroundColor: "#ea580c",
                         color: "#fff",
@@ -509,48 +586,98 @@ export function NaukriProfileView({ onOpenProfileBuilder }: NaukriProfileViewPro
                         {user.resumeFileName || "Uploaded_Resume.pdf"}
                       </div>
                       <div style={{ fontSize: 11, color: "#16a34a", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Attached &amp; Active
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Attached &amp; Active for Job Applications
                       </div>
                     </div>
                   </Space>
 
-                  <Space size={8}>
+                  <Space size={8} wrap>
                     <a href={user.resumeUrl} target="_blank" rel="noreferrer">
                       <Button size="small" icon={<Download className="w-3.5 h-3.5" />}>
                         Download
                       </Button>
                     </a>
                     <Button
+                      size="small"
+                      icon={<Upload className="w-3.5 h-3.5" />}
+                      loading={uploadingResume}
+                      onClick={() => resumeFileInputRef.current?.click()}
+                    >
+                      Replace File
+                    </Button>
+                    <Button
                       type="primary"
                       size="small"
                       icon={<Pencil className="w-3.5 h-3.5" />}
                       onClick={() => setIsResumeBuilderOpen(true)}
                     >
-                      Edit
+                      Edit Online (Builder)
                     </Button>
                   </Space>
                 </div>
               ) : (
-                <div
-                  style={{
-                    padding: 16,
-                    borderRadius: 12,
-                    backgroundColor: "#f8fafc",
-                    border: "1px dashed #cbd5e1",
-                    textAlign: "center",
-                  }}
-                >
-                  <Text strong style={{ color: "#475569", display: "block" }}>
-                    No Resume Attached
-                  </Text>
-                  <div style={{ marginTop: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12, marginTop: 4 }}>
+                  {/* Option A: Direct File Upload */}
+                  <div
+                    style={{
+                      padding: "16px",
+                      borderRadius: 12,
+                      backgroundColor: "#f8fafc",
+                      border: "1px dashed #cbd5e1",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      gap: 12,
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <Upload className="w-4 h-4 text-orange-600" />
+                        <span style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>Upload Resume File</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: 11, color: "#64748b", lineHeight: 1.4 }}>
+                        Upload your existing PDF, DOC, or DOCX resume from your device (Max 5MB).
+                      </p>
+                    </div>
+                    <Button
+                      icon={<Upload className="w-3.5 h-3.5" />}
+                      loading={uploadingResume}
+                      onClick={() => resumeFileInputRef.current?.click()}
+                      style={{ borderRadius: 8, fontWeight: 600 }}
+                    >
+                      Choose File to Upload
+                    </Button>
+                  </div>
+
+                  {/* Option B: Online ATS Resume Builder */}
+                  <div
+                    style={{
+                      padding: "16px",
+                      borderRadius: 12,
+                      backgroundColor: "#fff7ed",
+                      border: "1px solid #fed7aa",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      gap: 12,
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <Sparkles className="w-4 h-4 text-orange-600" />
+                        <span style={{ fontWeight: 700, fontSize: 13, color: "#9a3412" }}>Build ATS Resume Online</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: 11, color: "#78350f", lineHeight: 1.4 }}>
+                        Don&apos;t have a file? Generate a recruiter-preferred ATS resume directly from your profile.
+                      </p>
+                    </div>
                     <Button
                       type="primary"
-                      size="small"
-                      icon={<FileText className="w-3.5 h-3.5 mr-1" />}
+                      icon={<Sparkles className="w-3.5 h-3.5" />}
                       onClick={() => setIsResumeBuilderOpen(true)}
+                      style={{ borderRadius: 8, fontWeight: 600 }}
                     >
-                      Build ATS Resume
+                      Create Resume Online
                     </Button>
                   </div>
                 </div>

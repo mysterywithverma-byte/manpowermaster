@@ -25,6 +25,7 @@ import {
   Input,
   Select,
   Modal,
+  message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -43,6 +44,8 @@ import {
   Building2,
   CheckCircle2,
   ExternalLink,
+  Upload,
+  Sparkles,
 } from "lucide-react";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 
@@ -63,7 +66,7 @@ interface JobAlert {
 }
 
 export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProps) {
-  const { user, savedJobs } = useAuth();
+  const { user, savedJobs, updateUser } = useAuth();
   const [tab, setTab] = useState("applications");
   const [applications, setApplications] = useState<any[]>([]);
   const [bookmarkedJobs, setBookmarkedJobs] = useState<MockJob[]>([]);
@@ -72,6 +75,78 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
   const [profileModalTab, setProfileModalTab] = useState("basic");
   const [isResumeBuilderOpen, setIsResumeBuilderOpen] = useState(false);
   const [isViewProfileOpen, setIsViewProfileOpen] = useState(false);
+  const [uploadingResume, setUploadingResume] = useState(false);
+  const resumeFileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  // Lock background body scroll when profile details modal is open
+  useEffect(() => {
+    if (isViewProfileOpen) {
+      document.body.classList.add("modal-open");
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.classList.remove("modal-open");
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [isViewProfileOpen]);
+
+  const handleResumeFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedExts = /\.(pdf|docx?)$/i;
+    if (!allowedExts.test(file.name)) {
+      message.error("Please upload a PDF, DOC, or DOCX resume file.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      message.error("Resume file size should be less than 5MB.");
+      return;
+    }
+
+    setUploadingResume(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", "resume");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        updateUser({
+          resumeUrl: data.url,
+          resumeFileName: file.name,
+        });
+
+        await fetch("/api/users/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user?._id || user?.id,
+            email: user?.email,
+            profileData: {
+              resumeUrl: data.url,
+              resumeFileName: file.name,
+            },
+          }),
+        });
+
+        message.success("Resume uploaded and attached to your profile!");
+      } else {
+        message.error(data.error || "Failed to upload resume.");
+      }
+    } catch {
+      message.error("Network error while uploading resume.");
+    } finally {
+      setUploadingResume(false);
+      if (e.target) e.target.value = "";
+    }
+  };
 
   const handleOpenProfileBuilder = (targetTab: string = "basic") => {
     setProfileModalTab(targetTab);
@@ -358,6 +433,15 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
             </div>
           </div>
 
+          {/* Hidden resume file input for direct upload */}
+          <input
+            type="file"
+            ref={resumeFileInputRef}
+            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            className="hidden"
+            onChange={handleResumeFileChange}
+          />
+
           {/* Right: Modern Zoho-style Compact Icon Action Toolbar */}
           <Space size={8} align="center">
             <Tooltip title="View Profile">
@@ -388,15 +472,29 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
               />
             </Tooltip>
 
-            <Tooltip title="ATS Resume Builder">
+            <Tooltip title="Upload Resume File (PDF / DOCX)">
               <Button
                 shape="circle"
                 size="large"
-                icon={<FileText className="w-4 h-4 text-orange-600" />}
-                onClick={() => setIsResumeBuilderOpen(true)}
+                icon={<Upload className="w-4 h-4 text-orange-600" />}
+                loading={uploadingResume}
+                onClick={() => resumeFileInputRef.current?.click()}
                 style={{
                   border: "1px solid #fed7aa",
                   backgroundColor: "#fff7ed",
+                }}
+              />
+            </Tooltip>
+
+            <Tooltip title="Build ATS Resume Online">
+              <Button
+                shape="circle"
+                size="large"
+                icon={<Sparkles className="w-4 h-4 text-emerald-600" />}
+                onClick={() => setIsResumeBuilderOpen(true)}
+                style={{
+                  border: "1px solid #bbf7d0",
+                  backgroundColor: "#f0fdf4",
                 }}
               />
             </Tooltip>
@@ -646,6 +744,14 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
         }
         destroyOnHidden
         style={{ top: 24 }}
+        styles={{
+          body: {
+            maxHeight: "calc(85vh - 70px)",
+            overflowY: "auto",
+            overscrollBehavior: "contain",
+            padding: "16px 20px",
+          },
+        }}
       >
         <div style={{ marginTop: 16 }}>
           <NaukriProfileView

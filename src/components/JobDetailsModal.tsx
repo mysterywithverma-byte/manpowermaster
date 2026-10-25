@@ -13,6 +13,7 @@ import {
   ArrowUpRight,
   Sparkles,
   MessageCircle,
+  Calendar,
 } from "lucide-react";
 
 interface JobDetailsModalProps {
@@ -284,6 +285,19 @@ export function JobDetailsModal({ job, onClose, onApply }: JobDetailsModalProps)
             <div className="mt-2.5 p-2 rounded-xl bg-white border border-slate-200/80 text-xs text-slate-700">
               <span className="font-bold text-slate-900">Walk-in Location: </span>
               <span>{job.interviewAddress}</span>
+            </div>
+          )}
+          {(job.interviewStartDate || job.interviewEndDate || job.interviewTimeSlot) && (
+            <div className="mt-2.5 p-2.5 rounded-xl bg-orange-50/90 border border-orange-200 text-xs text-orange-950 flex items-start gap-2">
+              <Calendar className="w-4 h-4 text-orange-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold text-orange-950">Interview Schedule Window: </span>
+                <span>
+                  {job.interviewStartDate || "Immediate"}
+                  {job.interviewEndDate ? ` to ${job.interviewEndDate}` : ""}
+                  {job.interviewTimeSlot ? ` • Daily Slot: ${job.interviewTimeSlot}` : ""}
+                </span>
+              </div>
             </div>
           )}
           {job.requiredAssets && job.requiredAssets.length > 0 && (

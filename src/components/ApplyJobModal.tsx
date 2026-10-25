@@ -62,8 +62,17 @@ export function ApplyJobModal({
 
   const [uploadingResume, setUploadingResume] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+
+  React.useEffect(() => {
+    document.body.classList.add("modal-open");
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
 
   React.useEffect(() => {
     if (user) {
@@ -195,7 +204,14 @@ export function ApplyJobModal({
       footer={null}
       width={560}
       centered
-      styles={{ body: { padding: 24 } }}
+      styles={{
+        body: {
+          padding: 24,
+          maxHeight: "calc(85vh - 80px)",
+          overflowY: "auto",
+          overscrollBehavior: "contain",
+        },
+      }}
     >
       {!user ? (
         <Result

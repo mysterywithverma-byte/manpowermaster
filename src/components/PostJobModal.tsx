@@ -51,13 +51,14 @@ const QUALIFICATION_SUGGESTIONS = [
 ];
 
 const SHIFT_SUGGESTIONS = [
-  { value: "Day Shift (9 AM - 6 PM)" },
-  { value: "Day Shift (10 AM - 7 PM)" },
-  { value: "Morning Shift (7 AM - 3 PM)" },
-  { value: "Evening Shift (2 PM - 10 PM)" },
-  { value: "Night Shift (8 PM - 5 AM)" },
+  { value: "Day Shift (9:30 AM - 6:30 PM)" },
+  { value: "General Shift (10:00 AM - 7:00 PM)" },
+  { value: "Morning Shift (7:00 AM - 3:30 PM)" },
+  { value: "Evening Shift (2:00 PM - 10:30 PM)" },
+  { value: "Night Shift / US Shift (8:00 PM - 5:00 AM)" },
   { value: "Rotational Shift" },
-  { value: "Flexible Hours" },
+  { value: "Flexible Working Hours" },
+  { value: "Part-time / Hourly Shift" },
 ];
 
 const WORKING_DAYS_SUGGESTIONS = [
@@ -76,9 +77,18 @@ const EXPERIENCE_SUGGESTIONS = [
 ];
 
 const INTERVIEW_MODE_SUGGESTIONS = [
+  { value: "Interview Schedule (Scheduled Slot)" },
   { value: "Direct Walk-in Interview" },
-  { value: "Telephonic Interview" },
   { value: "Online (Google Meet / Zoom)" },
+  { value: "Telephonic Interview" },
+];
+
+const INTERVIEW_TIME_SLOT_SUGGESTIONS = [
+  { value: "10:00 AM - 1:00 PM (Morning Slot)" },
+  { value: "11:00 AM - 4:00 PM (Standard Slot)" },
+  { value: "2:00 PM - 5:30 PM (Afternoon Slot)" },
+  { value: "10:00 AM - 6:00 PM (Full Day Slot)" },
+  { value: "Flexible Hours (With Prior Appointment)" },
 ];
 
 const ENGLISH_SUGGESTIONS = [
@@ -125,8 +135,8 @@ export function PostJobModal({
   const [company, setCompany] = useState("");
   const [selectedBranchId, setSelectedBranchId] = useState<string>("main");
   const [location, setLocation] = useState("");
-  const [workplaceType, setWorkplaceType] = useState<"Remote" | "On-site" | "Hybrid">("On-site");
-  const [jobType, setJobType] = useState<"Full-time" | "Part-time" | "Contract" | "Internship">("Full-time");
+  const [workplaceType, setWorkplaceType] = useState<string>("");
+  const [jobType, setJobType] = useState<string>("");
   const [openingsCount, setOpeningsCount] = useState("");
   const [urgentHiring, setUrgentHiring] = useState(false);
 
@@ -141,14 +151,17 @@ export function PostJobModal({
   const [qualification, setQualification] = useState("");
   const [shiftTiming, setShiftTiming] = useState("");
   const [workingDays, setWorkingDays] = useState("");
-  const [expiryDays, setExpiryDays] = useState("30");
+  const [expiryDays, setExpiryDays] = useState<string>("");
 
   // Candidate Criteria & Interview
-  const [genderPreference, setGenderPreference] = useState("Any");
+  const [genderPreference, setGenderPreference] = useState<string>("");
   const [englishLevel, setEnglishLevel] = useState("");
   const [requiredAssets, setRequiredAssets] = useState<string[]>([]);
   const [interviewMode, setInterviewMode] = useState("");
   const [interviewAddress, setInterviewAddress] = useState("");
+  const [interviewStartDate, setInterviewStartDate] = useState("");
+  const [interviewEndDate, setInterviewEndDate] = useState("");
+  const [interviewTimeSlot, setInterviewTimeSlot] = useState("");
   const [recruiterWhatsApp, setRecruiterWhatsApp] = useState("");
 
   // Details
@@ -249,6 +262,19 @@ export function PostJobModal({
     }
   };
 
+  // Lock background body scroll when modal is active
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("modal-open");
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.classList.remove("modal-open");
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [isOpen]);
+
   // Reset or pre-fill on modal open
   useEffect(() => {
     if (isOpen) {
@@ -261,9 +287,9 @@ export function PostJobModal({
         setTitle(jobToEdit.title || "");
         setCompany(jobToEdit.company || employerName);
         setLocation(jobToEdit.location || "");
-        setWorkplaceType(jobToEdit.workplaceType || "On-site");
+        setWorkplaceType(jobToEdit.workplaceType || "");
         setExperienceLevel(jobToEdit.experienceLevel || "");
-        setJobType(jobToEdit.jobType || "Full-time");
+        setJobType(jobToEdit.jobType || "");
         setSalaryMin(jobToEdit.salaryMin ? String(jobToEdit.salaryMin) : "");
         setSalaryMax(jobToEdit.salaryMax ? String(jobToEdit.salaryMax) : "");
         setSalaryMonthlyMin(
@@ -280,16 +306,19 @@ export function PostJobModal({
             ? String(lpaToMonthly(jobToEdit.salaryMax))
             : ""
         );
-        setOpeningsCount(jobToEdit.openingsCount ? String(jobToEdit.openingsCount) : "1");
-        setExpiryDays(jobToEdit.expiryDays ? String(jobToEdit.expiryDays) : "30");
+        setOpeningsCount(jobToEdit.openingsCount ? String(jobToEdit.openingsCount) : "");
+        setExpiryDays(jobToEdit.expiryDays ? String(jobToEdit.expiryDays) : "");
         setQualification(jobToEdit.qualification || "");
         setShiftTiming(jobToEdit.shiftTiming || "");
         setWorkingDays(jobToEdit.workingDays || "");
-        setGenderPreference(jobToEdit.genderPreference || "Any");
+        setGenderPreference(jobToEdit.genderPreference || "");
         setEnglishLevel(jobToEdit.englishLevel || "");
         setRequiredAssets(jobToEdit.requiredAssets || []);
         setInterviewMode(jobToEdit.interviewMode || "");
         setInterviewAddress(jobToEdit.interviewAddress || "");
+        setInterviewStartDate(jobToEdit.interviewStartDate || "");
+        setInterviewEndDate(jobToEdit.interviewEndDate || "");
+        setInterviewTimeSlot(jobToEdit.interviewTimeSlot || "");
         setRecruiterWhatsApp(jobToEdit.recruiterWhatsApp || user?.phone || "");
         setUrgentHiring(Boolean(jobToEdit.urgentHiring));
         setSkills(Array.isArray(jobToEdit.skills) ? jobToEdit.skills.join(", ") : jobToEdit.skills || "");
@@ -303,9 +332,9 @@ export function PostJobModal({
         setTitle("");
         setCompany(user?.companyName || user?.name || "");
         setLocation(user?.location || "");
-        setWorkplaceType("On-site");
-        setJobType("Full-time");
-        setOpeningsCount("1");
+        setWorkplaceType("");
+        setJobType("");
+        setOpeningsCount("");
         setUrgentHiring(false);
         setSalaryMonthlyMin("");
         setSalaryMonthlyMax("");
@@ -315,12 +344,15 @@ export function PostJobModal({
         setQualification("");
         setShiftTiming("");
         setWorkingDays("");
-        setExpiryDays("30");
-        setGenderPreference("Any");
+        setExpiryDays("");
+        setGenderPreference("");
         setEnglishLevel("");
         setRequiredAssets([]);
         setInterviewMode("");
         setInterviewAddress("");
+        setInterviewStartDate("");
+        setInterviewEndDate("");
+        setInterviewTimeSlot("");
         setRecruiterWhatsApp(user?.phone || "");
         setSkills("");
         setDescription("");
@@ -374,9 +406,9 @@ export function PostJobModal({
         location: location.trim() || "India",
         branchId: selectedBranchId !== "custom" && selectedBranchId !== "main" ? selectedBranchId : undefined,
         branchName: selectedBranchObj?.branchName || (selectedBranchId === "main" ? "Head Office" : undefined),
-        workplaceType,
+        workplaceType: workplaceType || "On-site",
         experienceLevel: experienceLevel.trim() || "Fresher",
-        jobType,
+        jobType: jobType || "Full-time",
         salaryMin: Number(salaryMin) || (salaryMonthlyMin ? monthlyToLpa(Number(salaryMonthlyMin)) : 0),
         salaryMax: Number(salaryMax) || (salaryMonthlyMax ? monthlyToLpa(Number(salaryMonthlyMax)) : 0),
         salaryMonthlyMin: Number(salaryMonthlyMin) || (salaryMin ? lpaToMonthly(Number(salaryMin)) : 0),
@@ -387,11 +419,14 @@ export function PostJobModal({
         qualification: qualification.trim(),
         shiftTiming: shiftTiming.trim(),
         workingDays: workingDays.trim(),
-        genderPreference,
+        genderPreference: genderPreference || "Any",
         englishLevel: englishLevel.trim(),
         requiredAssets,
         interviewMode: interviewMode.trim(),
         interviewAddress: interviewAddress.trim(),
+        interviewStartDate: interviewStartDate.trim(),
+        interviewEndDate: interviewEndDate.trim(),
+        interviewTimeSlot: interviewTimeSlot.trim(),
         recruiterWhatsApp: recruiterWhatsApp.trim(),
         urgentHiring,
         skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
@@ -469,8 +504,17 @@ export function PostJobModal({
           </div>
         )
       }
-      width={780}
-      centered
+      width="94vw"
+      style={{ maxWidth: 1180, top: 20 }}
+      centered={false}
+      styles={{
+        body: {
+          padding: "20px 28px",
+          maxHeight: "calc(88vh - 85px)",
+          overflowY: "auto",
+          overscrollBehavior: "contain",
+        },
+      }}
       title={
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-orange-600 text-white flex items-center justify-center shrink-0">
@@ -537,7 +581,7 @@ export function PostJobModal({
           </div>
         </div>
       ) : (
-        <div className="max-h-[72vh] overflow-y-auto pr-1 flex flex-col gap-3.5">
+        <div className="flex flex-col gap-3.5">
           {/* SECTION 1: Employer Identity & Branch Selection */}
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
             <div className="flex items-center justify-between mb-2.5">
@@ -623,13 +667,15 @@ export function PostJobModal({
                 </span>
                 <Select
                   size="middle"
-                  value={workplaceType}
-                  onChange={(val) => setWorkplaceType(val)}
+                  value={workplaceType || undefined}
+                  placeholder="Select Workplace"
+                  allowClear
+                  onChange={(val) => setWorkplaceType(val || "")}
                   className="w-full"
                   options={[
-                    { label: "On-site", value: "On-site" },
-                    { label: "Hybrid", value: "Hybrid" },
-                    { label: "Remote (WFH)", value: "Remote" },
+                    { label: "🏢 On-site (Office / Plant)", value: "On-site" },
+                    { label: "🏡 Remote (WFH)", value: "Remote" },
+                    { label: "🔄 Hybrid", value: "Hybrid" },
                   ]}
                 />
               </div>
@@ -640,13 +686,15 @@ export function PostJobModal({
                 </span>
                 <Select
                   size="middle"
-                  value={jobType}
-                  onChange={(val) => setJobType(val)}
+                  value={jobType || undefined}
+                  placeholder="Select Job Type"
+                  allowClear
+                  onChange={(val) => setJobType(val || "")}
                   className="w-full"
                   options={[
-                    { label: "Full-time", value: "Full-time" },
+                    { label: "Full-time (Regular)", value: "Full-time" },
                     { label: "Part-time", value: "Part-time" },
-                    { label: "Contract", value: "Contract" },
+                    { label: "Contract / Project", value: "Contract" },
                     { label: "Internship", value: "Internship" },
                   ]}
                 />
@@ -658,8 +706,10 @@ export function PostJobModal({
                 </span>
                 <Select
                   size="middle"
-                  value={expiryDays}
-                  onChange={(val) => setExpiryDays(val)}
+                  value={expiryDays || undefined}
+                  placeholder="Select Expiry Days"
+                  allowClear
+                  onChange={(val) => setExpiryDays(val || "")}
                   className="w-full"
                   options={[
                     { label: "7 Days (Urgent)", value: "7" },
@@ -884,11 +934,13 @@ export function PostJobModal({
                 </label>
                 <Select
                   size="middle"
-                  value={genderPreference}
-                  onChange={(val) => setGenderPreference(val)}
+                  value={genderPreference || undefined}
+                  placeholder="Select Gender Preference"
+                  allowClear
+                  onChange={(val) => setGenderPreference(val || "")}
                   className="w-full"
                   options={[
-                    { label: "Any Gender", value: "Any" },
+                    { label: "No Preference (Any)", value: "Any" },
                     { label: "Male Only", value: "Male" },
                     { label: "Female Only", value: "Female" },
                   ]}
@@ -929,7 +981,7 @@ export function PostJobModal({
 
             <Row gutter={[10, 10]} className="mt-2.5">
               {/* Interview Mode (Custom typing supported) */}
-              <Col xs={12} sm={6}>
+              <Col xs={24} sm={8}>
                 <label className="text-[11px] font-bold text-slate-600 block mb-1">
                   Interview Mode
                 </label>
@@ -938,7 +990,7 @@ export function PostJobModal({
                   value={interviewMode}
                   onChange={(val) => setInterviewMode(val)}
                   options={INTERVIEW_MODE_SUGGESTIONS}
-                  placeholder="Walk-in / Telephonic / Online..."
+                  placeholder="Select mode (e.g. Interview Schedule, Walk-in)..."
                   className="w-full"
                 />
               </Col>
@@ -958,7 +1010,7 @@ export function PostJobModal({
               </Col>
 
               {/* Walk-in Venue Address */}
-              <Col xs={24} sm={12}>
+              <Col xs={24} sm={10}>
                 <label className="text-[11px] font-bold text-slate-600 block mb-1">
                   Interview Venue / Office Address
                 </label>
@@ -971,6 +1023,78 @@ export function PostJobModal({
                 />
               </Col>
             </Row>
+
+            {/* Interview Schedule Timing Box (Kab se kab tak interview dena jaruri hai) */}
+            <div className="mt-3 p-3 rounded-xl bg-orange-50/60 border border-orange-200/80">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-orange-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-orange-600" />
+                  <span>Interview Schedule Window (Kab se kab tak interview dena jaruri hai)</span>
+                </span>
+                <span className="text-[10px] font-semibold text-orange-700 bg-white px-2 py-0.5 rounded border border-orange-200">
+                  Candidate Time Window
+                </span>
+              </div>
+
+              <Row gutter={[10, 10]}>
+                <Col xs={12} sm={6}>
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                    Interview Start Date
+                  </label>
+                  <Input
+                    size="middle"
+                    type="date"
+                    value={interviewStartDate}
+                    onChange={(e) => setInterviewStartDate(e.target.value)}
+                    className="font-medium"
+                  />
+                </Col>
+
+                <Col xs={12} sm={6}>
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                    Interview End Date / Deadline
+                  </label>
+                  <Input
+                    size="middle"
+                    type="date"
+                    value={interviewEndDate}
+                    onChange={(e) => setInterviewEndDate(e.target.value)}
+                    className="font-medium"
+                  />
+                </Col>
+
+                <Col xs={24} sm={12}>
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                    Daily Interview Time Slot (Select or Type Window)
+                  </label>
+                  <AutoComplete
+                    size="middle"
+                    value={interviewTimeSlot}
+                    onChange={(val) => setInterviewTimeSlot(val)}
+                    options={INTERVIEW_TIME_SLOT_SUGGESTIONS}
+                    placeholder="e.g. 11:00 AM - 4:00 PM (Standard Slot)..."
+                    className="w-full"
+                  />
+                </Col>
+              </Row>
+
+              {/* Live Preview Info Banner */}
+              <div className="mt-2 text-[11px] text-slate-600 p-2 rounded-lg bg-white border border-orange-100 flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+                <span>
+                  {interviewStartDate || interviewEndDate || interviewTimeSlot ? (
+                    <>
+                      Candidate Notice: Must attend interview between{" "}
+                      <strong className="text-orange-950 font-bold">{interviewStartDate || "Immediate"}</strong> and{" "}
+                      <strong className="text-orange-950 font-bold">{interviewEndDate || "Vacancy Active"}</strong> during{" "}
+                      <strong className="text-orange-950 font-bold">{interviewTimeSlot || "Designated Hours"}</strong>.
+                    </>
+                  ) : (
+                    "Tip: Specify start date, end date, and time slot so candidates clearly know their interview window."
+                  )}
+                </span>
+              </div>
+            </div>
 
             {/* Mandatory Key Skills */}
             <div className="mt-2.5">

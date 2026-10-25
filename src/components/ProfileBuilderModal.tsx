@@ -70,6 +70,19 @@ export function ProfileBuilderModal({
     }
   }, [initialTab, isOpen]);
 
+  // Lock background body scroll when modal is active
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("modal-open");
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.classList.remove("modal-open");
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [isOpen]);
+
   // Tab 1: Basic & Headline
   const [name, setName] = useState(user?.name || "");
   const [headline, setHeadline] = useState(user?.headline || "");
@@ -401,7 +414,14 @@ export function ProfileBuilderModal({
       }
       width={780}
       centered
-      styles={{ body: { padding: "20px 24px" } }}
+      styles={{
+        body: {
+          padding: "16px 20px",
+          maxHeight: "calc(82vh - 90px)",
+          overflowY: "auto",
+          overscrollBehavior: "contain",
+        },
+      }}
     >
       {/* Header */}
       <div style={{ marginBottom: 16 }}>

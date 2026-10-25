@@ -116,6 +116,9 @@ export interface MockJob {
   requiredAssets?: string[];
   interviewMode?: string;
   interviewAddress?: string;
+  interviewStartDate?: string;
+  interviewEndDate?: string;
+  interviewTimeSlot?: string;
   recruiterWhatsApp?: string;
   urgentHiring?: boolean;
   expiryDays?: number;

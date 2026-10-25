@@ -228,3 +228,27 @@ html, body {
   }
 }
 
+/* ──────────────────────────────────────────────────────────────────────
+   MODAL BACKGROUND SCROLL-LOCK & OVERSCROLL PREVENTION
+   Prevents background page from scrolling when modals or forms are scrolled
+   ────────────────────────────────────────────────────────────────────── */
+body.modal-open,
+body.ant-scrolling-effect,
+html.modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+.ant-modal-wrap,
+.ant-modal-wrap > * {
+  overscroll-behavior: contain !important;
+}
+
+.ant-modal-content,
+.ant-modal-body,
+.ant-drawer-content,
+.ant-drawer-body {
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch;
+}
+

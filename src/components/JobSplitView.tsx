@@ -550,6 +550,20 @@ export function JobSplitView({
             </div>
           )}
 
+          {(job.interviewStartDate || job.interviewEndDate || job.interviewTimeSlot) && (
+            <div className="mt-2.5 p-2.5 rounded-lg bg-orange-50/80 border border-orange-200 text-xs text-orange-950 flex items-start gap-2">
+              <Calendar className="w-3.5 h-3.5 text-orange-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold text-orange-950">Interview Schedule Window: </span>
+                <span>
+                  {job.interviewStartDate || "Immediate"}
+                  {job.interviewEndDate ? ` to ${job.interviewEndDate}` : ""}
+                  {job.interviewTimeSlot ? ` • Daily Slot: ${job.interviewTimeSlot}` : ""}
+                </span>
+              </div>
+            </div>
+          )}
+
           {job.requiredAssets && job.requiredAssets.length > 0 && (
             <div className="mt-2.5 flex items-center flex-wrap gap-1.5">
               <span className="text-[10px] font-bold uppercase text-slate-400">Must Have:</span>

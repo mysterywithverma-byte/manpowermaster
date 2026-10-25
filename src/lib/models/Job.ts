@@ -26,6 +26,9 @@ export interface IJob extends Document {
   requiredAssets?: string[];
   interviewMode?: string;
   interviewAddress?: string;
+  interviewStartDate?: string;
+  interviewEndDate?: string;
+  interviewTimeSlot?: string;
   recruiterWhatsApp?: string;
   urgentHiring?: boolean;
   expiryDays?: number;
@@ -78,6 +81,9 @@ const JobSchema = new Schema<IJob>(
     requiredAssets: { type: [String], default: [] },
     interviewMode: { type: String, default: "Telephonic" },
     interviewAddress: { type: String, default: "" },
+    interviewStartDate: { type: String, default: "" },
+    interviewEndDate: { type: String, default: "" },
+    interviewTimeSlot: { type: String, default: "" },
     recruiterWhatsApp: { type: String, default: "" },
     urgentHiring: { type: Boolean, default: false },
     expiryDays: { type: Number, default: 30 },

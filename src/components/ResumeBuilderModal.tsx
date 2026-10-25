@@ -124,6 +124,19 @@ export function ResumeBuilderModal({ isOpen, onClose, onSaved }: ResumeBuilderMo
   const [newTool, setNewTool] = useState("");
   const [newSoftSkill, setNewSoftSkill] = useState("");
 
+  // Lock background body scroll when resume modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("modal-open");
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.classList.remove("modal-open");
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [isOpen]);
+
   const addTechSkill = (skill: string) => {
     const trimmed = skill.trim();
     if (!trimmed || resume.skills.technical.includes(trimmed)) return;
