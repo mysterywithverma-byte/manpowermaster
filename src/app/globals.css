@@ -252,3 +252,81 @@ html.modal-open {
   -webkit-overflow-scrolling: touch;
 }
 
+/* ──────────────────────────────────────────────────────────────────────
+   POST DIRECT JOB OPENING - FULL PAGE / FULL VIEWPORT STUDIO MODAL
+   Forces the job opening modal to stretch full-screen (98vw / 96vh)
+   with dedicated responsive padding and scrolling containment
+   ────────────────────────────────────────────────────────────────────── */
+.post-job-full-modal-wrap {
+  padding: 8px !important;
+  overflow: hidden !important;
+}
+
+.post-job-full-modal-wrap .ant-modal,
+.post-job-full-modal.ant-modal,
+.ant-modal.post-job-full-modal {
+  width: 98vw !important;
+  max-width: 98vw !important;
+  top: 8px !important;
+  margin: 0 auto !important;
+  padding-bottom: 8px !important;
+}
+
+.post-job-full-modal .ant-modal-content {
+  border-radius: 18px !important;
+  padding: 16px 22px !important;
+  min-height: calc(96vh - 16px) !important;
+  max-height: calc(96vh - 16px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.3) !important;
+  background: #ffffff !important;
+}
+
+.post-job-full-modal .ant-modal-header {
+  padding-bottom: 10px !important;
+  margin-bottom: 8px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  flex-shrink: 0 !important;
+}
+
+.post-job-full-modal .ant-modal-body {
+  flex: 1 1 auto !important;
+  max-height: calc(96vh - 145px) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  padding: 4px 6px 12px 2px !important;
+}
+
+.post-job-full-modal .ant-modal-footer {
+  margin-top: auto !important;
+  padding-top: 10px !important;
+  border-top: 1px solid #f1f5f9 !important;
+  flex-shrink: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .post-job-full-modal-wrap {
+    padding: 0 !important;
+  }
+  .post-job-full-modal-wrap .ant-modal,
+  .post-job-full-modal.ant-modal,
+  .ant-modal.post-job-full-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    top: 0 !important;
+    margin: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  .post-job-full-modal .ant-modal-content {
+    border-radius: 0 !important;
+    min-height: 100vh !important;
+    max-height: 100vh !important;
+    padding: 12px 14px !important;
+  }
+  .post-job-full-modal .ant-modal-body {
+    max-height: calc(100vh - 130px) !important;
+  }
+}
+
+
