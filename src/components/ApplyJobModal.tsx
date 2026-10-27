@@ -62,6 +62,7 @@ export function ApplyJobModal({
 
   const [uploadingResume, setUploadingResume] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
 
   React.useEffect(() => {

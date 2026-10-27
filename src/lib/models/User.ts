@@ -67,6 +67,7 @@ export interface IUser extends Document {
   savedJobs: string[];
   companyName?: string;
   companyLogo?: string;
+  avatar?: string;
   isVerified?: boolean;
   isBlocked?: boolean;
   isReported?: boolean;
