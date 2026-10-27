@@ -286,22 +286,22 @@ export function EmployerDashboard({
         <Row gutter={[16, 16]} style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #f1f5f9" }}>
           <Col xs={12} sm={6}>
             <Card size="small" style={{ borderRadius: 10, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
-              <Statistic title="Active Openings" value={jobs.length} valueStyle={{ color: "#0f172a", fontWeight: 800 }} />
+              <Statistic title="Active Openings" value={jobs.length} styles={{ content: { color: "#0f172a", fontWeight: 800 } }} />
             </Card>
           </Col>
           <Col xs={12} sm={6}>
             <Card size="small" style={{ borderRadius: 10, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
-              <Statistic title="Total Candidates" value={applications.length} valueStyle={{ color: "#ea580c", fontWeight: 800 }} />
+              <Statistic title="Total Candidates" value={applications.length} styles={{ content: { color: "#ea580c", fontWeight: 800 } }} />
             </Card>
           </Col>
           <Col xs={12} sm={6}>
             <Card size="small" style={{ borderRadius: 10, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
-              <Statistic title="In Interviews" value={totalShortlisted} valueStyle={{ color: "#eab308", fontWeight: 800 }} />
+              <Statistic title="In Interviews" value={totalShortlisted} styles={{ content: { color: "#eab308", fontWeight: 800 } }} />
             </Card>
           </Col>
           <Col xs={12} sm={6}>
             <Card size="small" style={{ borderRadius: 10, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
-              <Statistic title="Hired / Selected" value={totalHired} valueStyle={{ color: "#16a34a", fontWeight: 800 }} />
+              <Statistic title="Hired / Selected" value={totalHired} styles={{ content: { color: "#16a34a", fontWeight: 800 } }} />
             </Card>
           </Col>
         </Row>

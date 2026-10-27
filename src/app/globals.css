@@ -254,55 +254,67 @@ html.modal-open {
 
 /* ──────────────────────────────────────────────────────────────────────
    POST DIRECT JOB OPENING - FULL PAGE / FULL VIEWPORT STUDIO MODAL
-   Forces the job opening modal to stretch full-screen (98vw / 96vh)
-   with dedicated responsive padding and scrolling containment
+   Forces the job opening modal to stretch true full page (100vw / 100vh)
    ────────────────────────────────────────────────────────────────────── */
 .post-job-full-modal-wrap {
-  padding: 8px !important;
+  padding: 0 !important;
   overflow: hidden !important;
 }
 
 .post-job-full-modal-wrap .ant-modal,
 .post-job-full-modal.ant-modal,
 .ant-modal.post-job-full-modal {
-  width: 98vw !important;
-  max-width: 98vw !important;
-  top: 8px !important;
-  margin: 0 auto !important;
-  padding-bottom: 8px !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  top: 0 !important;
+  left: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
 }
 
 .post-job-full-modal .ant-modal-content {
-  border-radius: 18px !important;
-  padding: 16px 22px !important;
-  min-height: calc(96vh - 16px) !important;
-  max-height: calc(96vh - 16px) !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100vh !important;
+  max-height: 100vh !important;
   display: flex !important;
   flex-direction: column !important;
-  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.3) !important;
-  background: #ffffff !important;
+  box-shadow: none !important;
+  background: #f8fafc !important;
+  overflow: hidden !important;
 }
 
 .post-job-full-modal .ant-modal-header {
-  padding-bottom: 10px !important;
-  margin-bottom: 8px !important;
-  border-bottom: 1px solid #f1f5f9 !important;
+  padding: 14px 24px !important;
+  margin-bottom: 0 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
   flex-shrink: 0 !important;
 }
 
 .post-job-full-modal .ant-modal-body {
+  position: relative !important;
   flex: 1 1 auto !important;
-  max-height: calc(96vh - 145px) !important;
+  max-height: calc(100vh - 130px) !important;
+  max-height: calc(100dvh - 130px) !important;
   overflow-y: auto !important;
   overscroll-behavior: contain !important;
-  padding: 4px 6px 12px 2px !important;
+  padding: 20px 24px !important;
+  background: #f8fafc !important;
 }
 
 .post-job-full-modal .ant-modal-footer {
   margin-top: auto !important;
-  padding-top: 10px !important;
-  border-top: 1px solid #f1f5f9 !important;
+  padding: 12px 24px !important;
+  border-top: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
   flex-shrink: 0 !important;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.04) !important;
 }
 
 @media (max-width: 768px) {
@@ -314,19 +326,78 @@ html.modal-open {
   .ant-modal.post-job-full-modal {
     width: 100vw !important;
     max-width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
     top: 0 !important;
+    left: 0 !important;
     margin: 0 !important;
-    padding-bottom: 0 !important;
+    padding: 0 !important;
   }
   .post-job-full-modal .ant-modal-content {
     border-radius: 0 !important;
     min-height: 100vh !important;
+    min-height: 100dvh !important;
     max-height: 100vh !important;
-    padding: 12px 14px !important;
+    max-height: 100dvh !important;
+    padding: 0 !important;
+  }
+  .post-job-full-modal .ant-modal-header {
+    padding: 12px 16px !important;
   }
   .post-job-full-modal .ant-modal-body {
-    max-height: calc(100vh - 130px) !important;
+    padding: 14px 12px !important;
+    max-height: calc(100vh - 120px) !important;
+    max-height: calc(100dvh - 120px) !important;
+  }
+  .post-job-full-modal .ant-modal-footer {
+    padding: 10px 16px !important;
   }
 }
 
+.ant-select-dropdown {
+  overscroll-behavior: contain !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+  border-radius: 10px !important;
+}
 
+/* Post Job Modal - Tabs Styling */
+.post-job-tabs .ant-tabs-nav {
+  margin-bottom: 0 !important;
+}
+
+.post-job-tabs .ant-tabs-tab {
+  padding: 10px 16px !important;
+  margin: 0 2px !important;
+  border-radius: 10px 10px 0 0 !important;
+  transition: all 0.2s ease !important;
+  background: transparent !important;
+}
+
+.post-job-tabs .ant-tabs-tab:hover {
+  background: #f1f5f9 !important;
+}
+
+.post-job-tabs .ant-tabs-tab-active {
+  background: #fff7ed !important;
+}
+
+.post-job-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #ea580c !important;
+}
+
+.post-job-tabs .ant-tabs-ink-bar {
+  background: #ea580c !important;
+  height: 3px !important;
+  border-radius: 3px 3px 0 0 !important;
+}
+
+.post-job-tabs .ant-tabs-content-holder {
+  padding-top: 4px !important;
+}
+
+@media (max-width: 640px) {
+  .post-job-tabs .ant-tabs-tab {
+    padding: 8px 10px !important;
+    margin: 0 1px !important;
+  }
+}
