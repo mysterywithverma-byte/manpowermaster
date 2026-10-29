@@ -17,7 +17,17 @@ import {
   Avatar,
   ConfigProvider,
   Tabs,
+  TimePicker,
 } from "antd";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+dayjs.extend(customParseFormat);
+
+const parseTimeToDayjs = (timeStr?: string) => {
+  if (!timeStr) return null;
+  const d = dayjs(timeStr, ["h:mm A", "hh:mm A", "h:mm a", "hh:mm a", "HH:mm"]);
+  return d.isValid() ? d : null;
+};
 import {
   Building2,
   MapPin,
@@ -169,6 +179,37 @@ const PERK_TAG_SUGGESTIONS = [
   { label: "Mobile Allowance", value: "Mobile Allowance" },
 ];
 
+const WEEK_DAYS = [
+  { key: "Mon", short: "Mon", full: "Monday" },
+  { key: "Tue", short: "Tue", full: "Tuesday" },
+  { key: "Wed", short: "Wed", full: "Wednesday" },
+  { key: "Thu", short: "Thu", full: "Thursday" },
+  { key: "Fri", short: "Fri", full: "Friday" },
+  { key: "Sat", short: "Sat", full: "Saturday" },
+  { key: "Sun", short: "Sun", full: "Sunday" },
+];
+
+function calculateShiftDuration(inTimeStr: string, outTimeStr: string): string {
+  const parseToMinutes = (t: string) => {
+    const match = t?.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+    if (!match) return null;
+    let h = parseInt(match[1], 10);
+    const m = parseInt(match[2], 10);
+    const p = match[3]?.toUpperCase() || (h >= 12 ? "PM" : "AM");
+    if (p === "PM" && h < 12) h += 12;
+    if (p === "AM" && h === 12) h = 0;
+    return h * 60 + m;
+  };
+  const inM = parseToMinutes(inTimeStr);
+  const outM = parseToMinutes(outTimeStr);
+  if (inM === null || outM === null) return "";
+  let diff = outM - inM;
+  if (diff < 0) diff += 24 * 60; // overnight shift
+  const hours = Math.floor(diff / 60);
+  const mins = diff % 60;
+  return `${hours}${mins > 0 ? `h ${mins}m` : " Hours"}`;
+}
+
 interface PostJobModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -214,7 +255,6 @@ export function PostJobModal({
   const [salaryMax, setSalaryMax] = useState("");
   const [probationPeriod, setProbationPeriod] = useState("");
   const [perkTags, setPerkTags] = useState<string[]>([]);
-  const [customPerkInput, setCustomPerkInput] = useState("");
 
   // Role Specs (Custom values supported)
   const [experienceLevel, setExperienceLevel] = useState("");
@@ -223,7 +263,65 @@ export function PostJobModal({
   const [shiftInTime, setShiftInTime] = useState("");
   const [shiftOutTime, setShiftOutTime] = useState("");
   const [workingDays, setWorkingDays] = useState("");
+  const [workingDaysList, setWorkingDaysList] = useState<string[]>([
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+  ]);
   const [expiryDays, setExpiryDays] = useState<string>("");
+
+  const toggleWorkingDay = (dayKey: string) => {
+    let nextList: string[];
+    if (workingDaysList.includes(dayKey)) {
+      nextList = workingDaysList.filter((d) => d !== dayKey);
+    } else {
+      nextList = WEEK_DAYS.map((w) => w.key).filter(
+        (k) => workingDaysList.includes(k) || k === dayKey
+      );
+    }
+    setWorkingDaysList(nextList);
+
+    let summary = "";
+    if (nextList.length === 6 && !nextList.includes("Sun")) {
+      summary = "6 Days (Mon - Sat, Sun Off)";
+    } else if (
+      nextList.length === 5 &&
+      !nextList.includes("Sat") &&
+      !nextList.includes("Sun")
+    ) {
+      summary = "5 Days (Mon - Fri, Sat & Sun Off)";
+    } else if (nextList.length === 7) {
+      summary = "All 7 Days (Rotational Off)";
+    } else if (nextList.length === 0) {
+      summary = "Flexible / Remote Hours";
+    } else {
+      const offDays = WEEK_DAYS.filter((d) => !nextList.includes(d.key)).map(
+        (d) => d.full
+      );
+      summary = `${nextList.length} Days (${nextList.join(", ")}${
+        offDays.length > 0 ? ` • ${offDays.join(", ")} Off` : ""
+      })`;
+    }
+    setWorkingDays(summary);
+  };
+
+  const applyWorkingDaysPreset = (days: string[], customSummary?: string) => {
+    setWorkingDaysList(days);
+    if (customSummary) {
+      setWorkingDays(customSummary);
+    } else if (days.length === 6 && !days.includes("Sun")) {
+      setWorkingDays("6 Days (Mon - Sat, Sun Off)");
+    } else if (days.length === 5) {
+      setWorkingDays("5 Days (Mon - Fri, Sat & Sun Off)");
+    } else if (days.length === 7) {
+      setWorkingDays("All 7 Days (Rotational Off)");
+    } else {
+      setWorkingDays(`${days.length} Days (${days.join(", ")})`);
+    }
+  };
 
   const updateShiftInTime = (inVal: string) => {
     setShiftInTime(inVal);
@@ -247,7 +345,6 @@ export function PostJobModal({
   const [genderPreference, setGenderPreference] = useState<string>("");
   const [englishLevel, setEnglishLevel] = useState("");
   const [requiredAssets, setRequiredAssets] = useState<string[]>([]);
-  const [customAssetInput, setCustomAssetInput] = useState("");
   const [interviewMode, setInterviewMode] = useState("");
   const [interviewAddress, setInterviewAddress] = useState("");
   const [interviewStartDate, setInterviewStartDate] = useState("");
@@ -306,47 +403,6 @@ export function PostJobModal({
     }
   };
 
-  // Custom Asset Handlers
-  const addCustomAsset = () => {
-    const trimmed = customAssetInput.trim();
-    if (trimmed && !requiredAssets.includes(trimmed)) {
-      setRequiredAssets([...requiredAssets, trimmed]);
-      setCustomAssetInput("");
-    }
-  };
-
-  const removeAsset = (val: string) => {
-    setRequiredAssets(requiredAssets.filter((a) => a !== val));
-  };
-
-  const toggleAsset = (val: string) => {
-    if (requiredAssets.includes(val)) {
-      setRequiredAssets(requiredAssets.filter((a) => a !== val));
-    } else {
-      setRequiredAssets([...requiredAssets, val]);
-    }
-  };
-
-  // Perk Tag Handlers
-  const addCustomPerk = () => {
-    const trimmed = customPerkInput.trim();
-    if (trimmed && !perkTags.includes(trimmed)) {
-      setPerkTags([...perkTags, trimmed]);
-      setCustomPerkInput("");
-    }
-  };
-
-  const removePerk = (val: string) => {
-    setPerkTags(perkTags.filter((p) => p !== val));
-  };
-
-  const togglePerk = (val: string) => {
-    if (perkTags.includes(val)) {
-      setPerkTags(perkTags.filter((p) => p !== val));
-    } else {
-      setPerkTags([...perkTags, val]);
-    }
-  };
 
   // Details
   const [skills, setSkills] = useState("");
@@ -505,7 +561,15 @@ export function PostJobModal({
           setShiftInTime("");
           setShiftOutTime("");
         }
-        setWorkingDays(jobToEdit.workingDays || "");
+        const wd = jobToEdit.workingDays || "";
+        setWorkingDays(wd || "6 Days (Mon - Sat, Sun Off)");
+        if (wd.includes("5 Days") || wd.includes("Mon - Fri")) {
+          setWorkingDaysList(["Mon", "Tue", "Wed", "Thu", "Fri"]);
+        } else if (wd.includes("7 Days") || wd.includes("Rotational")) {
+          setWorkingDaysList(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
+        } else {
+          setWorkingDaysList(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
+        }
         setGenderPreference(jobToEdit.genderPreference || "");
         setEnglishLevel(jobToEdit.englishLevel || "");
         setRequiredAssets(jobToEdit.requiredAssets || []);
@@ -533,7 +597,6 @@ export function PostJobModal({
         if (jobToEdit.branchId) setSelectedBranchId(jobToEdit.branchId);
         setProbationPeriod(jobToEdit.probationPeriod || "");
         setPerkTags(jobToEdit.perkTags || []);
-        setCustomPerkInput("");
         setAgePreference(jobToEdit.agePreference || "");
         setLanguagesRequired(jobToEdit.languagesRequired || []);
         setNoticePeriod(jobToEdit.noticePeriod || "");
@@ -556,15 +619,15 @@ export function PostJobModal({
         setSalaryMax("");
         setExperienceLevel("");
         setQualification("");
-        setShiftTiming("");
-        setShiftInTime("");
-        setShiftOutTime("");
-        setWorkingDays("");
+        setShiftTiming("09:30 AM - 06:30 PM (Day Shift)");
+        setShiftInTime("09:30 AM");
+        setShiftOutTime("06:30 PM");
+        setWorkingDaysList(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
+        setWorkingDays("6 Days (Mon - Sat, Sun Off)");
         setExpiryDays("");
         setGenderPreference("");
         setEnglishLevel("");
         setRequiredAssets([]);
-        setCustomAssetInput("");
         setInterviewMode("");
         setInterviewAddress("");
         setInterviewStartDate("");
@@ -581,7 +644,6 @@ export function PostJobModal({
         setSelectedBranchId("");
         setProbationPeriod("");
         setPerkTags([]);
-        setCustomPerkInput("");
         setAgePreference("");
         setLanguagesRequired([]);
         setNoticePeriod("");
@@ -1034,118 +1096,142 @@ export function PostJobModal({
         </Row>
       </div>
 
-      {/* Perks & Benefits Tags */}
+      {/* Perks & Benefits Tags (Native Ant Design Tags Select) */}
       <div className="p-4 rounded-2xl bg-white border border-slate-200">
-        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-3">
-          <Gift className="w-3.5 h-3.5 text-orange-600" />
-          <span>Company Perks &amp; Benefits</span>
-        </span>
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {PERK_TAG_SUGGESTIONS.map((perk) => {
-            const isActive = perkTags.includes(perk.value);
-            return (
-              <button
-                key={perk.value}
-                type="button"
-                onClick={() => togglePerk(perk.value)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1 ${
-                  isActive
-                    ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
-                    : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300"
-                }`}
-              >
-                {isActive ? <Check className="w-3 h-3 stroke-[3]" /> : <span className="text-slate-400 font-bold">+</span>}
-                <span>{perk.label}</span>
-              </button>
-            );
-          })}
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <Gift className="w-3.5 h-3.5 text-orange-600" />
+            <span>Company Perks &amp; Benefits</span>
+          </span>
+          <span className="text-[11px] text-slate-500 font-medium">Type custom &amp; press <strong>Enter ↵</strong></span>
         </div>
-
-        {/* Custom Perk Input */}
-        <div className="flex items-center gap-2">
-          <Input
-            size="middle"
-            placeholder="Add custom perk (e.g. Free Cab, Gym Membership, Performance Bonus)..."
-            value={customPerkInput}
-            onChange={(e) => setCustomPerkInput(e.target.value)}
-            onPressEnter={addCustomPerk}
-            className="flex-1"
-            prefix={<Plus className="w-3.5 h-3.5 text-slate-400" />}
-          />
-          <Button
-            size="middle"
-            type="primary"
-            onClick={addCustomPerk}
-            disabled={!customPerkInput.trim()}
-            icon={<Plus className="w-3.5 h-3.5" />}
-            className="shrink-0"
-          >
-            Add
-          </Button>
-        </div>
-
-        {/* Display Selected Custom Perks */}
-        {perkTags.filter((p) => !PERK_TAG_SUGGESTIONS.some((s) => s.value === p)).length > 0 && (
-          <div className="mt-2.5 flex flex-wrap gap-1.5">
-            {perkTags
-              .filter((p) => !PERK_TAG_SUGGESTIONS.some((s) => s.value === p))
-              .map((custom) => (
-                <span
-                  key={custom}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"
-                >
-                  <Check className="w-3 h-3 stroke-[3]" />
-                  <span>{custom}</span>
-                  <button
-                    type="button"
-                    onClick={() => removePerk(custom)}
-                    className="text-emerald-500 hover:text-red-500 transition-colors cursor-pointer ml-0.5"
-                    title="Remove perk"
-                  >
-                    <X className="w-3 h-3 stroke-[3]" />
-                  </button>
-                </span>
-              ))}
-          </div>
-        )}
+        <Select
+          mode="tags"
+          size="middle"
+          placeholder="Select perks or type any custom perk (e.g. Free Cab, Gym Membership) and press Enter..."
+          value={perkTags}
+          onChange={(val) => setPerkTags(val || [])}
+          options={PERK_TAG_SUGGESTIONS.map((p) => ({ label: p.label, value: p.value }))}
+          allowClear
+          className="w-full"
+          tokenSeparators={[","]}
+          notFoundContent={<div className="p-2 text-xs text-slate-500">Press <strong>Enter ↵</strong> to add this custom perk</div>}
+        />
+        <p className="mt-1.5 text-[11px] text-slate-500">
+          💡 <strong>Custom perk add karne ke liye:</strong> Box me naam type karein aur keyboard par <strong>Enter</strong> (ya comma <code>,</code>) dabayein — wo tag ban kar add ho jayega.
+        </p>
       </div>
 
-      {/* Shift Timing */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200">
-        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-3">
+      {/* Working Schedule & Shift Timing (Clean Ant Design Styling) */}
+      <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-4">
+        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
           <Clock className="w-3.5 h-3.5 text-orange-600" />
           <span>Working Schedule &amp; Shift Timing</span>
         </span>
+
+        {/* Working Days Selection */}
+        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
+            <div>
+              <label className="text-[11px] font-bold text-slate-700 block">
+                Working Days (Click to toggle Working Days vs Weekly Off)
+              </label>
+              <span className="text-[11px] text-slate-500">
+                Current: <strong className="text-orange-600">{workingDays || "6 Days (Mon - Sat, Sun Off)"}</strong>
+              </span>
+            </div>
+            {/* Quick Presets */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => applyWorkingDaysPreset(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], "6 Days (Mon - Sat, Sun Off)")}
+                className="px-2.5 py-1 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-orange-500 hover:text-orange-600 transition-colors cursor-pointer shadow-2xs"
+              >
+                6 Days (Mon-Sat)
+              </button>
+              <button
+                type="button"
+                onClick={() => applyWorkingDaysPreset(["Mon", "Tue", "Wed", "Thu", "Fri"], "5 Days (Mon - Fri, Sat & Sun Off)")}
+                className="px-2.5 py-1 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-orange-500 hover:text-orange-600 transition-colors cursor-pointer shadow-2xs"
+              >
+                5 Days (Mon-Fri)
+              </button>
+              <button
+                type="button"
+                onClick={() => applyWorkingDaysPreset(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], "All 7 Days (Rotational Off)")}
+                className="px-2.5 py-1 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-orange-500 hover:text-orange-600 transition-colors cursor-pointer shadow-2xs"
+              >
+                All 7 Days
+              </button>
+            </div>
+          </div>
+
+          {/* 7 Day Pills */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {WEEK_DAYS.map((day) => {
+              const isWorking = workingDaysList.includes(day.key);
+              return (
+                <button
+                  key={day.key}
+                  type="button"
+                  onClick={() => toggleWorkingDay(day.key)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5 select-none ${
+                    isWorking
+                      ? "bg-orange-600 text-white border-orange-600 shadow-xs"
+                      : "bg-white text-slate-400 border-slate-200 hover:border-slate-300 hover:text-slate-600"
+                  }`}
+                  title={`${day.full}: ${isWorking ? "Working Day" : "Weekly Off"}`}
+                >
+                  {isWorking ? <Check className="w-3 h-3 stroke-[3]" /> : <span className="text-slate-300 text-[10px]">✕</span>}
+                  <span>{day.full}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-2.5 text-[11px] text-slate-500 flex items-center gap-1 flex-wrap">
+            <span>Weekly Off:</span>
+            <span className="font-semibold text-slate-700">
+              {WEEK_DAYS.filter((d) => !workingDaysList.includes(d.key)).map((d) => d.full).join(", ") || "None (Rotational Off)"}
+            </span>
+          </div>
+        </div>
+
+        {/* Shift In & Shift Out Time - Clean Ant Design TimePicker */}
         <Row gutter={[12, 12]}>
-          <Col xs={24} sm={6}>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">Working Days</label>
-            <Input
-              size="middle"
-              placeholder="e.g. 6 Days (Mon - Sat)"
-              value={workingDays}
-              onChange={(e) => setWorkingDays(e.target.value)}
-              className="w-full"
-            />
-          </Col>
-          <Col xs={12} sm={4}>
+          <Col xs={12} sm={5}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Shift In Time</label>
-            <Input
+            <TimePicker
               size="middle"
-              placeholder="e.g. 09:30 AM"
-              value={shiftInTime}
-              onChange={(e) => updateShiftInTime(e.target.value)}
+              use12Hours
+              format="h:mm A"
+              minuteStep={5}
+              placeholder="09:30 AM"
+              value={parseTimeToDayjs(shiftInTime)}
+              onChange={(_, timeString) => updateShiftInTime(typeof timeString === "string" ? timeString : "")}
               className="w-full"
+              allowClear
             />
           </Col>
-          <Col xs={12} sm={4}>
+          <Col xs={12} sm={5}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Shift Out Time</label>
-            <Input
+            <TimePicker
               size="middle"
-              placeholder="e.g. 06:30 PM"
-              value={shiftOutTime}
-              onChange={(e) => updateShiftOutTime(e.target.value)}
+              use12Hours
+              format="h:mm A"
+              minuteStep={5}
+              placeholder="06:30 PM"
+              value={parseTimeToDayjs(shiftOutTime)}
+              onChange={(_, timeString) => updateShiftOutTime(typeof timeString === "string" ? timeString : "")}
               className="w-full"
+              allowClear
             />
+          </Col>
+          <Col xs={24} sm={4}>
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">Shift Duration</label>
+            <div className="h-8 px-2.5 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center text-xs font-bold text-orange-700">
+              {calculateShiftDuration(shiftInTime, shiftOutTime) || "9.0 Hours"}
+            </div>
           </Col>
           <Col xs={24} sm={10}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Shift Preset / Summary</label>
@@ -1233,86 +1319,30 @@ export function PostJobModal({
         </Row>
       </div>
 
-      {/* Mandatory Assets / Documents - Custom */}
+      {/* Mandatory Assets / Documents (Native Ant Design Tags Select) */}
       <div className="p-4 rounded-2xl bg-white border border-slate-200">
-        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-3">
-          <FileText className="w-3.5 h-3.5 text-orange-600" />
-          <span>Mandatory Candidate Assets / Documents</span>
-        </span>
-
-        {/* Quick Toggle Tags */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {ASSET_SUGGESTIONS.map((asset) => {
-            const isSelected = requiredAssets.includes(asset.value);
-            return (
-              <button
-                key={asset.value}
-                type="button"
-                onClick={() => toggleAsset(asset.value)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1 ${
-                  isSelected
-                    ? "bg-orange-600 text-white border-orange-600 shadow-xs"
-                    : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300"
-                }`}
-              >
-                {isSelected ? <Check className="w-3 h-3 stroke-[3]" /> : <span className="text-slate-400 font-bold">+</span>}
-                <span>{asset.label}</span>
-              </button>
-            );
-          })}
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-orange-600" />
+            <span>Mandatory Candidate Assets / Documents</span>
+          </span>
+          <span className="text-[11px] text-slate-500 font-medium">Type custom &amp; press <strong>Enter ↵</strong></span>
         </div>
-
-        {/* Custom Asset Input */}
-        <div className="flex items-center gap-2">
-          <Input
-            size="middle"
-            value={customAssetInput}
-            onChange={(e) => setCustomAssetInput(e.target.value)}
-            onPressEnter={addCustomAsset}
-            className="flex-1"
-            prefix={<Plus className="w-3.5 h-3.5 text-slate-400" />}
-          />
-          <Button
-            size="middle"
-            type="primary"
-            onClick={addCustomAsset}
-            disabled={!customAssetInput.trim()}
-            icon={<Plus className="w-3.5 h-3.5" />}
-            className="shrink-0"
-          >
-            Add
-          </Button>
-        </div>
-
-        {/* Display Selected Custom Assets */}
-        {requiredAssets.filter((a) => !ASSET_SUGGESTIONS.some((s) => s.value === a)).length > 0 && (
-          <div className="mt-2.5 flex flex-wrap gap-1.5">
-            {requiredAssets
-              .filter((a) => !ASSET_SUGGESTIONS.some((s) => s.value === a))
-              .map((custom) => (
-                <span
-                  key={custom}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200"
-                >
-                  {custom}
-                  <button
-                    type="button"
-                    onClick={() => removeAsset(custom)}
-                    className="text-blue-400 hover:text-red-500 transition-colors cursor-pointer"
-                  >
-                    <X className="w-3 h-3 stroke-[3]" />
-                  </button>
-                </span>
-              ))}
-          </div>
-        )}
-
-        {/* Summary */}
-        {requiredAssets.length > 0 && (
-          <div className="mt-2 text-[10px] text-slate-500 font-medium">
-            {requiredAssets.length} item{requiredAssets.length > 1 ? "s" : ""} selected
-          </div>
-        )}
+        <Select
+          mode="tags"
+          size="middle"
+          placeholder="Select mandatory assets or type any custom asset and press Enter..."
+          value={requiredAssets}
+          onChange={(val) => setRequiredAssets(val || [])}
+          options={ASSET_SUGGESTIONS.map((a) => ({ label: a.label, value: a.value }))}
+          allowClear
+          className="w-full"
+          tokenSeparators={[","]}
+          notFoundContent={<div className="p-2 text-xs text-slate-500">Press <strong>Enter ↵</strong> to add this custom document/asset</div>}
+        />
+        <p className="mt-1.5 text-[11px] text-slate-500">
+          💡 <strong>Custom asset/document add karne ke liye:</strong> Box me naam type karein aur keyboard par <strong>Enter</strong> (ya comma <code>,</code>) dabayein — wo tag ban kar add ho jayega.
+        </p>
       </div>
     </div>
   );
@@ -1413,28 +1443,8 @@ export function PostJobModal({
               className="font-medium"
             />
           </Col>
-          <Col xs={12} sm={3}>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">In Time (Start)</label>
-            <Input
-              size="middle"
-              placeholder="e.g. 10:00 AM"
-              value={interviewStartTime}
-              onChange={(e) => updateInterviewStartTime(e.target.value)}
-              className="w-full"
-            />
-          </Col>
-          <Col xs={12} sm={3}>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">Out Time (End)</label>
-            <Input
-              size="middle"
-              placeholder="e.g. 05:00 PM"
-              value={interviewEndTime}
-              onChange={(e) => updateInterviewEndTime(e.target.value)}
-              className="w-full"
-            />
-          </Col>
-          <Col xs={24} sm={6}>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">Daily Interview Time Slot</label>
+          <Col xs={24} sm={12}>
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">Daily Interview Time Slot Preset</label>
             <Select
               size="middle"
               value={interviewTimeSlot || undefined}
@@ -1442,6 +1452,37 @@ export function PostJobModal({
               options={INTERVIEW_TIME_SLOT_SUGGESTIONS.map((t) => ({ label: t.value, value: t.value }))}
               allowClear
               className="w-full"
+            />
+          </Col>
+        </Row>
+
+        <Row gutter={[12, 12]} className="mt-2.5">
+          <Col xs={12} sm={6}>
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">In Time (Start Window)</label>
+            <TimePicker
+              size="middle"
+              use12Hours
+              format="h:mm A"
+              minuteStep={15}
+              placeholder="10:00 AM"
+              value={parseTimeToDayjs(interviewStartTime)}
+              onChange={(_, timeString) => updateInterviewStartTime(typeof timeString === "string" ? timeString : "")}
+              className="w-full"
+              allowClear
+            />
+          </Col>
+          <Col xs={12} sm={6}>
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">Out Time (End Window)</label>
+            <TimePicker
+              size="middle"
+              use12Hours
+              format="h:mm A"
+              minuteStep={15}
+              placeholder="05:00 PM"
+              value={parseTimeToDayjs(interviewEndTime)}
+              onChange={(_, timeString) => updateInterviewEndTime(typeof timeString === "string" ? timeString : "")}
+              className="w-full"
+              allowClear
             />
           </Col>
         </Row>
