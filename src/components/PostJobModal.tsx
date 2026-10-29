@@ -72,36 +72,6 @@ const SHIFT_SUGGESTIONS = [
   { value: "Flexible Working Hours" },
 ];
 
-const SHIFT_IN_TIME_SUGGESTIONS = [
-  { value: "08:00 AM" },
-  { value: "08:30 AM" },
-  { value: "09:00 AM" },
-  { value: "09:30 AM" },
-  { value: "10:00 AM" },
-  { value: "10:30 AM" },
-  { value: "11:00 AM" },
-  { value: "02:00 PM" },
-  { value: "08:00 PM" },
-];
-
-const SHIFT_OUT_TIME_SUGGESTIONS = [
-  { value: "05:00 PM" },
-  { value: "05:30 PM" },
-  { value: "06:00 PM" },
-  { value: "06:30 PM" },
-  { value: "07:00 PM" },
-  { value: "07:30 PM" },
-  { value: "08:00 PM" },
-  { value: "10:30 PM" },
-  { value: "05:00 AM" },
-];
-
-const WORKING_DAYS_SUGGESTIONS = [
-  { value: "6 Days (Mon - Sat)" },
-  { value: "5 Days (Mon - Fri)" },
-  { value: "Alternate Saturdays Off" },
-  { value: "Rotational Off" },
-];
 
 const EXPERIENCE_SUGGESTIONS = [
   { value: "Fresher" },
@@ -120,36 +90,6 @@ const INTERVIEW_MODE_SUGGESTIONS = [
   { value: "Telephonic Interview" },
 ];
 
-const INTERVIEW_START_TIME_SUGGESTIONS = [
-  { value: "08:00 AM" },
-  { value: "08:30 AM" },
-  { value: "09:00 AM" },
-  { value: "09:30 AM" },
-  { value: "10:00 AM" },
-  { value: "10:30 AM" },
-  { value: "11:00 AM" },
-  { value: "11:30 AM" },
-  { value: "12:00 PM" },
-  { value: "01:00 PM" },
-  { value: "02:00 PM" },
-  { value: "03:00 PM" },
-  { value: "04:00 PM" },
-];
-
-const INTERVIEW_END_TIME_SUGGESTIONS = [
-  { value: "12:00 PM" },
-  { value: "01:00 PM" },
-  { value: "02:00 PM" },
-  { value: "03:00 PM" },
-  { value: "04:00 PM" },
-  { value: "04:30 PM" },
-  { value: "05:00 PM" },
-  { value: "05:30 PM" },
-  { value: "06:00 PM" },
-  { value: "06:30 PM" },
-  { value: "07:00 PM" },
-  { value: "08:00 PM" },
-];
 
 const INTERVIEW_TIME_SLOT_SUGGESTIONS = [
   { value: "10:00 AM to 01:00 PM (Morning Slot)" },
@@ -274,6 +214,7 @@ export function PostJobModal({
   const [salaryMax, setSalaryMax] = useState("");
   const [probationPeriod, setProbationPeriod] = useState("");
   const [perkTags, setPerkTags] = useState<string[]>([]);
+  const [customPerkInput, setCustomPerkInput] = useState("");
 
   // Role Specs (Custom values supported)
   const [experienceLevel, setExperienceLevel] = useState("");
@@ -387,6 +328,18 @@ export function PostJobModal({
   };
 
   // Perk Tag Handlers
+  const addCustomPerk = () => {
+    const trimmed = customPerkInput.trim();
+    if (trimmed && !perkTags.includes(trimmed)) {
+      setPerkTags([...perkTags, trimmed]);
+      setCustomPerkInput("");
+    }
+  };
+
+  const removePerk = (val: string) => {
+    setPerkTags(perkTags.filter((p) => p !== val));
+  };
+
   const togglePerk = (val: string) => {
     if (perkTags.includes(val)) {
       setPerkTags(perkTags.filter((p) => p !== val));
@@ -570,7 +523,7 @@ export function PostJobModal({
           setInterviewStartTime("");
           setInterviewEndTime("");
         }
-        setRecruiterWhatsApp(jobToEdit.recruiterWhatsApp || user?.phone || "");
+        setRecruiterWhatsApp(jobToEdit.recruiterWhatsApp || "");
         setUrgentHiring(Boolean(jobToEdit.urgentHiring));
         setSkills(Array.isArray(jobToEdit.skills) ? jobToEdit.skills.join(", ") : jobToEdit.skills || "");
         setDescription(jobToEdit.description || "");
@@ -580,6 +533,7 @@ export function PostJobModal({
         if (jobToEdit.branchId) setSelectedBranchId(jobToEdit.branchId);
         setProbationPeriod(jobToEdit.probationPeriod || "");
         setPerkTags(jobToEdit.perkTags || []);
+        setCustomPerkInput("");
         setAgePreference(jobToEdit.agePreference || "");
         setLanguagesRequired(jobToEdit.languagesRequired || []);
         setNoticePeriod(jobToEdit.noticePeriod || "");
@@ -618,7 +572,7 @@ export function PostJobModal({
         setInterviewStartTime("");
         setInterviewEndTime("");
         setInterviewTimeSlot("");
-        setRecruiterWhatsApp(user?.phone || "");
+        setRecruiterWhatsApp("");
         setSkills("");
         setDescription("");
         setRequirements("");
@@ -627,6 +581,7 @@ export function PostJobModal({
         setSelectedBranchId("");
         setProbationPeriod("");
         setPerkTags([]);
+        setCustomPerkInput("");
         setAgePreference("");
         setLanguagesRequired([]);
         setNoticePeriod("");
@@ -1085,7 +1040,7 @@ export function PostJobModal({
           <Gift className="w-3.5 h-3.5 text-orange-600" />
           <span>Company Perks &amp; Benefits</span>
         </span>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5 mb-3">
           {PERK_TAG_SUGGESTIONS.map((perk) => {
             const isActive = perkTags.includes(perk.value);
             return (
@@ -1105,6 +1060,54 @@ export function PostJobModal({
             );
           })}
         </div>
+
+        {/* Custom Perk Input */}
+        <div className="flex items-center gap-2">
+          <Input
+            size="middle"
+            placeholder="Add custom perk (e.g. Free Cab, Gym Membership, Performance Bonus)..."
+            value={customPerkInput}
+            onChange={(e) => setCustomPerkInput(e.target.value)}
+            onPressEnter={addCustomPerk}
+            className="flex-1"
+            prefix={<Plus className="w-3.5 h-3.5 text-slate-400" />}
+          />
+          <Button
+            size="middle"
+            type="primary"
+            onClick={addCustomPerk}
+            disabled={!customPerkInput.trim()}
+            icon={<Plus className="w-3.5 h-3.5" />}
+            className="shrink-0"
+          >
+            Add
+          </Button>
+        </div>
+
+        {/* Display Selected Custom Perks */}
+        {perkTags.filter((p) => !PERK_TAG_SUGGESTIONS.some((s) => s.value === p)).length > 0 && (
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {perkTags
+              .filter((p) => !PERK_TAG_SUGGESTIONS.some((s) => s.value === p))
+              .map((custom) => (
+                <span
+                  key={custom}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"
+                >
+                  <Check className="w-3 h-3 stroke-[3]" />
+                  <span>{custom}</span>
+                  <button
+                    type="button"
+                    onClick={() => removePerk(custom)}
+                    className="text-emerald-500 hover:text-red-500 transition-colors cursor-pointer ml-0.5"
+                    title="Remove perk"
+                  >
+                    <X className="w-3 h-3 stroke-[3]" />
+                  </button>
+                </span>
+              ))}
+          </div>
+        )}
       </div>
 
       {/* Shift Timing */}
@@ -1116,34 +1119,31 @@ export function PostJobModal({
         <Row gutter={[12, 12]}>
           <Col xs={24} sm={6}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Working Days</label>
-            <Select
+            <Input
               size="middle"
-              value={workingDays || undefined}
-              onChange={(val) => setWorkingDays(val || "")}
-              options={WORKING_DAYS_SUGGESTIONS.map((w) => ({ label: w.value, value: w.value }))}
-              allowClear
+              placeholder="e.g. 6 Days (Mon - Sat)"
+              value={workingDays}
+              onChange={(e) => setWorkingDays(e.target.value)}
               className="w-full"
             />
           </Col>
           <Col xs={12} sm={4}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Shift In Time</label>
-            <Select
+            <Input
               size="middle"
-              value={shiftInTime || undefined}
-              onChange={(val) => updateShiftInTime(val || "")}
-              options={SHIFT_IN_TIME_SUGGESTIONS.map((s) => ({ label: s.value, value: s.value }))}
-              allowClear
+              placeholder="e.g. 09:30 AM"
+              value={shiftInTime}
+              onChange={(e) => updateShiftInTime(e.target.value)}
               className="w-full"
             />
           </Col>
           <Col xs={12} sm={4}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Shift Out Time</label>
-            <Select
+            <Input
               size="middle"
-              value={shiftOutTime || undefined}
-              onChange={(val) => updateShiftOutTime(val || "")}
-              options={SHIFT_OUT_TIME_SUGGESTIONS.map((s) => ({ label: s.value, value: s.value }))}
-              allowClear
+              placeholder="e.g. 06:30 PM"
+              value={shiftOutTime}
+              onChange={(e) => updateShiftOutTime(e.target.value)}
               className="w-full"
             />
           </Col>
@@ -1341,6 +1341,7 @@ export function PostJobModal({
             <label className="text-[11px] font-bold text-slate-600 block mb-1">HR WhatsApp Number</label>
             <Input
               size="middle"
+              placeholder="Enter HR WhatsApp number"
               prefix={<PhoneCall className="w-3.5 h-3.5 text-emerald-600" />}
               value={recruiterWhatsApp}
               onChange={(e) => setRecruiterWhatsApp(e.target.value.replace(/[^0-9]/g, ""))}
@@ -1414,23 +1415,21 @@ export function PostJobModal({
           </Col>
           <Col xs={12} sm={3}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">In Time (Start)</label>
-            <Select
+            <Input
               size="middle"
-              value={interviewStartTime || undefined}
-              onChange={updateInterviewStartTime}
-              options={INTERVIEW_START_TIME_SUGGESTIONS.map((s) => ({ label: s.value, value: s.value }))}
-              allowClear
+              placeholder="e.g. 10:00 AM"
+              value={interviewStartTime}
+              onChange={(e) => updateInterviewStartTime(e.target.value)}
               className="w-full"
             />
           </Col>
           <Col xs={12} sm={3}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Out Time (End)</label>
-            <Select
+            <Input
               size="middle"
-              value={interviewEndTime || undefined}
-              onChange={updateInterviewEndTime}
-              options={INTERVIEW_END_TIME_SUGGESTIONS.map((s) => ({ label: s.value, value: s.value }))}
-              allowClear
+              placeholder="e.g. 05:00 PM"
+              value={interviewEndTime}
+              onChange={(e) => updateInterviewEndTime(e.target.value)}
               className="w-full"
             />
           </Col>

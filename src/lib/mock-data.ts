@@ -178,7 +178,7 @@ export const INITIAL_USERS: MockUser[] = [
     role: "employer",
     companyName: "TechCorp Global Technologies Pvt. Ltd.",
     companyLogo: "https://images.unsplash.com/photo-1549923746-c502d488b3ea?w=120&auto=format&fit=crop&q=80",
-    phone: "+91 98765 43210",
+    phone: "",
     location: "Bengaluru, Karnataka",
     headline: "Head of Talent Acquisition & People Operations",
     bio: "Head of Talent Acquisition with 10+ years of corporate hiring experience.",
