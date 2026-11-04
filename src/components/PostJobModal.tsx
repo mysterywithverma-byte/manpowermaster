@@ -117,6 +117,14 @@ const INTERVIEW_TIME_SLOT_SUGGESTIONS = [
   { value: "Flexible Hours (With Prior Appointment)" },
 ];
 
+const CALLING_TIME_SLOT_PRESETS = [
+  { label: "09:30 AM to 06:30 PM (Standard Business Hours)", value: "09:30 AM to 06:30 PM" },
+  { label: "10:00 AM to 05:00 PM (Direct Calling Window)", value: "10:00 AM to 05:00 PM" },
+  { label: "09:00 AM to 07:00 PM (Extended Working Hours)", value: "09:00 AM to 07:00 PM" },
+  { label: "10:00 AM to 01:00 PM (Morning Slot Only)", value: "10:00 AM to 01:00 PM" },
+  { label: "02:00 PM to 06:00 PM (Afternoon Slot Only)", value: "02:00 PM to 06:00 PM" },
+];
+
 const ENGLISH_SUGGESTIONS = [
   { value: "No English Required" },
   { value: "Basic / Conversational" },
@@ -347,6 +355,12 @@ export function PostJobModal({
   const [contactEmail, setContactEmail] = useState("");
   const [referralBonus, setReferralBonus] = useState("");
 
+  // Candidate Calling Availability
+  const [callingDaysList, setCallingDaysList] = useState<string[]>(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
+  const [callingTimeStart, setCallingTimeStart] = useState("09:30 AM");
+  const [callingTimeEnd, setCallingTimeEnd] = useState("06:30 PM");
+  const [callingSlotPreset, setCallingSlotPreset] = useState("09:30 AM to 06:30 PM");
+
   // Description & Visibility
   const [skills, setSkills] = useState("");
   const [description, setDescription] = useState("");
@@ -447,6 +461,35 @@ export function PostJobModal({
       setInterviewTimeSlot(`Till ${outVal}`);
     } else {
       setInterviewTimeSlot(interviewStartTime ? `${interviewStartTime} Onwards` : "");
+    }
+  };
+
+  const toggleCallingDay = (dayKey: string) => {
+    setCallingDaysList((prev) =>
+      prev.includes(dayKey) ? prev.filter((d) => d !== dayKey) : [...prev, dayKey]
+    );
+  };
+
+  const updateCallingTimeStart = (time: string) => {
+    setCallingTimeStart(time);
+    if (time && callingTimeEnd) {
+      setCallingSlotPreset(`${time} to ${callingTimeEnd}`);
+    }
+  };
+
+  const updateCallingTimeEnd = (time: string) => {
+    setCallingTimeEnd(time);
+    if (callingTimeStart && time) {
+      setCallingSlotPreset(`${callingTimeStart} to ${time}`);
+    }
+  };
+
+  const handleCallingSlotPreset = (val: string) => {
+    setCallingSlotPreset(val);
+    if (val.includes(" to ")) {
+      const parts = val.split(" to ");
+      if (parts[0]) setCallingTimeStart(parts[0].trim());
+      if (parts[1]) setCallingTimeEnd(parts[1].trim());
     }
   };
 
@@ -630,6 +673,10 @@ export function PostJobModal({
           interviewEndTime,
           interviewTimeSlot,
           recruiterWhatsApp,
+          callingDaysList,
+          callingTimeStart,
+          callingTimeEnd,
+          callingSlotPreset,
           contactPerson,
           contactEmail,
           referralBonus,
@@ -738,6 +785,10 @@ export function PostJobModal({
       setInterviewEndTime(draftAvailable.interviewEndTime || "05:00 PM");
       setInterviewTimeSlot(draftAvailable.interviewTimeSlot || "");
       setRecruiterWhatsApp(draftAvailable.recruiterWhatsApp || "");
+      setCallingDaysList(draftAvailable.callingDaysList || ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
+      setCallingTimeStart(draftAvailable.callingTimeStart || "09:30 AM");
+      setCallingTimeEnd(draftAvailable.callingTimeEnd || "06:30 PM");
+      setCallingSlotPreset(draftAvailable.callingSlotPreset || "09:30 AM to 06:30 PM");
       setContactPerson(draftAvailable.contactPerson || user?.name || "");
       setContactEmail(draftAvailable.contactEmail || user?.email || "");
       setReferralBonus(draftAvailable.referralBonus || "");
@@ -889,6 +940,14 @@ export function PostJobModal({
           if (parts[1]) setInterviewEndTime(parts[1].trim());
         }
         setRecruiterWhatsApp(jobToEdit.recruiterWhatsApp || "");
+        if (jobToEdit.callingDays && Array.isArray(jobToEdit.callingDays) && jobToEdit.callingDays.length > 0) {
+          setCallingDaysList(jobToEdit.callingDays);
+        }
+        if (jobToEdit.callingTimeStart) setCallingTimeStart(jobToEdit.callingTimeStart);
+        if (jobToEdit.callingTimeEnd) setCallingTimeEnd(jobToEdit.callingTimeEnd);
+        if (jobToEdit.callingTimeStart && jobToEdit.callingTimeEnd) {
+          setCallingSlotPreset(`${jobToEdit.callingTimeStart} to ${jobToEdit.callingTimeEnd}`);
+        }
         setUrgentHiring(Boolean(jobToEdit.urgentHiring));
         setSkills(Array.isArray(jobToEdit.skills) ? jobToEdit.skills.join(", ") : jobToEdit.skills || "");
         setDescription(jobToEdit.description || "");
@@ -945,6 +1004,10 @@ export function PostJobModal({
         setInterviewEndTime("05:00 PM");
         setInterviewTimeSlot("10:00 AM to 05:00 PM (Standard Slot)");
         setRecruiterWhatsApp(user?.phone || "");
+        setCallingDaysList(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
+        setCallingTimeStart("09:30 AM");
+        setCallingTimeEnd("06:30 PM");
+        setCallingSlotPreset("09:30 AM to 06:30 PM");
         setSkills("");
         setDescription("");
         setRequirements("");
@@ -1047,6 +1110,18 @@ export function PostJobModal({
         interviewEndDate: interviewEndDate.trim(),
         interviewTimeSlot: interviewTimeSlot.trim(),
         recruiterWhatsApp: recruiterWhatsApp.trim(),
+        callingDays: callingDaysList,
+        callingTimeStart: callingTimeStart.trim(),
+        callingTimeEnd: callingTimeEnd.trim(),
+        callingHoursSummary: `${
+          callingDaysList.length === 7
+            ? "All Days"
+            : callingDaysList.length === 6 && !callingDaysList.includes("Sun")
+            ? "Mon - Sat"
+            : callingDaysList.length === 5 && !callingDaysList.includes("Sat") && !callingDaysList.includes("Sun")
+            ? "Mon - Fri"
+            : callingDaysList.join(", ")
+        } (${callingTimeStart || "09:30 AM"} - ${callingTimeEnd || "06:30 PM"})`,
         urgentHiring,
         skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
         description: description.trim() || `${title} position at ${companyToUse}. Apply now to connect with recruiter directly.`,
@@ -1249,40 +1324,6 @@ export function PostJobModal({
               }
               className="w-full font-medium"
             />
-            {/* Quick popular city pills */}
-            <div className="mt-2 flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] text-slate-400 font-semibold">Top Cities:</span>
-              {[
-                "Mumbai",
-                "Delhi",
-                "Bengaluru",
-                "Pune",
-                "Hyderabad",
-                "Kanpur",
-                "Lucknow",
-                "Jaipur",
-                "Ahmedabad",
-                "Surat",
-                "Kolkata",
-                "Indore",
-                "Chandigarh",
-                "Noida",
-                "Gurgaon",
-              ].map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setLocation(c)}
-                  className={`px-2 py-0.5 text-[11px] rounded border transition-colors cursor-pointer ${
-                    location === c
-                      ? "bg-blue-600 text-white border-blue-600 font-bold"
-                      : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
           </Col>
         </Row>
 
@@ -1375,37 +1416,6 @@ export function PostJobModal({
               }
               className="w-full font-medium"
             />
-            {/* Quick popular role pill presets */}
-            <div className="mt-2 flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] text-slate-400 font-semibold">Popular:</span>
-              {[
-                "Telecalling / BPO Executive",
-                "Field Sales Executive",
-                "Delivery Partner / Rider",
-                "Back Office / Data Entry Operator",
-                "Accountant",
-                "Retail Counter Sales",
-                "Cook / Chef",
-                "Security Guard",
-                "Driver",
-                "Teacher",
-                "Nurse",
-                "Software Developer",
-              ].map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTitle(t)}
-                  className={`px-2 py-0.5 text-[11px] rounded border transition-colors cursor-pointer ${
-                    title === t
-                      ? "bg-blue-600 text-white border-blue-600 font-bold"
-                      : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
           </Col>
 
           <Col xs={24} sm={10}>
@@ -1425,39 +1435,21 @@ export function PostJobModal({
         </Row>
 
         <Row gutter={[12, 12]} className="mt-3">
-          <Col xs={24} sm={12}>
+          <Col xs={24} sm={8}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">
               No. of Openings / Vacancies <span className="text-red-500">*</span>
             </label>
-            <div className="flex items-center gap-2">
-              <Input
-                size="middle"
-                prefix={<Users className="w-3.5 h-3.5 text-slate-400" />}
-                placeholder="e.g. 2"
-                value={openingsCount}
-                onChange={(e) => setOpeningsCount(e.target.value.replace(/[^0-9]/g, ""))}
-                className="w-28 font-semibold text-center"
-              />
-              <div className="flex items-center gap-1 flex-wrap">
-                {["1", "2", "5", "10", "25", "50+"].map((num) => (
-                  <button
-                    key={num}
-                    type="button"
-                    onClick={() => setOpeningsCount(num.replace("+", ""))}
-                    className={`px-2 py-1 text-xs rounded border transition-colors cursor-pointer ${
-                      openingsCount === num.replace("+", "")
-                        ? "bg-slate-900 text-white border-slate-900 font-bold"
-                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
-                    }`}
-                  >
-                    {num}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <Input
+              size="middle"
+              prefix={<Users className="w-3.5 h-3.5 text-slate-400" />}
+              placeholder="e.g. 2"
+              value={openingsCount}
+              onChange={(e) => setOpeningsCount(e.target.value.replace(/[^0-9]/g, ""))}
+              className="w-full font-semibold"
+            />
           </Col>
 
-          <Col xs={12} sm={6}>
+          <Col xs={12} sm={8}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">
               Experience Level
             </label>
@@ -1471,7 +1463,7 @@ export function PostJobModal({
             />
           </Col>
 
-          <Col xs={12} sm={6}>
+          <Col xs={12} sm={8}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">
               Min Qualification
             </label>
@@ -1560,27 +1552,6 @@ export function PostJobModal({
             />
           </Col>
         </Row>
-
-        {/* Quick Range Presets (WorkIndia Style) */}
-        <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] font-semibold text-slate-500">Quick Ranges:</span>
-          {[
-            { label: "₹12k - ₹18k", min: 12000, max: 18000 },
-            { label: "₹18k - ₹25k", min: 18000, max: 25000 },
-            { label: "₹25k - ₹35k", min: 25000, max: 35000 },
-            { label: "₹35k - ₹50k", min: 35000, max: 50000 },
-            { label: "₹50k - ₹80k", min: 50000, max: 80000 },
-          ].map((preset) => (
-            <button
-              key={preset.label}
-              type="button"
-              onClick={() => applyMonthlySalaryPreset(preset.min, preset.max)}
-              className="px-2.5 py-1 text-xs rounded bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
-            >
-              {preset.label}
-            </button>
-          ))}
-        </div>
 
         <Row gutter={[12, 12]} className="mt-3">
           <Col xs={12} sm={8}>
@@ -1968,6 +1939,158 @@ export function PostJobModal({
             />
           </Col>
         </Row>
+      </div>
+
+      {/* Candidate Calling Days & Hours */}
+      <div className="p-4 rounded-xl bg-white border border-slate-200">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <PhoneCall className="w-3.5 h-3.5 text-slate-500" />
+            <span>Recruiter Calling Days &amp; Timings (कैंडिडेट कब कॉल कर सकते हैं)</span>
+          </span>
+          <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+            {callingDaysList.length === 7 ? "All 7 Days" : `${callingDaysList.length} Days Active`}
+          </span>
+        </div>
+
+        {/* Calling Days Selection */}
+        <div className="mb-3.5">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-[11px] font-bold text-slate-600 block">
+              Calling Days (कॉल करने के दिन) <span className="text-red-500">*</span>
+            </label>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setCallingDaysList(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"])}
+                className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer ${
+                  callingDaysList.length === 6 && !callingDaysList.includes("Sun")
+                    ? "bg-slate-900 text-white border-slate-900 font-bold"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                Mon - Sat
+              </button>
+              <button
+                type="button"
+                onClick={() => setCallingDaysList(["Mon", "Tue", "Wed", "Thu", "Fri"])}
+                className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer ${
+                  callingDaysList.length === 5 && !callingDaysList.includes("Sat") && !callingDaysList.includes("Sun")
+                    ? "bg-slate-900 text-white border-slate-900 font-bold"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                Mon - Fri
+              </button>
+              <button
+                type="button"
+                onClick={() => setCallingDaysList(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"])}
+                className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer ${
+                  callingDaysList.length === 7
+                    ? "bg-slate-900 text-white border-slate-900 font-bold"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                All 7 Days
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {WEEK_DAYS.map((day) => {
+              const isSelected = callingDaysList.includes(day.key);
+              return (
+                <button
+                  key={day.key}
+                  type="button"
+                  onClick={() => toggleCallingDay(day.key)}
+                  className={`px-3 py-1 rounded text-xs font-medium border transition-all cursor-pointer flex items-center gap-1 select-none ${
+                    isSelected
+                      ? "bg-slate-900 text-white border-slate-900 font-bold shadow-xs"
+                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  {isSelected && <Check className="w-3 h-3 stroke-[2.5]" />}
+                  <span>{day.full}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Calling Hours Window */}
+        <Row gutter={[12, 12]}>
+          <Col xs={24} sm={12}>
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">
+              Calling Time Preset (समय स्लॉट)
+            </label>
+            <Select
+              size="middle"
+              value={callingSlotPreset || undefined}
+              onChange={handleCallingSlotPreset}
+              options={CALLING_TIME_SLOT_PRESETS}
+              placeholder="Select standard calling hours"
+              className="w-full"
+            />
+          </Col>
+          <Col xs={12} sm={6}>
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">
+              Call Start Time (कॉल शुरू)
+            </label>
+            <TimePicker
+              size="middle"
+              use12Hours
+              format="h:mm A"
+              minuteStep={15}
+              placeholder="09:30 AM"
+              value={parseTimeToDayjs(callingTimeStart)}
+              onChange={(_, timeString) => updateCallingTimeStart(typeof timeString === "string" ? timeString : "")}
+              className="w-full"
+              allowClear
+            />
+          </Col>
+          <Col xs={12} sm={6}>
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">
+              Call End Time (कॉल समाप्त)
+            </label>
+            <TimePicker
+              size="middle"
+              use12Hours
+              format="h:mm A"
+              minuteStep={15}
+              placeholder="06:30 PM"
+              value={parseTimeToDayjs(callingTimeEnd)}
+              onChange={(_, timeString) => updateCallingTimeEnd(typeof timeString === "string" ? timeString : "")}
+              className="w-full"
+              allowClear
+            />
+          </Col>
+        </Row>
+
+        {/* Live Candidate Calling Notice Preview */}
+        <div className="mt-3 p-2.5 rounded-lg bg-emerald-50/80 border border-emerald-200 text-[11px] text-emerald-950 flex items-start gap-2">
+          <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+          <div>
+            <span className="font-bold text-emerald-900">Candidate Calling Notice: </span>
+            <span>
+              Candidates can call HR on{" "}
+              <strong className="text-emerald-950 font-bold">
+                {callingDaysList.length === 7
+                  ? "All 7 Days"
+                  : callingDaysList.length === 6 && !callingDaysList.includes("Sun")
+                  ? "Monday to Saturday"
+                  : callingDaysList.length === 5 && !callingDaysList.includes("Sat") && !callingDaysList.includes("Sun")
+                  ? "Monday to Friday"
+                  : callingDaysList.map((k) => WEEK_DAYS.find((w) => w.key === k)?.full || k).join(", ")}
+              </strong>{" "}
+              between{" "}
+              <strong className="text-emerald-950 font-bold">
+                {callingTimeStart || "09:30 AM"} to {callingTimeEnd || "06:30 PM"}
+              </strong>
+              . Calling outside these hours is strictly prohibited.
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Interview Schedule Timing */}

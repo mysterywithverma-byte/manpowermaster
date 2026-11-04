@@ -30,6 +30,10 @@ export interface IJob extends Document {
   interviewEndDate?: string;
   interviewTimeSlot?: string;
   recruiterWhatsApp?: string;
+  callingDays?: string[];
+  callingTimeStart?: string;
+  callingTimeEnd?: string;
+  callingHoursSummary?: string;
   urgentHiring?: boolean;
   expiryDays?: number;
   expiresAt?: Date;
@@ -98,6 +102,10 @@ const JobSchema = new Schema<IJob>(
     interviewEndDate: { type: String, default: "" },
     interviewTimeSlot: { type: String, default: "" },
     recruiterWhatsApp: { type: String, default: "" },
+    callingDays: { type: [String], default: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] },
+    callingTimeStart: { type: String, default: "09:30 AM" },
+    callingTimeEnd: { type: String, default: "06:30 PM" },
+    callingHoursSummary: { type: String, default: "Mon-Sat (09:30 AM - 06:30 PM)" },
     urgentHiring: { type: Boolean, default: false },
     otherRequirements: { type: String, default: "" },
     contactConsent: { type: Boolean, default: true },

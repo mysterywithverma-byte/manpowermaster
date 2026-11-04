@@ -14,6 +14,7 @@ import {
   Sparkles,
   MessageCircle,
   Calendar,
+  PhoneCall,
 } from "lucide-react";
 
 interface JobDetailsModalProps {
@@ -296,6 +297,20 @@ export function JobDetailsModal({ job, onClose, onApply }: JobDetailsModalProps)
                   {job.interviewStartDate || "Immediate"}
                   {job.interviewEndDate ? ` to ${job.interviewEndDate}` : ""}
                   {job.interviewTimeSlot ? ` • Daily Slot: ${job.interviewTimeSlot}` : ""}
+                </span>
+              </div>
+            </div>
+          )}
+          {((job as any).callingHoursSummary || (job as any).callingTimeStart) && (
+            <div className="mt-2.5 p-2.5 rounded-xl bg-emerald-50/90 border border-emerald-200 text-xs text-emerald-950 flex items-start gap-2">
+              <PhoneCall className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold text-emerald-950">Recruiter Calling Hours: </span>
+                <span>
+                  {(job as any).callingHoursSummary || `${((job as any).callingDays || ["Mon-Sat"]).join(", ")} (${(job as any).callingTimeStart || "09:30 AM"} - ${(job as any).callingTimeEnd || "06:30 PM"})`}
+                </span>
+                <span className="block text-[11px] text-emerald-700 font-medium mt-0.5">
+                  Candidates are advised to call HR strictly within these working hours.
                 </span>
               </div>
             </div>

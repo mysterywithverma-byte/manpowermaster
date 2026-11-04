@@ -123,6 +123,10 @@ export interface MockJob {
   interviewEndDate?: string;
   interviewTimeSlot?: string;
   recruiterWhatsApp?: string;
+  callingDays?: string[];
+  callingTimeStart?: string;
+  callingTimeEnd?: string;
+  callingHoursSummary?: string;
   urgentHiring?: boolean;
   otherRequirements?: string;
   contactConsent?: boolean;
