@@ -19,7 +19,6 @@ import {
   LogOut,
   Plus,
   ChevronDown,
-  ArrowLeftRight,
   LogIn,
   UserPlus,
   CheckCircle2,
@@ -45,12 +44,6 @@ export function Navbar({
   onSelectJobId,
 }: NavbarProps) {
   const { user, role, activeView, setActiveView, logout, savedJobs, updateUser } = useAuth();
-
-  const handleSwitchRole = (newRole: "seeker" | "employer") => {
-    updateUser({ role: newRole });
-    if (newRole === "employer") setActiveView("employer-dashboard");
-    else setActiveView("seeker-dashboard");
-  };
 
   // Ant Design Dropdown items
   const menuItems: MenuProps["items"] = [
@@ -120,13 +113,6 @@ export function Navbar({
           },
         ]
       : []),
-    { type: "divider" as const },
-    {
-      key: "switch-role",
-      icon: <ArrowLeftRight className="w-4 h-4" />,
-      label: role === "seeker" ? "Switch to Employer Mode" : "Switch to Employee Mode",
-      onClick: () => handleSwitchRole(role === "seeker" ? "employer" : "seeker"),
-    },
     { type: "divider" },
     {
       key: "logout",

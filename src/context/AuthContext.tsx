@@ -11,6 +11,7 @@ interface AuthContextType {
   setActiveView: (view: "explore" | "seeker-dashboard" | "employer-dashboard") => void;
   loginAsDemo: (role: "seeker" | "employer") => void;
   login: (email: string, name?: string, chosenRole?: "seeker" | "employer") => Promise<{ success: boolean; error?: string } | boolean>;
+  loginWithUser: (userData: MockUser) => void;
   register: (data: { name: string; email: string; role: "seeker" | "employer"; companyName?: string }) => Promise<{ success: boolean; error?: string } | boolean>;
   logout: () => void;
   clearDemoSession: () => void;
@@ -119,6 +120,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithUser = (userData: MockUser) => {
+    setUser(userData);
+    setSavedJobs(userData.savedJobs || []);
+    localStorage.setItem("jn_user", JSON.stringify(userData));
+    if (userData.role === "employer") setActiveView("employer-dashboard");
+    else setActiveView("explore");
+  };
+
   const register = async (userData: { name: string; email: string; role: "seeker" | "employer"; companyName?: string }) => {
     try {
       const res = await fetch("/api/auth/register", {
@@ -186,6 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setActiveView,
         loginAsDemo,
         login,
+        loginWithUser,
         register,
         logout,
         clearDemoSession,

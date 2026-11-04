@@ -731,8 +731,11 @@ export function JobSplitView({
         open={mobileDrawerOpen}
         onClose={() => setMobileDrawerOpen(false)}
         placement="bottom"
-        height="90%"
-        styles={{ body: { padding: 0 } }}
+        size="large"
+        styles={{
+          wrapper: { height: "90%" },
+          body: { padding: 0 },
+        }}
         footer={
           selectedJob ? (
             <div className="flex items-center gap-2.5 pb-safe">

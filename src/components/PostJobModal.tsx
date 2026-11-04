@@ -353,7 +353,8 @@ export function PostJobModal({
   const [interviewEndTime, setInterviewEndTime] = useState("");
   const [interviewTimeSlot, setInterviewTimeSlot] = useState("");
   const [recruiterWhatsApp, setRecruiterWhatsApp] = useState("");
-  const [agePreference, setAgePreference] = useState("");
+  const [ageMin, setAgeMin] = useState("");
+  const [ageMax, setAgeMax] = useState("");
   const [languagesRequired, setLanguagesRequired] = useState<string[]>([]);
   const [noticePeriod, setNoticePeriod] = useState("");
 
@@ -597,7 +598,19 @@ export function PostJobModal({
         if (jobToEdit.branchId) setSelectedBranchId(jobToEdit.branchId);
         setProbationPeriod(jobToEdit.probationPeriod || "");
         setPerkTags(jobToEdit.perkTags || []);
-        setAgePreference(jobToEdit.agePreference || "");
+        if (jobToEdit.agePreference) {
+          const match = String(jobToEdit.agePreference).match(/(\d+)\s*[-to]+\s*(\d+)/i);
+          if (match) {
+            setAgeMin(match[1]);
+            setAgeMax(match[2]);
+          } else {
+            setAgeMin("");
+            setAgeMax("");
+          }
+        } else {
+          setAgeMin("");
+          setAgeMax("");
+        }
         setLanguagesRequired(jobToEdit.languagesRequired || []);
         setNoticePeriod(jobToEdit.noticePeriod || "");
         setContactPerson(jobToEdit.contactPerson || "");
@@ -644,7 +657,8 @@ export function PostJobModal({
         setSelectedBranchId("");
         setProbationPeriod("");
         setPerkTags([]);
-        setAgePreference("");
+        setAgeMin("");
+        setAgeMax("");
         setLanguagesRequired([]);
         setNoticePeriod("");
         setContactPerson(user?.name || "");
@@ -725,7 +739,14 @@ export function PostJobModal({
         postedBy: user._id || user.id || user.email,
         probationPeriod: probationPeriod.trim(),
         perkTags,
-        agePreference: agePreference.trim(),
+        agePreference:
+          ageMin && ageMax
+            ? `${ageMin} - ${ageMax} Years`
+            : ageMin
+            ? `${ageMin}+ Years`
+            : ageMax
+            ? `Up to ${ageMax} Years`
+            : "",
         languagesRequired,
         noticePeriod: noticePeriod.trim(),
         contactPerson: contactPerson.trim(),
@@ -777,24 +798,24 @@ export function PostJobModal({
   const renderTab1_CompanyBasics = () => (
     <div className="space-y-4 max-w-[900px] mx-auto">
       {/* Employer Identity Card */}
-      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+      <div className="p-4 rounded-xl bg-white border border-slate-200">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-            <Building2 className="w-3.5 h-3.5 text-orange-600" />
+            <Building2 className="w-3.5 h-3.5 text-slate-500" />
             <span>Company &amp; Branch Location</span>
           </span>
-          <Tag color="green" className="m-0 text-[10px] font-bold">
-            Verified DP
+          <Tag color="default" className="m-0 text-[10px] font-semibold text-slate-600 bg-slate-100 border-slate-200">
+            Profile Attached
           </Tag>
         </div>
 
         {/* Employer DP Display */}
-        <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 mb-3">
+        <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-50 border border-slate-200 mb-3">
           <Avatar
-            size={44}
+            size={40}
             shape="square"
             src={employerLogo}
-            className="border border-slate-200 rounded-lg shrink-0"
+            className="border border-slate-200 rounded-md shrink-0 bg-white text-slate-700 font-bold"
           >
             {employerName.charAt(0)}
           </Avatar>
@@ -802,9 +823,8 @@ export function PostJobModal({
             <div className="text-sm font-bold text-slate-900 truncate">
               {company || employerName}
             </div>
-            <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3" />
-              <span>Company Profile DP Attached</span>
+            <div className="text-[11px] text-slate-500 flex items-center gap-1">
+              <span>Recruiter Identity Verified</span>
             </div>
           </div>
         </div>
@@ -915,9 +935,9 @@ export function PostJobModal({
       </div>
 
       {/* Job Role Details */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200">
+      <div className="p-4 rounded-xl bg-white border border-slate-200">
         <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-3">
-          <Briefcase className="w-3.5 h-3.5 text-orange-600" />
+          <Briefcase className="w-3.5 h-3.5 text-slate-500" />
           <span>Role Details &amp; Openings</span>
         </span>
 
@@ -1007,14 +1027,14 @@ export function PostJobModal({
   const renderTab2_SalaryTiming = () => (
     <div className="space-y-4 max-w-[900px] mx-auto">
       {/* Salary Compensation */}
-      <div className="p-4 rounded-2xl bg-orange-50/70 border border-orange-200">
+      <div className="p-4 rounded-xl bg-white border border-slate-200">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-            <IndianRupee className="w-3.5 h-3.5 text-orange-600" />
+          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <IndianRupee className="w-3.5 h-3.5 text-slate-500" />
             <span>Salary Compensation (Monthly &amp; LPA)</span>
           </span>
           {salaryMin && salaryMax && (
-            <span className="text-[11px] font-bold text-orange-700 bg-white px-2 py-0.5 rounded-md border border-orange-200">
+            <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
               ₹{salaryMin} - ₹{salaryMax} LPA
             </span>
           )}
@@ -1051,7 +1071,7 @@ export function PostJobModal({
               suffix="LPA"
               value={salaryMin}
               onChange={(e) => handleLpaMinChange(e.target.value)}
-              className="font-bold text-orange-600"
+              className="font-semibold"
             />
           </Col>
           <Col xs={12} sm={6}>
@@ -1062,7 +1082,7 @@ export function PostJobModal({
               suffix="LPA"
               value={salaryMax}
               onChange={(e) => handleLpaMaxChange(e.target.value)}
-              className="font-bold text-orange-600"
+              className="font-semibold"
             />
           </Col>
         </Row>
@@ -1097,47 +1117,43 @@ export function PostJobModal({
       </div>
 
       {/* Perks & Benefits Tags (Native Ant Design Tags Select) */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200">
+      <div className="p-4 rounded-xl bg-white border border-slate-200">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-            <Gift className="w-3.5 h-3.5 text-orange-600" />
+            <Gift className="w-3.5 h-3.5 text-slate-500" />
             <span>Company Perks &amp; Benefits</span>
           </span>
-          <span className="text-[11px] text-slate-500 font-medium">Type custom &amp; press <strong>Enter ↵</strong></span>
+          <span className="text-[11px] text-slate-400">Select or type custom &amp; press Enter</span>
         </div>
         <Select
           mode="tags"
           size="middle"
-          placeholder="Select perks or type any custom perk (e.g. Free Cab, Gym Membership) and press Enter..."
+          placeholder="Select perks or type any custom perk (e.g. Free Cab, Health Insurance)..."
           value={perkTags}
           onChange={(val) => setPerkTags(val || [])}
           options={PERK_TAG_SUGGESTIONS.map((p) => ({ label: p.label, value: p.value }))}
           allowClear
           className="w-full"
           tokenSeparators={[","]}
-          notFoundContent={<div className="p-2 text-xs text-slate-500">Press <strong>Enter ↵</strong> to add this custom perk</div>}
         />
-        <p className="mt-1.5 text-[11px] text-slate-500">
-          💡 <strong>Custom perk add karne ke liye:</strong> Box me naam type karein aur keyboard par <strong>Enter</strong> (ya comma <code>,</code>) dabayein — wo tag ban kar add ho jayega.
-        </p>
       </div>
 
       {/* Working Schedule & Shift Timing (Clean Ant Design Styling) */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-4">
+      <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-3.5">
         <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5 text-orange-600" />
+          <Clock className="w-3.5 h-3.5 text-slate-500" />
           <span>Working Schedule &amp; Shift Timing</span>
         </span>
 
         {/* Working Days Selection */}
-        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
+        <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
             <div>
               <label className="text-[11px] font-bold text-slate-700 block">
-                Working Days (Click to toggle Working Days vs Weekly Off)
+                Working Days
               </label>
               <span className="text-[11px] text-slate-500">
-                Current: <strong className="text-orange-600">{workingDays || "6 Days (Mon - Sat, Sun Off)"}</strong>
+                Selected: <strong className="text-slate-800">{workingDays || "6 Days (Mon - Sat, Sun Off)"}</strong>
               </span>
             </div>
             {/* Quick Presets */}
@@ -1145,21 +1161,21 @@ export function PostJobModal({
               <button
                 type="button"
                 onClick={() => applyWorkingDaysPreset(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], "6 Days (Mon - Sat, Sun Off)")}
-                className="px-2.5 py-1 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-orange-500 hover:text-orange-600 transition-colors cursor-pointer shadow-2xs"
+                className="px-2 py-0.5 text-xs rounded bg-white border border-slate-200 text-slate-700 hover:border-slate-400 transition-colors cursor-pointer"
               >
                 6 Days (Mon-Sat)
               </button>
               <button
                 type="button"
                 onClick={() => applyWorkingDaysPreset(["Mon", "Tue", "Wed", "Thu", "Fri"], "5 Days (Mon - Fri, Sat & Sun Off)")}
-                className="px-2.5 py-1 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-orange-500 hover:text-orange-600 transition-colors cursor-pointer shadow-2xs"
+                className="px-2 py-0.5 text-xs rounded bg-white border border-slate-200 text-slate-700 hover:border-slate-400 transition-colors cursor-pointer"
               >
                 5 Days (Mon-Fri)
               </button>
               <button
                 type="button"
                 onClick={() => applyWorkingDaysPreset(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], "All 7 Days (Rotational Off)")}
-                className="px-2.5 py-1 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-orange-500 hover:text-orange-600 transition-colors cursor-pointer shadow-2xs"
+                className="px-2 py-0.5 text-xs rounded bg-white border border-slate-200 text-slate-700 hover:border-slate-400 transition-colors cursor-pointer"
               >
                 All 7 Days
               </button>
@@ -1167,7 +1183,7 @@ export function PostJobModal({
           </div>
 
           {/* 7 Day Pills */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {WEEK_DAYS.map((day) => {
               const isWorking = workingDaysList.includes(day.key);
               return (
@@ -1175,21 +1191,21 @@ export function PostJobModal({
                   key={day.key}
                   type="button"
                   onClick={() => toggleWorkingDay(day.key)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5 select-none ${
+                  className={`px-3 py-1 rounded text-xs font-medium border transition-all cursor-pointer flex items-center gap-1 select-none ${
                     isWorking
-                      ? "bg-orange-600 text-white border-orange-600 shadow-xs"
-                      : "bg-white text-slate-400 border-slate-200 hover:border-slate-300 hover:text-slate-600"
+                      ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
                   }`}
                   title={`${day.full}: ${isWorking ? "Working Day" : "Weekly Off"}`}
                 >
-                  {isWorking ? <Check className="w-3 h-3 stroke-[3]" /> : <span className="text-slate-300 text-[10px]">✕</span>}
+                  {isWorking && <Check className="w-3 h-3 stroke-[2.5]" />}
                   <span>{day.full}</span>
                 </button>
               );
             })}
           </div>
 
-          <div className="mt-2.5 text-[11px] text-slate-500 flex items-center gap-1 flex-wrap">
+          <div className="mt-2 text-[11px] text-slate-500 flex items-center gap-1 flex-wrap">
             <span>Weekly Off:</span>
             <span className="font-semibold text-slate-700">
               {WEEK_DAYS.filter((d) => !workingDaysList.includes(d.key)).map((d) => d.full).join(", ") || "None (Rotational Off)"}
@@ -1229,7 +1245,7 @@ export function PostJobModal({
           </Col>
           <Col xs={24} sm={4}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Shift Duration</label>
-            <div className="h-8 px-2.5 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center text-xs font-bold text-orange-700">
+            <div className="h-8 px-2.5 rounded bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-semibold text-slate-700">
               {calculateShiftDuration(shiftInTime, shiftOutTime) || "9.0 Hours"}
             </div>
           </Col>
@@ -1252,9 +1268,9 @@ export function PostJobModal({
   const renderTab3_CandidateCriteria = () => (
     <div className="space-y-4 max-w-[900px] mx-auto">
       {/* Candidate Criteria */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200">
+      <div className="p-4 rounded-xl bg-white border border-slate-200">
         <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-3">
-          <UserCheck className="w-3.5 h-3.5 text-orange-600" />
+          <UserCheck className="w-3.5 h-3.5 text-slate-500" />
           <span>Candidate Eligibility &amp; Preferences</span>
         </span>
         <Row gutter={[12, 12]}>
@@ -1285,23 +1301,28 @@ export function PostJobModal({
             />
           </Col>
           <Col xs={12} sm={6}>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">Age Preference</label>
-            <Select
-              size="middle"
-              value={agePreference || undefined}
-              onChange={(val) => setAgePreference(val || "")}
-              allowClear
-              className="w-full"
-              options={[
-                { label: "No Age Restriction", value: "No Age Restriction" },
-                { label: "18 - 25 Years", value: "18-25" },
-                { label: "21 - 30 Years", value: "21-30" },
-                { label: "25 - 35 Years", value: "25-35" },
-                { label: "30 - 45 Years", value: "30-45" },
-                { label: "Below 30 Years", value: "Below 30" },
-                { label: "Below 40 Years", value: "Below 40" },
-              ]}
-            />
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">
+              Age Preference (Years)
+            </label>
+            <div className="flex items-center gap-1.5">
+              <Input
+                size="middle"
+                placeholder="Min (e.g. 18)"
+                value={ageMin}
+                onChange={(e) => setAgeMin(e.target.value.replace(/[^0-9]/g, ""))}
+                className="w-full text-center"
+                maxLength={2}
+              />
+              <span className="text-xs text-slate-400 font-semibold shrink-0">to</span>
+              <Input
+                size="middle"
+                placeholder="Max (e.g. 35)"
+                value={ageMax}
+                onChange={(e) => setAgeMax(e.target.value.replace(/[^0-9]/g, ""))}
+                className="w-full text-center"
+                maxLength={2}
+              />
+            </div>
           </Col>
           <Col xs={12} sm={6}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Languages Required</label>
@@ -1320,29 +1341,25 @@ export function PostJobModal({
       </div>
 
       {/* Mandatory Assets / Documents (Native Ant Design Tags Select) */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200">
+      <div className="p-4 rounded-xl bg-white border border-slate-200">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5 text-orange-600" />
+            <FileText className="w-3.5 h-3.5 text-slate-500" />
             <span>Mandatory Candidate Assets / Documents</span>
           </span>
-          <span className="text-[11px] text-slate-500 font-medium">Type custom &amp; press <strong>Enter ↵</strong></span>
+          <span className="text-[11px] text-slate-400">Select or type custom &amp; press Enter</span>
         </div>
         <Select
           mode="tags"
           size="middle"
-          placeholder="Select mandatory assets or type any custom asset and press Enter..."
+          placeholder="Select mandatory assets or type any custom document/asset (e.g. Android Phone, Driving License)..."
           value={requiredAssets}
           onChange={(val) => setRequiredAssets(val || [])}
           options={ASSET_SUGGESTIONS.map((a) => ({ label: a.label, value: a.value }))}
           allowClear
           className="w-full"
           tokenSeparators={[","]}
-          notFoundContent={<div className="p-2 text-xs text-slate-500">Press <strong>Enter ↵</strong> to add this custom document/asset</div>}
         />
-        <p className="mt-1.5 text-[11px] text-slate-500">
-          💡 <strong>Custom asset/document add karne ke liye:</strong> Box me naam type karein aur keyboard par <strong>Enter</strong> (ya comma <code>,</code>) dabayein — wo tag ban kar add ho jayega.
-        </p>
       </div>
     </div>
   );
@@ -1350,9 +1367,9 @@ export function PostJobModal({
   const renderTab4_Interview = () => (
     <div className="space-y-4 max-w-[900px] mx-auto">
       {/* Interview Process */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200">
+      <div className="p-4 rounded-xl bg-white border border-slate-200">
         <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-3">
-          <Video className="w-3.5 h-3.5 text-orange-600" />
+          <Video className="w-3.5 h-3.5 text-slate-500" />
           <span>Interview Process &amp; Contact</span>
         </span>
         <Row gutter={[12, 12]}>
@@ -1411,14 +1428,14 @@ export function PostJobModal({
       </div>
 
       {/* Interview Schedule Timing */}
-      <div className="p-4 rounded-2xl bg-orange-50/60 border border-orange-200/80">
+      <div className="p-4 rounded-xl bg-white border border-slate-200">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[11px] font-bold text-orange-900 uppercase tracking-wider flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-orange-600" />
+          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5 text-slate-500" />
             <span>Interview Schedule Window</span>
           </span>
-          <span className="text-[10px] font-semibold text-orange-700 bg-white px-2 py-0.5 rounded border border-orange-200">
-            Candidate Time Window
+          <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+            Candidate Slot Window
           </span>
         </div>
 
@@ -1488,15 +1505,15 @@ export function PostJobModal({
         </Row>
 
         {/* Live Preview Info Banner */}
-        <div className="mt-2.5 text-[11px] text-slate-600 p-2 rounded-lg bg-white border border-orange-100 flex items-center gap-2">
-          <Clock className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+        <div className="mt-2.5 text-[11px] text-slate-600 p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-2">
+          <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
           <span>
             {interviewStartDate || interviewEndDate || interviewTimeSlot ? (
               <>
                 Candidate Notice: Must attend interview between{" "}
-                <strong className="text-orange-950 font-bold">{interviewStartDate || "Immediate"}</strong> and{" "}
-                <strong className="text-orange-950 font-bold">{interviewEndDate || "Vacancy Active"}</strong> during{" "}
-                <strong className="text-orange-950 font-bold">{interviewTimeSlot || "Designated Hours"}</strong>.
+                <strong className="text-slate-900 font-bold">{interviewStartDate || "Immediate"}</strong> and{" "}
+                <strong className="text-slate-900 font-bold">{interviewEndDate || "Vacancy Active"}</strong> during{" "}
+                <strong className="text-slate-900 font-bold">{interviewTimeSlot || "Designated Hours"}</strong>.
               </>
             ) : (
               "Tip: Specify start date, end date, and time slot so candidates clearly know their interview window."
@@ -1510,9 +1527,9 @@ export function PostJobModal({
   const renderTab5_Description = () => (
     <div className="space-y-4 max-w-[900px] mx-auto">
       {/* Skills & Description */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200">
+      <div className="p-4 rounded-xl bg-white border border-slate-200">
         <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-3">
-          <FileCheck className="w-3.5 h-3.5 text-orange-600" />
+          <FileCheck className="w-3.5 h-3.5 text-slate-500" />
           <span>Job Description &amp; Details</span>
         </span>
 
@@ -1568,15 +1585,14 @@ export function PostJobModal({
       </div>
 
       {/* Featured & Visibility */}
-      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+      <div className="p-4 rounded-xl bg-white border border-slate-200">
         <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-3">
-          <Star className="w-3.5 h-3.5 text-orange-600" />
+          <Star className="w-3.5 h-3.5 text-slate-500" />
           <span>Listing Visibility &amp; Highlights</span>
         </span>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200">
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50 border border-slate-200">
             <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-              <Star className="w-3.5 h-3.5 text-amber-500" />
               <span>Featured Listing</span>
             </span>
             <Switch
@@ -1585,9 +1601,8 @@ export function PostJobModal({
               onChange={(checked) => setFeatured(checked)}
             />
           </div>
-          <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200">
+          <div className="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50 border border-slate-200">
             <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
               <span>Urgent Hiring</span>
             </span>
             <Switch
@@ -1600,22 +1615,22 @@ export function PostJobModal({
       </div>
 
       {/* Direct Employer Hiring Trust Card */}
-      <div className="p-3.5 rounded-2xl bg-gradient-to-br from-orange-50/80 to-amber-50/60 border border-orange-200/80 text-xs">
+      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
         <div className="font-bold text-slate-800 flex items-center gap-1.5 mb-2">
-          <ShieldCheck className="w-4 h-4 text-orange-600" />
+          <ShieldCheck className="w-4 h-4 text-slate-500" />
           <span>Direct Employer Benefits</span>
         </div>
         <div className="text-[11px] text-slate-600 space-y-1.5">
           <div className="flex items-center gap-2">
-            <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <Check className="w-3.5 h-3.5 text-slate-700 shrink-0" />
             <span>Zero intermediary commission — 100% direct recruiter hiring</span>
           </div>
           <div className="flex items-center gap-2">
-            <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <Check className="w-3.5 h-3.5 text-slate-700 shrink-0" />
             <span>Applicants can contact you directly via HR WhatsApp</span>
           </div>
           <div className="flex items-center gap-2">
-            <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <Check className="w-3.5 h-3.5 text-slate-700 shrink-0" />
             <span>Live tracking in Employer Dashboard</span>
           </div>
         </div>
@@ -1765,7 +1780,7 @@ export function PostJobModal({
       title={
         <div className="flex items-center justify-between w-full pr-8">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-orange-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center shrink-0">
               <Briefcase className="w-4 h-4" />
             </div>
             <div>
@@ -1777,10 +1792,9 @@ export function PostJobModal({
               </div>
             </div>
           </div>
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-            Full Screen Job Posting Studio
-          </span>
+          <Tag className="hidden sm:inline-flex m-0 text-xs font-medium text-slate-600 bg-slate-100 border-slate-200">
+            Employer Studio
+          </Tag>
         </div>
       }
     >
