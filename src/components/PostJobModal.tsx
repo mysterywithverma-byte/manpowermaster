@@ -299,9 +299,9 @@ export function PostJobModal({
   const [company, setCompany] = useState("");
   const [selectedBranchId, setSelectedBranchId] = useState<string>("");
   const [location, setLocation] = useState("");
-  const [workplaceType, setWorkplaceType] = useState<string>("On-site");
-  const [jobType, setJobType] = useState<string>("Full-time");
-  const [openingsCount, setOpeningsCount] = useState("2");
+  const [workplaceType, setWorkplaceType] = useState<string>("");
+  const [jobType, setJobType] = useState<string>("");
+  const [openingsCount, setOpeningsCount] = useState("");
   const [urgentHiring, setUrgentHiring] = useState(false);
   const [jobCategory, setJobCategory] = useState("");
 
@@ -314,52 +314,45 @@ export function PostJobModal({
   const [perkTags, setPerkTags] = useState<string[]>([]);
 
   // Role Specs
-  const [experienceLevel, setExperienceLevel] = useState("Fresher");
+  const [experienceLevel, setExperienceLevel] = useState("");
   const [qualification, setQualification] = useState("");
-  const [shiftTiming, setShiftTiming] = useState("09:30 AM - 06:30 PM (Day Shift)");
-  const [shiftInTime, setShiftInTime] = useState("09:30 AM");
-  const [shiftOutTime, setShiftOutTime] = useState("06:30 PM");
-  const [workingDays, setWorkingDays] = useState("6 Days (Mon - Sat, Sun Off)");
-  const [workingDaysList, setWorkingDaysList] = useState<string[]>([
-    "Mon",
-    "Tue",
-    "Wed",
-    "Thu",
-    "Fri",
-    "Sat",
-  ]);
+  const [shiftTiming, setShiftTiming] = useState("");
+  const [shiftInTime, setShiftInTime] = useState("");
+  const [shiftOutTime, setShiftOutTime] = useState("");
+  const [workingDays, setWorkingDays] = useState("");
+  const [workingDaysList, setWorkingDaysList] = useState<string[]>([]);
   const [expiryDays, setExpiryDays] = useState<string>("30");
 
   // Candidate Criteria
-  const [genderPreference, setGenderPreference] = useState<string>("Any");
-  const [englishLevel, setEnglishLevel] = useState("Basic / Conversational");
+  const [genderPreference, setGenderPreference] = useState<string>("");
+  const [englishLevel, setEnglishLevel] = useState("");
   const [requiredAssets, setRequiredAssets] = useState<string[]>([]);
   const [ageMin, setAgeMin] = useState("");
   const [ageMax, setAgeMax] = useState("");
-  const [languagesRequired, setLanguagesRequired] = useState<string[]>(["Hindi"]);
+  const [languagesRequired, setLanguagesRequired] = useState<string[]>([]);
   const [noticePeriod, setNoticePeriod] = useState("");
 
   // WorkIndia Hero Specific Requirements Field
   const [otherRequirements, setOtherRequirements] = useState("");
 
   // Interview & Contact
-  const [interviewMode, setInterviewMode] = useState("Direct Walk-in Interview");
+  const [interviewMode, setInterviewMode] = useState("");
   const [interviewAddress, setInterviewAddress] = useState("");
   const [interviewStartDate, setInterviewStartDate] = useState("");
   const [interviewEndDate, setInterviewEndDate] = useState("");
-  const [interviewStartTime, setInterviewStartTime] = useState("10:00 AM");
-  const [interviewEndTime, setInterviewEndTime] = useState("05:00 PM");
-  const [interviewTimeSlot, setInterviewTimeSlot] = useState("10:00 AM to 05:00 PM (Standard Slot)");
+  const [interviewStartTime, setInterviewStartTime] = useState("");
+  const [interviewEndTime, setInterviewEndTime] = useState("");
+  const [interviewTimeSlot, setInterviewTimeSlot] = useState("");
   const [recruiterWhatsApp, setRecruiterWhatsApp] = useState("");
   const [contactPerson, setContactPerson] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [referralBonus, setReferralBonus] = useState("");
 
   // Candidate Calling Availability
-  const [callingDaysList, setCallingDaysList] = useState<string[]>(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
-  const [callingTimeStart, setCallingTimeStart] = useState("09:30 AM");
-  const [callingTimeEnd, setCallingTimeEnd] = useState("06:30 PM");
-  const [callingSlotPreset, setCallingSlotPreset] = useState("09:30 AM to 06:30 PM");
+  const [callingDaysList, setCallingDaysList] = useState<string[]>([]);
+  const [callingTimeStart, setCallingTimeStart] = useState("");
+  const [callingTimeEnd, setCallingTimeEnd] = useState("");
+  const [callingSlotPreset, setCallingSlotPreset] = useState("");
 
   // Description & Visibility
   const [skills, setSkills] = useState("");
@@ -972,42 +965,42 @@ export function PostJobModal({
         setReferralBonus(jobToEdit.referralBonus || "");
         setContactConsent(true);
       } else {
-        // Fresh posting defaults
+        // Fresh posting defaults - clean & unselected
         setTitle("");
         setCompany(user?.companyName || user?.name || "");
         setLocation(user?.location || "");
-        setWorkplaceType("On-site");
-        setJobType("Full-time");
+        setWorkplaceType("");
+        setJobType("");
         setJobCategory("");
-        setOpeningsCount("2");
+        setOpeningsCount("");
         setUrgentHiring(false);
         setSalaryMonthlyMin("");
         setSalaryMonthlyMax("");
         setSalaryMin("");
         setSalaryMax("");
-        setExperienceLevel("Fresher");
+        setExperienceLevel("");
         setQualification("");
-        setShiftTiming("09:30 AM - 06:30 PM (Day Shift)");
-        setShiftInTime("09:30 AM");
-        setShiftOutTime("06:30 PM");
-        setWorkingDaysList(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
-        setWorkingDays("6 Days (Mon - Sat, Sun Off)");
+        setShiftTiming("");
+        setShiftInTime("");
+        setShiftOutTime("");
+        setWorkingDaysList([]);
+        setWorkingDays("");
         setExpiryDays("30");
-        setGenderPreference("Any");
-        setEnglishLevel("Basic / Conversational");
+        setGenderPreference("");
+        setEnglishLevel("");
         setRequiredAssets([]);
-        setInterviewMode("Direct Walk-in Interview");
+        setInterviewMode("");
         setInterviewAddress("");
         setInterviewStartDate("");
         setInterviewEndDate("");
-        setInterviewStartTime("10:00 AM");
-        setInterviewEndTime("05:00 PM");
-        setInterviewTimeSlot("10:00 AM to 05:00 PM (Standard Slot)");
+        setInterviewStartTime("");
+        setInterviewEndTime("");
+        setInterviewTimeSlot("");
         setRecruiterWhatsApp(user?.phone || "");
-        setCallingDaysList(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
-        setCallingTimeStart("09:30 AM");
-        setCallingTimeEnd("06:30 PM");
-        setCallingSlotPreset("09:30 AM to 06:30 PM");
+        setCallingDaysList([]);
+        setCallingTimeStart("");
+        setCallingTimeEnd("");
+        setCallingSlotPreset("");
         setSkills("");
         setDescription("");
         setRequirements("");
@@ -1019,7 +1012,7 @@ export function PostJobModal({
         setPerkTags([]);
         setAgeMin("");
         setAgeMax("");
-        setLanguagesRequired(["Hindi"]);
+        setLanguagesRequired([]);
         setNoticePeriod("");
         setContactPerson(user?.name || "");
         setContactEmail(user?.email || "");
@@ -1249,38 +1242,100 @@ export function PostJobModal({
         </div>
       )}
 
-      {/* Employer Identity Card */}
+      {/* 1. Job Role Details */}
       <div className="p-4 rounded-xl bg-white border border-slate-200">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-            <Building2 className="w-3.5 h-3.5 text-slate-500" />
-            <span>Company &amp; Branch Location</span>
-          </span>
-          <Tag className="m-0 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border-emerald-200">
-            Verified Employer
-          </Tag>
-        </div>
+        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-3">
+          <Briefcase className="w-3.5 h-3.5 text-slate-500" />
+          <span>Role Details &amp; Vacancies</span>
+        </span>
 
-        {/* Employer DP Display */}
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200 mb-3">
-          <Avatar
-            size={42}
-            shape="square"
-            src={employerLogo}
-            className="border border-slate-200 rounded-md shrink-0 bg-white text-slate-700 font-bold"
-          >
-            {employerName.charAt(0)}
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-bold text-slate-900 truncate">
-              {company || employerName}
-            </div>
-            <div className="text-[11px] text-slate-500 flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-              <span>Direct Corporate Hiring Account</span>
-            </div>
-          </div>
-        </div>
+        <Row gutter={[12, 12]}>
+          <Col xs={24} sm={14}>
+            <label className="text-[11px] font-bold text-slate-700 block mb-1">
+              Job Title / Designation <span className="text-red-500">*</span>
+            </label>
+            <AutoComplete
+              size="middle"
+              placeholder="Search or enter job title"
+              value={title}
+              onChange={(val) => setTitle(val)}
+              options={TITLE_AUTOCOMPLETE_OPTIONS}
+              filterOption={(inputValue, option) =>
+                (option?.value?.toLowerCase().includes(inputValue.toLowerCase()) ?? false)
+              }
+              className="w-full font-medium"
+            />
+          </Col>
+
+          <Col xs={24} sm={10}>
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">
+              Job Role / Area of Work <span className="text-red-500">*</span>
+            </label>
+            <Select
+              size="middle"
+              placeholder="Select job category"
+              value={jobCategory || undefined}
+              onChange={(val) => setJobCategory(val || "")}
+              options={JOB_CATEGORY_SUGGESTIONS.map((c) => ({ label: c.value, value: c.value }))}
+              allowClear
+              className="w-full"
+            />
+          </Col>
+        </Row>
+
+        <Row gutter={[12, 12]} className="mt-3">
+          <Col xs={24} sm={8}>
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">
+              No. of Openings / Vacancies <span className="text-red-500">*</span>
+            </label>
+            <Input
+              size="middle"
+              prefix={<Users className="w-3.5 h-3.5 text-slate-400" />}
+              placeholder="Number of openings"
+              value={openingsCount}
+              onChange={(e) => setOpeningsCount(e.target.value.replace(/[^0-9]/g, ""))}
+              className="w-full font-semibold"
+            />
+          </Col>
+
+          <Col xs={12} sm={8}>
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">
+              Experience Level
+            </label>
+            <Select
+              size="middle"
+              placeholder="Select experience level"
+              value={experienceLevel || undefined}
+              onChange={(val) => setExperienceLevel(val || "")}
+              options={EXPERIENCE_SUGGESTIONS.map((s) => ({ label: s.value, value: s.value }))}
+              allowClear
+              className="w-full"
+            />
+          </Col>
+
+          <Col xs={12} sm={8}>
+            <label className="text-[11px] font-bold text-slate-600 block mb-1">
+              Min Qualification
+            </label>
+            <Select
+              size="middle"
+              placeholder="Select minimum qualification"
+              value={qualification || undefined}
+              onChange={(val) => setQualification(val || "")}
+              options={QUALIFICATION_SUGGESTIONS.map((q) => ({ label: q.value, value: q.value }))}
+              allowClear
+              className="w-full"
+            />
+          </Col>
+        </Row>
+      </div>
+
+      {/* 2. Workplace & Location */}
+      <div className="p-4 rounded-xl bg-white border border-slate-200">
+        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-3">
+          <MapPin className="w-3.5 h-3.5 text-slate-500" />
+          <span>Workplace &amp; Location</span>
+        </span>
 
         <Row gutter={[12, 12]}>
           {userBranches.length > 0 && (
@@ -1290,6 +1345,7 @@ export function PostJobModal({
               </label>
               <Select
                 size="middle"
+                placeholder="Select branch office"
                 value={selectedBranchId || undefined}
                 allowClear
                 onChange={handleBranchSelect}
@@ -1307,15 +1363,12 @@ export function PostJobModal({
           )}
 
           <Col xs={24} sm={userBranches.length > 0 ? 12 : 24}>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[11px] font-bold text-slate-700 block">
-                Job Location / Target City <span className="text-red-500">*</span>
-              </label>
-              <span className="text-[10px] text-slate-400 font-medium">Kaha / Kis city ki vacancy hai</span>
-            </div>
+            <label className="text-[11px] font-bold text-slate-700 block mb-1">
+              Job Location / Target City <span className="text-red-500">*</span>
+            </label>
             <AutoComplete
               size="middle"
-              placeholder="Search or select hiring city (e.g. Mumbai, Delhi, Bengaluru, Kanpur...)"
+              placeholder="Search or enter city"
               value={location}
               onChange={(val) => setLocation(val)}
               options={CITY_AUTOCOMPLETE_OPTIONS}
@@ -1333,8 +1386,10 @@ export function PostJobModal({
             <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Workplace</span>
             <Select
               size="middle"
-              value={workplaceType || "On-site"}
-              onChange={(val) => setWorkplaceType(val || "On-site")}
+              placeholder="Select workplace"
+              value={workplaceType || undefined}
+              onChange={(val) => setWorkplaceType(val || "")}
+              allowClear
               className="w-full"
               options={[
                 { label: "🏢 On-site (Office / Plant)", value: "On-site" },
@@ -1347,8 +1402,10 @@ export function PostJobModal({
             <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Job Type</span>
             <Select
               size="middle"
-              value={jobType || "Full-time"}
-              onChange={(val) => setJobType(val || "Full-time")}
+              placeholder="Select job type"
+              value={jobType || undefined}
+              onChange={(val) => setJobType(val || "")}
+              allowClear
               className="w-full"
               options={[
                 { label: "Full-time (Regular)", value: "Full-time" },
@@ -1390,94 +1447,37 @@ export function PostJobModal({
         </div>
       </div>
 
-      {/* Job Role Details (WorkIndia Primary Fields) */}
+      {/* 3. Employer Identity Card */}
       <div className="p-4 rounded-xl bg-white border border-slate-200">
-        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 mb-3">
-          <Briefcase className="w-3.5 h-3.5 text-slate-500" />
-          <span>Role Details &amp; Vacancies</span>
-        </span>
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <Building2 className="w-3.5 h-3.5 text-slate-500" />
+            <span>Hiring Company Profile</span>
+          </span>
+          <Tag className="m-0 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border-emerald-200">
+            Verified Employer
+          </Tag>
+        </div>
 
-        <Row gutter={[12, 12]}>
-          <Col xs={24} sm={14}>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[11px] font-bold text-slate-700 block">
-                Job Title / Designation <span className="text-red-500">*</span>
-              </label>
-              <span className="text-[10px] text-slate-400 font-medium">990+ Titles &amp; Custom</span>
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
+          <Avatar
+            size={42}
+            shape="square"
+            src={employerLogo}
+            className="border border-slate-200 rounded-md shrink-0 bg-white text-slate-700 font-bold"
+          >
+            {employerName.charAt(0)}
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-bold text-slate-900 truncate">
+              {company || employerName}
             </div>
-            <AutoComplete
-              size="middle"
-              placeholder="Select or search role (e.g. Accountant, Delivery Partner, Cook, AI Engineer...)"
-              value={title}
-              onChange={(val) => setTitle(val)}
-              options={TITLE_AUTOCOMPLETE_OPTIONS}
-              filterOption={(inputValue, option) =>
-                (option?.value?.toLowerCase().includes(inputValue.toLowerCase()) ?? false)
-              }
-              className="w-full font-medium"
-            />
-          </Col>
-
-          <Col xs={24} sm={10}>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">
-              Job Role / Area of Work <span className="text-red-500">*</span>
-            </label>
-            <Select
-              size="middle"
-              placeholder="Select category from dropdown"
-              value={jobCategory || undefined}
-              onChange={(val) => setJobCategory(val || "")}
-              options={JOB_CATEGORY_SUGGESTIONS.map((c) => ({ label: c.value, value: c.value }))}
-              allowClear
-              className="w-full"
-            />
-          </Col>
-        </Row>
-
-        <Row gutter={[12, 12]} className="mt-3">
-          <Col xs={24} sm={8}>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">
-              No. of Openings / Vacancies <span className="text-red-500">*</span>
-            </label>
-            <Input
-              size="middle"
-              prefix={<Users className="w-3.5 h-3.5 text-slate-400" />}
-              placeholder="e.g. 2"
-              value={openingsCount}
-              onChange={(e) => setOpeningsCount(e.target.value.replace(/[^0-9]/g, ""))}
-              className="w-full font-semibold"
-            />
-          </Col>
-
-          <Col xs={12} sm={8}>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">
-              Experience Level
-            </label>
-            <Select
-              size="middle"
-              value={experienceLevel || undefined}
-              onChange={(val) => setExperienceLevel(val || "")}
-              options={EXPERIENCE_SUGGESTIONS.map((s) => ({ label: s.value, value: s.value }))}
-              allowClear
-              className="w-full"
-            />
-          </Col>
-
-          <Col xs={12} sm={8}>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">
-              Min Qualification
-            </label>
-            <Select
-              size="middle"
-              placeholder="Select Education"
-              value={qualification || undefined}
-              onChange={(val) => setQualification(val || "")}
-              options={QUALIFICATION_SUGGESTIONS.map((q) => ({ label: q.value, value: q.value }))}
-              allowClear
-              className="w-full"
-            />
-          </Col>
-        </Row>
+            <div className="text-[11px] text-slate-500 flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+              <span>Direct Corporate Hiring Account</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1509,7 +1509,7 @@ export function PostJobModal({
               size="middle"
               prefix="₹"
               suffix="/mo"
-              placeholder="e.g. 18000"
+              placeholder="Min salary"
               value={salaryMonthlyMin}
               onChange={(e) => handleMonthlyMinChange(e.target.value)}
               className="font-semibold"
@@ -1521,7 +1521,7 @@ export function PostJobModal({
               size="middle"
               prefix="₹"
               suffix="/mo"
-              placeholder="e.g. 25000"
+              placeholder="Max salary"
               value={salaryMonthlyMax}
               onChange={(e) => handleMonthlyMaxChange(e.target.value)}
               className="font-semibold"
@@ -1533,7 +1533,7 @@ export function PostJobModal({
               size="middle"
               prefix="₹"
               suffix="LPA"
-              placeholder="2.16"
+              placeholder="Min LPA"
               value={salaryMin}
               onChange={(e) => handleLpaMinChange(e.target.value)}
               className="font-semibold"
@@ -1545,7 +1545,7 @@ export function PostJobModal({
               size="middle"
               prefix="₹"
               suffix="LPA"
-              placeholder="3.00"
+              placeholder="Max LPA"
               value={salaryMax}
               onChange={(e) => handleLpaMaxChange(e.target.value)}
               className="font-semibold"
@@ -1558,6 +1558,7 @@ export function PostJobModal({
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Probation Period</label>
             <Select
               size="middle"
+              placeholder="Select probation period"
               value={probationPeriod || undefined}
               onChange={(val) => setProbationPeriod(val || "")}
               allowClear
@@ -1575,7 +1576,7 @@ export function PostJobModal({
             <Input
               size="middle"
               prefix="₹"
-              placeholder="Optional candidate referral reward"
+              placeholder="Referral bonus amount"
               value={referralBonus}
               onChange={(e) => setReferralBonus(e.target.value.replace(/[^0-9]/g, ""))}
             />
@@ -1595,7 +1596,7 @@ export function PostJobModal({
         <Select
           mode="tags"
           size="middle"
-          placeholder="Select perks or type custom (e.g. Free Cab, Health Insurance, Weekly Bonus)..."
+          placeholder="Select perks or type custom (e.g. Free Cab, Health Insurance)..."
           value={perkTags}
           onChange={(val) => setPerkTags(val || [])}
           options={PERK_TAG_SUGGESTIONS.map((p) => ({ label: p.label, value: p.value }))}
@@ -1620,7 +1621,7 @@ export function PostJobModal({
                 Working Days
               </label>
               <span className="text-[11px] text-slate-500">
-                Selected: <strong className="text-slate-800">{workingDays || "6 Days (Mon - Sat, Sun Off)"}</strong>
+                Selected: <strong className="text-slate-800">{workingDays || (workingDaysList.length > 0 ? `${workingDaysList.length} Days` : "Not specified")}</strong>
               </span>
             </div>
             {/* Quick Presets */}
@@ -1628,21 +1629,33 @@ export function PostJobModal({
               <button
                 type="button"
                 onClick={() => applyWorkingDaysPreset(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], "6 Days (Mon - Sat, Sun Off)")}
-                className="px-2 py-0.5 text-xs rounded bg-white border border-slate-200 text-slate-700 hover:border-slate-400 transition-colors cursor-pointer"
+                className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer ${
+                  workingDaysList.length === 6 && !workingDaysList.includes("Sun")
+                    ? "bg-blue-600 text-white border-blue-600 font-semibold"
+                    : "bg-white text-slate-700 border-slate-200 hover:border-slate-400"
+                }`}
               >
                 6 Days (Mon-Sat)
               </button>
               <button
                 type="button"
                 onClick={() => applyWorkingDaysPreset(["Mon", "Tue", "Wed", "Thu", "Fri"], "5 Days (Mon - Fri, Sat & Sun Off)")}
-                className="px-2 py-0.5 text-xs rounded bg-white border border-slate-200 text-slate-700 hover:border-slate-400 transition-colors cursor-pointer"
+                className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer ${
+                  workingDaysList.length === 5 && !workingDaysList.includes("Sat") && !workingDaysList.includes("Sun")
+                    ? "bg-blue-600 text-white border-blue-600 font-semibold"
+                    : "bg-white text-slate-700 border-slate-200 hover:border-slate-400"
+                }`}
               >
                 5 Days (Mon-Fri)
               </button>
               <button
                 type="button"
                 onClick={() => applyWorkingDaysPreset(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], "All 7 Days (Rotational Off)")}
-                className="px-2 py-0.5 text-xs rounded bg-white border border-slate-200 text-slate-700 hover:border-slate-400 transition-colors cursor-pointer"
+                className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer ${
+                  workingDaysList.length === 7
+                    ? "bg-blue-600 text-white border-blue-600 font-semibold"
+                    : "bg-white text-slate-700 border-slate-200 hover:border-slate-400"
+                }`}
               >
                 All 7 Days
               </button>
@@ -1660,8 +1673,8 @@ export function PostJobModal({
                   onClick={() => toggleWorkingDay(day.key)}
                   className={`px-3 py-1 rounded text-xs font-medium border transition-all cursor-pointer flex items-center gap-1 select-none ${
                     isWorking
-                      ? "bg-slate-900 text-white border-slate-900 shadow-xs"
-                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
+                      ? "bg-blue-600 text-white border-blue-600 shadow-xs font-semibold"
+                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                   title={`${day.full}: ${isWorking ? "Working Day" : "Weekly Off"}`}
                 >
@@ -1675,7 +1688,9 @@ export function PostJobModal({
           <div className="mt-2 text-[11px] text-slate-500 flex items-center gap-1 flex-wrap">
             <span>Weekly Off:</span>
             <span className="font-semibold text-slate-700">
-              {WEEK_DAYS.filter((d) => !workingDaysList.includes(d.key)).map((d) => d.full).join(", ") || "None (Rotational Off)"}
+              {workingDaysList.length === 0
+                ? "Not selected"
+                : WEEK_DAYS.filter((d) => !workingDaysList.includes(d.key)).map((d) => d.full).join(", ") || "None (Rotational Off)"}
             </span>
           </div>
         </div>
@@ -1689,7 +1704,7 @@ export function PostJobModal({
               use12Hours
               format="h:mm A"
               minuteStep={5}
-              placeholder="09:30 AM"
+              placeholder="In Time"
               value={parseTimeToDayjs(shiftInTime)}
               onChange={(_, timeString) => updateShiftInTime(typeof timeString === "string" ? timeString : "")}
               className="w-full"
@@ -1703,7 +1718,7 @@ export function PostJobModal({
               use12Hours
               format="h:mm A"
               minuteStep={5}
-              placeholder="06:30 PM"
+              placeholder="Out Time"
               value={parseTimeToDayjs(shiftOutTime)}
               onChange={(_, timeString) => updateShiftOutTime(typeof timeString === "string" ? timeString : "")}
               className="w-full"
@@ -1713,13 +1728,14 @@ export function PostJobModal({
           <Col xs={24} sm={4}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Shift Duration</label>
             <div className="h-8 px-2.5 rounded bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-semibold text-slate-700">
-              {calculateShiftDuration(shiftInTime, shiftOutTime) || "9.0 Hours"}
+              {calculateShiftDuration(shiftInTime, shiftOutTime) || "--"}
             </div>
           </Col>
           <Col xs={24} sm={10}>
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Shift Preset / Summary</label>
             <Select
               size="middle"
+              placeholder="Select shift preset"
               value={shiftTiming || undefined}
               onChange={(val) => setShiftTiming(val || "")}
               options={SHIFT_SUGGESTIONS.map((s) => ({ label: s.value, value: s.value }))}
@@ -1746,8 +1762,10 @@ export function PostJobModal({
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Gender Preference</label>
             <Select
               size="middle"
-              value={genderPreference || "Any"}
-              onChange={(val) => setGenderPreference(val || "Any")}
+              placeholder="Select Gender"
+              value={genderPreference || undefined}
+              onChange={(val) => setGenderPreference(val || "")}
+              allowClear
               className="w-full"
               options={[
                 { label: "No Preference (Any)", value: "Any" },
@@ -1760,6 +1778,7 @@ export function PostJobModal({
             <label className="text-[11px] font-bold text-slate-600 block mb-1">English Requirement</label>
             <Select
               size="middle"
+              placeholder="Select English Level"
               value={englishLevel || undefined}
               onChange={(val) => setEnglishLevel(val || "")}
               options={ENGLISH_SUGGESTIONS.map((e) => ({ label: e.value, value: e.value }))}
@@ -1774,7 +1793,7 @@ export function PostJobModal({
             <div className="flex items-center gap-1.5">
               <Input
                 size="middle"
-                placeholder="Min (e.g. 18)"
+                placeholder="Min"
                 value={ageMin}
                 onChange={(e) => setAgeMin(e.target.value.replace(/[^0-9]/g, ""))}
                 className="w-full text-center"
@@ -1783,7 +1802,7 @@ export function PostJobModal({
               <span className="text-xs text-slate-400 font-semibold shrink-0">to</span>
               <Input
                 size="middle"
-                placeholder="Max (e.g. 35)"
+                placeholder="Max"
                 value={ageMax}
                 onChange={(e) => setAgeMax(e.target.value.replace(/[^0-9]/g, ""))}
                 className="w-full text-center"
@@ -1796,6 +1815,7 @@ export function PostJobModal({
             <Select
               size="middle"
               mode="multiple"
+              placeholder="Select languages"
               value={languagesRequired}
               onChange={(val) => setLanguagesRequired(val || [])}
               options={LANGUAGE_SUGGESTIONS.map((l) => ({ label: l.value, value: l.value }))}
@@ -1819,7 +1839,7 @@ export function PostJobModal({
         <Select
           mode="tags"
           size="middle"
-          placeholder="Select mandatory assets (e.g. 2-Wheeler & DL, Aadhaar, Smartphone)..."
+          placeholder="Select mandatory assets (e.g. 2-Wheeler, Aadhaar, Smartphone)..."
           value={requiredAssets}
           onChange={(val) => setRequiredAssets(val || [])}
           options={ASSET_SUGGESTIONS.map((a) => ({ label: a.label, value: a.value }))}
@@ -1844,7 +1864,7 @@ export function PostJobModal({
 
         <Input.TextArea
           rows={3}
-          placeholder="e.g. Must have Android smartphone with GPS, good interpersonal communication skills, and willing to work in field sales across Dadar and Lower Parel."
+          placeholder="Enter any other specific qualification, certificate, or tool requirements"
           value={otherRequirements}
           onChange={(e) => setOtherRequirements(e.target.value)}
           className="text-xs mb-3"
@@ -1887,9 +1907,11 @@ export function PostJobModal({
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Interview Mode</label>
             <Select
               size="middle"
-              value={interviewMode || "Direct Walk-in Interview"}
-              onChange={(val) => setInterviewMode(val || "Direct Walk-in Interview")}
+              placeholder="Select interview mode"
+              value={interviewMode || undefined}
+              onChange={(val) => setInterviewMode(val || "")}
               options={INTERVIEW_MODE_SUGGESTIONS.map((m) => ({ label: m.value, value: m.value }))}
+              allowClear
               className="w-full"
             />
           </Col>
@@ -1899,7 +1921,7 @@ export function PostJobModal({
             </label>
             <Input
               size="middle"
-              placeholder="e.g. 9876543210"
+              placeholder="10-digit WhatsApp number"
               prefix={<PhoneCall className="w-3.5 h-3.5 text-emerald-600" />}
               value={recruiterWhatsApp}
               onChange={(e) => setRecruiterWhatsApp(e.target.value.replace(/[^0-9]/g, ""))}
@@ -1910,7 +1932,7 @@ export function PostJobModal({
             <Input
               size="middle"
               prefix={<User className="w-3.5 h-3.5 text-slate-400" />}
-              placeholder="e.g. HR Manager / Rohit Verma"
+              placeholder="Contact person name"
               value={contactPerson}
               onChange={(e) => setContactPerson(e.target.value)}
             />
@@ -1922,7 +1944,7 @@ export function PostJobModal({
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Interview Venue / Walk-in Address</label>
             <Input
               size="middle"
-              placeholder="Complete building, street, landmark address for candidates"
+              placeholder="Enter interview venue or office address"
               prefix={<MapPin className="w-3.5 h-3.5 text-slate-400" />}
               value={interviewAddress}
               onChange={(e) => setInterviewAddress(e.target.value)}
@@ -1932,7 +1954,7 @@ export function PostJobModal({
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Official Contact Email</label>
             <Input
               size="middle"
-              placeholder="recruiter@company.com"
+              placeholder="Official contact email"
               prefix={<MessageSquare className="w-3.5 h-3.5 text-slate-400" />}
               value={contactEmail}
               onChange={(e) => setContactEmail(e.target.value)}
@@ -1949,7 +1971,7 @@ export function PostJobModal({
             <span>Recruiter Calling Days &amp; Timings (कैंडिडेट कब कॉल कर सकते हैं)</span>
           </span>
           <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-            {callingDaysList.length === 7 ? "All 7 Days" : `${callingDaysList.length} Days Active`}
+            {callingDaysList.length === 7 ? "All 7 Days" : callingDaysList.length > 0 ? `${callingDaysList.length} Days Active` : "Not specified"}
           </span>
         </div>
 
@@ -1957,7 +1979,7 @@ export function PostJobModal({
         <div className="mb-3.5">
           <div className="flex items-center justify-between mb-2">
             <label className="text-[11px] font-bold text-slate-600 block">
-              Calling Days (कॉल करने के दिन) <span className="text-red-500">*</span>
+              Calling Days (कॉल करने के दिन)
             </label>
             <div className="flex items-center gap-1.5">
               <button
@@ -1965,7 +1987,7 @@ export function PostJobModal({
                 onClick={() => setCallingDaysList(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"])}
                 className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer ${
                   callingDaysList.length === 6 && !callingDaysList.includes("Sun")
-                    ? "bg-slate-900 text-white border-slate-900 font-bold"
+                    ? "bg-blue-600 text-white border-blue-600 font-semibold"
                     : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
                 }`}
               >
@@ -1976,7 +1998,7 @@ export function PostJobModal({
                 onClick={() => setCallingDaysList(["Mon", "Tue", "Wed", "Thu", "Fri"])}
                 className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer ${
                   callingDaysList.length === 5 && !callingDaysList.includes("Sat") && !callingDaysList.includes("Sun")
-                    ? "bg-slate-900 text-white border-slate-900 font-bold"
+                    ? "bg-blue-600 text-white border-blue-600 font-semibold"
                     : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
                 }`}
               >
@@ -1987,7 +2009,7 @@ export function PostJobModal({
                 onClick={() => setCallingDaysList(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"])}
                 className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer ${
                   callingDaysList.length === 7
-                    ? "bg-slate-900 text-white border-slate-900 font-bold"
+                    ? "bg-blue-600 text-white border-blue-600 font-semibold"
                     : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
                 }`}
               >
@@ -2006,8 +2028,8 @@ export function PostJobModal({
                   onClick={() => toggleCallingDay(day.key)}
                   className={`px-3 py-1 rounded text-xs font-medium border transition-all cursor-pointer flex items-center gap-1 select-none ${
                     isSelected
-                      ? "bg-slate-900 text-white border-slate-900 font-bold shadow-xs"
-                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
+                      ? "bg-blue-600 text-white border-blue-600 font-semibold shadow-xs"
+                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
                   {isSelected && <Check className="w-3 h-3 stroke-[2.5]" />}
@@ -2030,6 +2052,7 @@ export function PostJobModal({
               onChange={handleCallingSlotPreset}
               options={CALLING_TIME_SLOT_PRESETS}
               placeholder="Select standard calling hours"
+              allowClear
               className="w-full"
             />
           </Col>
@@ -2042,7 +2065,7 @@ export function PostJobModal({
               use12Hours
               format="h:mm A"
               minuteStep={15}
-              placeholder="09:30 AM"
+              placeholder="Start Time"
               value={parseTimeToDayjs(callingTimeStart)}
               onChange={(_, timeString) => updateCallingTimeStart(typeof timeString === "string" ? timeString : "")}
               className="w-full"
@@ -2058,7 +2081,7 @@ export function PostJobModal({
               use12Hours
               format="h:mm A"
               minuteStep={15}
-              placeholder="06:30 PM"
+              placeholder="End Time"
               value={parseTimeToDayjs(callingTimeEnd)}
               onChange={(_, timeString) => updateCallingTimeEnd(typeof timeString === "string" ? timeString : "")}
               className="w-full"
@@ -2073,21 +2096,27 @@ export function PostJobModal({
           <div>
             <span className="font-bold text-emerald-900">Candidate Calling Notice: </span>
             <span>
-              Candidates can call HR on{" "}
-              <strong className="text-emerald-950 font-bold">
-                {callingDaysList.length === 7
-                  ? "All 7 Days"
-                  : callingDaysList.length === 6 && !callingDaysList.includes("Sun")
-                  ? "Monday to Saturday"
-                  : callingDaysList.length === 5 && !callingDaysList.includes("Sat") && !callingDaysList.includes("Sun")
-                  ? "Monday to Friday"
-                  : callingDaysList.map((k) => WEEK_DAYS.find((w) => w.key === k)?.full || k).join(", ")}
-              </strong>{" "}
-              between{" "}
-              <strong className="text-emerald-950 font-bold">
-                {callingTimeStart || "09:30 AM"} to {callingTimeEnd || "06:30 PM"}
-              </strong>
-              . Calling outside these hours is strictly prohibited.
+              {callingDaysList.length > 0 ? (
+                <>
+                  Candidates can call HR on{" "}
+                  <strong className="text-emerald-950 font-bold">
+                    {callingDaysList.length === 7
+                      ? "All 7 Days"
+                      : callingDaysList.length === 6 && !callingDaysList.includes("Sun")
+                      ? "Monday to Saturday"
+                      : callingDaysList.length === 5 && !callingDaysList.includes("Sat") && !callingDaysList.includes("Sun")
+                      ? "Monday to Friday"
+                      : callingDaysList.map((k) => WEEK_DAYS.find((w) => w.key === k)?.full || k).join(", ")}
+                  </strong>{" "}
+                  between{" "}
+                  <strong className="text-emerald-950 font-bold">
+                    {callingTimeStart || "09:30 AM"} to {callingTimeEnd || "06:30 PM"}
+                  </strong>
+                  .
+                </>
+              ) : (
+                "Select calling days and hours above to inform candidates when they can call HR."
+              )}
             </span>
           </div>
         </div>
@@ -2130,6 +2159,7 @@ export function PostJobModal({
             <label className="text-[11px] font-bold text-slate-600 block mb-1">Daily Interview Time Slot Preset</label>
             <Select
               size="middle"
+              placeholder="Select daily interview slot"
               value={interviewTimeSlot || undefined}
               onChange={handleInterviewSlotPreset}
               options={INTERVIEW_TIME_SLOT_SUGGESTIONS.map((t) => ({ label: t.value, value: t.value }))}
@@ -2147,7 +2177,7 @@ export function PostJobModal({
               use12Hours
               format="h:mm A"
               minuteStep={15}
-              placeholder="10:00 AM"
+              placeholder="Start Time"
               value={parseTimeToDayjs(interviewStartTime)}
               onChange={(_, timeString) => updateInterviewStartTime(typeof timeString === "string" ? timeString : "")}
               className="w-full"
@@ -2161,7 +2191,7 @@ export function PostJobModal({
               use12Hours
               format="h:mm A"
               minuteStep={15}
-              placeholder="05:00 PM"
+              placeholder="End Time"
               value={parseTimeToDayjs(interviewEndTime)}
               onChange={(_, timeString) => updateInterviewEndTime(typeof timeString === "string" ? timeString : "")}
               className="w-full"
@@ -2206,7 +2236,7 @@ export function PostJobModal({
             </label>
             <Input
               size="middle"
-              placeholder="e.g. Sales, Telecalling, Lead Generation, English, Customer Handling"
+              placeholder="e.g. Sales, Telecalling, Computer, Customer Handling"
               value={skills}
               onChange={(e) => setSkills(e.target.value)}
             />
@@ -2218,7 +2248,7 @@ export function PostJobModal({
             </label>
             <Input.TextArea
               rows={4}
-              placeholder="Briefly describe what the candidate will be doing day-to-day..."
+              placeholder="Enter brief role overview and key day-to-day responsibilities..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="text-xs"
@@ -2232,7 +2262,7 @@ export function PostJobModal({
               </label>
               <Input.TextArea
                 rows={3}
-                placeholder="e.g. Minimum 12th pass&#10;Good communication skills&#10;Smartphone required"
+                placeholder="Enter candidate requirements (one per line)"
                 value={requirements}
                 onChange={(e) => setRequirements(e.target.value)}
                 className="text-xs"
@@ -2244,7 +2274,7 @@ export function PostJobModal({
               </label>
               <Input.TextArea
                 rows={3}
-                placeholder="e.g. PF & ESI included&#10;Weekly incentive up to ₹3,000&#10;Travel allowance provided"
+                placeholder="Enter perks, allowances &amp; incentives (one per line)"
                 value={benefits}
                 onChange={(e) => setBenefits(e.target.value)}
                 className="text-xs"
