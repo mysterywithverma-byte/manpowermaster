@@ -37,6 +37,19 @@ export interface IJob extends Document {
   applicantsCount: number;
   featured: boolean;
   isVerified?: boolean;
+  otherRequirements?: string;
+  contactConsent?: boolean;
+  contactPerson?: string;
+  contactEmail?: string;
+  jobCategory?: string;
+  probationPeriod?: string;
+  perkTags?: string[];
+  agePreference?: string;
+  languagesRequired?: string[];
+  noticePeriod?: string;
+  referralBonus?: string;
+  branchId?: string;
+  branchName?: string;
   status: "active" | "closed" | "filled" | "expired";
   createdAt: Date;
   updatedAt: Date;
@@ -86,6 +99,19 @@ const JobSchema = new Schema<IJob>(
     interviewTimeSlot: { type: String, default: "" },
     recruiterWhatsApp: { type: String, default: "" },
     urgentHiring: { type: Boolean, default: false },
+    otherRequirements: { type: String, default: "" },
+    contactConsent: { type: Boolean, default: true },
+    contactPerson: { type: String, default: "" },
+    contactEmail: { type: String, default: "" },
+    jobCategory: { type: String, default: "" },
+    probationPeriod: { type: String, default: "" },
+    perkTags: { type: [String], default: [] },
+    agePreference: { type: String, default: "" },
+    languagesRequired: { type: [String], default: [] },
+    noticePeriod: { type: String, default: "" },
+    referralBonus: { type: String, default: "" },
+    branchId: { type: String, default: "" },
+    branchName: { type: String, default: "" },
     expiryDays: { type: Number, default: 30 },
     expiresAt: { type: Date, index: true },
     postedBy: { type: Schema.Types.Mixed, required: true, index: true },

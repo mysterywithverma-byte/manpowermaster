@@ -535,6 +535,12 @@ export default function HomePage() {
           fetchJobs();
           setActiveView("employer-dashboard");
         }}
+        onSwitchToCandidate={() => {
+          setIsPostJobOpen(false);
+          setActiveView("explore");
+          const el = document.getElementById("job-listings");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }}
       />
 
       <AuthModal
