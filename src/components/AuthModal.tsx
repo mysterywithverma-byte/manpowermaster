@@ -20,6 +20,7 @@ import {
   SafetyCertificateOutlined,
   ArrowLeftOutlined,
   CheckCircleFilled,
+  LockOutlined,
 } from "@ant-design/icons";
 import { auth } from "@/lib/firebase";
 import {
@@ -49,7 +50,6 @@ export function AuthModal({
   const [error, setError] = useState("");
 
   // Phone Auth State
-  const [authMethod, setAuthMethod] = useState<"phone" | "google">("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -57,6 +57,7 @@ export function AuthModal({
   const [resendCountdown, setResendCountdown] = useState(0);
 
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+  const phoneInputRef = useRef<any>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -66,10 +67,13 @@ export function AuthModal({
       setOtpCode("");
       setPhoneNumber("");
       setConfirmationResult(null);
+      setTimeout(() => {
+        phoneInputRef.current?.focus();
+      }, 200);
     }
   }, [isOpen, initialRole]);
 
-  // Clean up recaptcha on unmount/close
+  // Clean up recaptcha on unmount
   useEffect(() => {
     return () => {
       if (recaptchaVerifierRef.current) {
@@ -94,22 +98,33 @@ export function AuthModal({
   const setupRecaptcha = () => {
     if (typeof window === "undefined") return null;
 
-    if (!recaptchaVerifierRef.current) {
-      try {
-        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
-          size: "invisible",
-          callback: () => {
-            // reCAPTCHA solved
-          },
-          "expired-callback": () => {
-            setError("reCAPTCHA expired. Please try sending OTP again.");
-          },
-        });
-      } catch (err: any) {
-        console.error("Recaptcha init error:", err);
+    try {
+      if (recaptchaVerifierRef.current) {
+        try {
+          recaptchaVerifierRef.current.clear();
+        } catch {}
+        recaptchaVerifierRef.current = null;
       }
+
+      const container = document.getElementById("recaptcha-container");
+      if (!container) return null;
+
+      const verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+        callback: () => {
+          // reCAPTCHA solved
+        },
+        "expired-callback": () => {
+          setError("reCAPTCHA expired. Please try sending OTP again.");
+        },
+      });
+
+      recaptchaVerifierRef.current = verifier;
+      return verifier;
+    } catch (err: any) {
+      console.error("Recaptcha init error:", err);
+      return null;
     }
-    return recaptchaVerifierRef.current;
   };
 
   // Send SMS OTP
@@ -127,7 +142,7 @@ export function AuthModal({
     try {
       const verifier = setupRecaptcha();
       if (!verifier) {
-        throw new Error("reCAPTCHA initialization failed. Please refresh the page.");
+        throw new Error("Security verification failed. Please refresh the page.");
       }
 
       const formattedPhone = `+91${cleaned}`;
@@ -136,20 +151,19 @@ export function AuthModal({
       setConfirmationResult(confirmation);
       setOtpSent(true);
       setResendCountdown(60);
-      message.success(`OTP sent to +91 ${cleaned}`);
+      message.success(`OTP code sent to +91 ${cleaned}`);
     } catch (err: any) {
       console.error("Phone Auth Error:", err);
       let userMsg = "Failed to send OTP. Please check your phone number.";
       if (err.code === "auth/invalid-phone-number") {
         userMsg = "Invalid phone number format.";
       } else if (err.code === "auth/too-many-requests") {
-        userMsg = "Too many attempts. Please try again after some time.";
+        userMsg = "Too many attempts. Please try again after 2 minutes.";
       } else if (err.code === "auth/quota-exceeded") {
-        userMsg = "SMS quota exceeded for today. Please try again later or use Google Login.";
+        userMsg = "Daily SMS limit reached. You can also log in via Google or Demo.";
       }
       setError(userMsg);
 
-      // Reset recaptcha on error so user can retry
       if (recaptchaVerifierRef.current) {
         try {
           recaptchaVerifierRef.current.clear();
@@ -161,15 +175,15 @@ export function AuthModal({
     }
   };
 
-  // Verify OTP & Synchronize with MongoDB Database
+  // Verify OTP & Synchronize with Database
   const handleVerifyOtp = async () => {
     if (!otpCode || otpCode.length !== 6) {
-      setError("Please enter the complete 6-digit verification code.");
+      setError("Please enter the complete 6-digit OTP sent to your phone.");
       return;
     }
 
     if (!confirmationResult) {
-      setError("Session expired. Please request a new OTP.");
+      setError("OTP session expired. Please request a new OTP.");
       return;
     }
 
@@ -182,7 +196,7 @@ export function AuthModal({
 
       const formattedPhone = `+91 ${phoneNumber.replace(/[^0-9]/g, "")}`;
 
-      // Sync verified phone with backend MongoDB Database
+      // Synchronize with MongoDB database
       const res = await fetch("/api/auth/phone-sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -196,22 +210,22 @@ export function AuthModal({
       const data = await res.json();
 
       if (data.success && data.user) {
-        // Save user session in State & LocalStorage
+        // Save user session
         loginWithUser(data.user);
 
-        message.success(data.isNewUser ? "Account created successfully!" : "Welcome back!");
+        message.success(data.isNewUser ? "Account created successfully!" : "Logged in successfully!");
         onClose();
       } else {
-        throw new Error(data.error || "Failed to synchronize profile");
+        throw new Error(data.error || "Failed to synchronize user account");
       }
     } catch (err: any) {
       console.error("OTP verification error:", err);
       if (err.code === "auth/invalid-verification-code") {
         setError("Invalid OTP code. Please enter the correct 6-digit code.");
       } else if (err.code === "auth/code-expired") {
-        setError("OTP has expired. Please click 'Resend OTP'.");
+        setError("This OTP has expired. Please click 'Resend OTP'.");
       } else {
-        setError(err.message || "Verification failed. Please try again.");
+        setError(err.message || "OTP verification failed. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -244,8 +258,8 @@ export function AuthModal({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            width: 50,
-            height: 50,
+            width: 52,
+            height: 52,
             borderRadius: 14,
             background: "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)",
             color: "#ffffff",
@@ -254,23 +268,23 @@ export function AuthModal({
             marginBottom: 12,
           }}
         >
-          {role === "employer" ? <BankOutlined /> : <UserOutlined />}
+          {role === "employer" ? <BankOutlined /> : <PhoneOutlined />}
         </div>
 
         <Title level={3} style={{ margin: "0 0 6px", fontSize: 22, color: "#0f172a", fontWeight: 700 }}>
-          {role === "employer" ? "Employer Sign In" : "Candidate Sign In"}
+          {role === "employer" ? "Employer Sign In / Register" : "Candidate Sign In / Register"}
         </Title>
         <Text type="secondary" style={{ fontSize: 13 }}>
           {role === "employer"
-            ? "Post verified jobs, review applicant resumes & hire talent"
-            : "Find verified corporate jobs & get direct recruiter calls"}
+            ? "Log in with your Mobile Number to post jobs & hire staff"
+            : "Log in with your Mobile Number to apply for jobs & get calls"}
         </Text>
       </div>
 
       {/* Account Type Selector (Employer vs Candidate) */}
       <div style={{ marginBottom: 18 }}>
         <Text strong style={{ fontSize: 12, color: "#475569", display: "block", marginBottom: 6 }}>
-          Select your profile type:
+          Select profile type:
         </Text>
         <Segmented
           block
@@ -282,7 +296,7 @@ export function AuthModal({
               label: (
                 <Space size={6} style={{ padding: "4px 0" }}>
                   <BankOutlined style={{ color: role === "employer" ? "#ea580c" : undefined }} />
-                  <span style={{ fontWeight: 700 }}>Employer</span>
+                  <span style={{ fontWeight: 700 }}>Employer / HR</span>
                 </Space>
               ),
               value: "employer",
@@ -291,7 +305,7 @@ export function AuthModal({
               label: (
                 <Space size={6} style={{ padding: "4px 0" }}>
                   <UserOutlined style={{ color: role === "seeker" ? "#ea580c" : undefined }} />
-                  <span style={{ fontWeight: 700 }}>Candidate</span>
+                  <span style={{ fontWeight: 700 }}>Job Candidate</span>
                 </Space>
               ),
               value: "seeker",
@@ -311,15 +325,16 @@ export function AuthModal({
         />
       )}
 
-      {/* ─── PHONE OTP AUTHENTICATION FLOW ─── */}
+      {/* ─── PRIMARY: MOBILE NUMBER OTP AUTHENTICATION ─── */}
       {!otpSent ? (
         <div>
           <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#334155", marginBottom: 6 }}>
             Mobile Number (10 Digits)
           </label>
           <Input
+            ref={phoneInputRef}
             size="large"
-            prefix={<span style={{ fontWeight: 700, color: "#64748b", marginRight: 4 }}>+91</span>}
+            prefix={<span style={{ fontWeight: 700, color: "#475569", marginRight: 6 }}>🇮🇳 +91</span>}
             placeholder="Enter mobile number"
             maxLength={10}
             value={phoneNumber}
@@ -327,6 +342,35 @@ export function AuthModal({
             onPressEnter={handleSendOtp}
             style={{ borderRadius: 10, marginBottom: 12 }}
           />
+
+          {/* Value Prop Checklist */}
+          <div
+            style={{
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: 10,
+              padding: "10px 14px",
+              marginBottom: 16,
+              fontSize: 11,
+              color: "#475569",
+              display: "flex",
+              flexDirection: "column",
+              gap: 4,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <CheckCircleFilled style={{ color: "#16a34a", fontSize: 12 }} />
+              <span>Instant 6-digit SMS OTP verification (No password needed)</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <CheckCircleFilled style={{ color: "#16a34a", fontSize: 12 }} />
+              <span>Existing account data &amp; profile restored automatically</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <SafetyCertificateOutlined style={{ color: "#ea580c", fontSize: 12 }} />
+              <span>Direct WhatsApp alerts on application &amp; recruiter calls</span>
+            </div>
+          </div>
 
           <Button
             type="primary"
@@ -336,22 +380,22 @@ export function AuthModal({
             icon={<PhoneOutlined />}
             onClick={handleSendOtp}
             style={{
-              height: 46,
+              height: 48,
               borderRadius: 10,
-              fontSize: 14,
+              fontSize: 15,
               fontWeight: 700,
               background: "#ea580c",
               borderColor: "#ea580c",
-              boxShadow: "0 2px 4px rgba(234, 88, 12, 0.25)",
+              boxShadow: "0 2px 6px rgba(234, 88, 12, 0.3)",
             }}
           >
-            Send OTP Verification SMS
+            Get OTP to Continue
           </Button>
         </div>
       ) : (
         /* OTP Verification Step */
         <div style={{ textAlign: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <Button
               type="text"
               size="small"
@@ -365,7 +409,7 @@ export function AuthModal({
             >
               Change Number
             </Button>
-            <Text style={{ fontSize: 12, color: "#0f172a", fontWeight: 600 }}>
+            <Text style={{ fontSize: 12, color: "#0f172a", fontWeight: 700 }}>
               Sent to +91 {phoneNumber}
             </Text>
           </div>
@@ -379,7 +423,7 @@ export function AuthModal({
             size="large"
             value={otpCode}
             onChange={(val) => setOtpCode(val)}
-            style={{ marginBottom: 16 }}
+            style={{ marginBottom: 18 }}
           />
 
           <Button
@@ -389,19 +433,19 @@ export function AuthModal({
             loading={loading}
             onClick={handleVerifyOtp}
             style={{
-              height: 46,
+              height: 48,
               borderRadius: 10,
-              fontSize: 14,
+              fontSize: 15,
               fontWeight: 700,
               background: "#16a34a",
               borderColor: "#16a34a",
               marginBottom: 10,
             }}
           >
-            Verify &amp; Continue
+            Verify OTP &amp; Login
           </Button>
 
-          <div style={{ marginTop: 6 }}>
+          <div style={{ marginTop: 8 }}>
             {resendCountdown > 0 ? (
               <Text type="secondary" style={{ fontSize: 12 }}>
                 Resend OTP in <strong>{resendCountdown}s</strong>
@@ -448,15 +492,15 @@ export function AuthModal({
         }
         onClick={handleGoogleSignIn}
         style={{
-          height: 46,
+          height: 44,
           borderRadius: 10,
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: 600,
           color: "#1e293b",
           borderColor: "#cbd5e1",
         }}
       >
-        Continue with Google
+        Sign in with Google
       </Button>
 
       {/* Quick Demo Switcher for Testing */}
