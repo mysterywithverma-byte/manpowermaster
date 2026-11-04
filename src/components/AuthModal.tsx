@@ -240,7 +240,7 @@ export function AuthModal({
       if (confirmationResult) {
         // Real Firebase confirmation
         const result = await confirmationResult.confirm(otpCode);
-        firebaseUserUid: firebaseUid = result.user.uid;
+        firebaseUid = result.user.uid;
       } else if (isFallbackOtpMode) {
         // Fallback test verification code check
         if (otpCode !== "123456") {
