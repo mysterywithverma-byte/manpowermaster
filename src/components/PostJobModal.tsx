@@ -4,10 +4,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import confetti from "canvas-confetti";
 import { ALL_CATALOG_JOB_ROLES } from "@/data/businessCatalog";
+import { CATALOG_JOB_TITLES, CATALOG_INDIAN_CITIES } from "@/data/jobTitlesAndCities";
 import {
   Modal,
   Input,
   Select,
+  AutoComplete,
   Button,
   Row,
   Col,
@@ -22,6 +24,9 @@ import {
   Drawer,
   message,
 } from "antd";
+
+const TITLE_AUTOCOMPLETE_OPTIONS = CATALOG_JOB_TITLES.map((t) => ({ value: t, label: t }));
+const CITY_AUTOCOMPLETE_OPTIONS = CATALOG_INDIAN_CITIES.map((c) => ({ value: c, label: c }));
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 dayjs.extend(customParseFormat);
@@ -1227,17 +1232,57 @@ export function PostJobModal({
           )}
 
           <Col xs={24} sm={userBranches.length > 0 ? 12 : 24}>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">
-              Job Location (City / Locality) <span className="text-red-500">*</span>
-            </label>
-            <Input
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[11px] font-bold text-slate-700 block">
+                Job Location / Target City <span className="text-red-500">*</span>
+              </label>
+              <span className="text-[10px] text-slate-400 font-medium">Kaha / Kis city ki vacancy hai</span>
+            </div>
+            <AutoComplete
               size="middle"
-              placeholder="e.g. Mumbai, Dadar, Bangalore, Kanpur, Delhi NCR"
+              placeholder="Search or select hiring city (e.g. Mumbai, Delhi, Bengaluru, Kanpur...)"
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="w-full"
-              prefix={<MapPin className="w-3.5 h-3.5 text-slate-400 mr-1 inline" />}
+              onChange={(val) => setLocation(val)}
+              options={CITY_AUTOCOMPLETE_OPTIONS}
+              filterOption={(inputValue, option) =>
+                (option?.value?.toLowerCase().includes(inputValue.toLowerCase()) ?? false)
+              }
+              className="w-full font-medium"
             />
+            {/* Quick popular city pills */}
+            <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] text-slate-400 font-semibold">Top Cities:</span>
+              {[
+                "Mumbai",
+                "Delhi",
+                "Bengaluru",
+                "Pune",
+                "Hyderabad",
+                "Kanpur",
+                "Lucknow",
+                "Jaipur",
+                "Ahmedabad",
+                "Surat",
+                "Kolkata",
+                "Indore",
+                "Chandigarh",
+                "Noida",
+                "Gurgaon",
+              ].map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setLocation(c)}
+                  className={`px-2 py-0.5 text-[11px] rounded border transition-colors cursor-pointer ${
+                    location === c
+                      ? "bg-blue-600 text-white border-blue-600 font-bold"
+                      : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
           </Col>
         </Row>
 
@@ -1313,25 +1358,49 @@ export function PostJobModal({
 
         <Row gutter={[12, 12]}>
           <Col xs={24} sm={14}>
-            <label className="text-[11px] font-bold text-slate-600 block mb-1">
-              Job Title / Designation <span className="text-red-500">*</span>
-            </label>
-            <Input
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[11px] font-bold text-slate-700 block">
+                Job Title / Designation <span className="text-red-500">*</span>
+              </label>
+              <span className="text-[10px] text-slate-400 font-medium">990+ Titles &amp; Custom</span>
+            </div>
+            <AutoComplete
               size="middle"
-              placeholder="e.g. Telecalling Executive, Retail Counter Sales, Delivery Partner"
+              placeholder="Select or search role (e.g. Accountant, Delivery Partner, Cook, AI Engineer...)"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(val) => setTitle(val)}
+              options={TITLE_AUTOCOMPLETE_OPTIONS}
+              filterOption={(inputValue, option) =>
+                (option?.value?.toLowerCase().includes(inputValue.toLowerCase()) ?? false)
+              }
               className="w-full font-medium"
             />
             {/* Quick popular role pill presets */}
             <div className="mt-2 flex items-center gap-1.5 flex-wrap">
               <span className="text-[10px] text-slate-400 font-semibold">Popular:</span>
-              {POPULAR_JOB_TITLES.slice(0, 5).map((t) => (
+              {[
+                "Telecalling / BPO Executive",
+                "Field Sales Executive",
+                "Delivery Partner / Rider",
+                "Back Office / Data Entry Operator",
+                "Accountant",
+                "Retail Counter Sales",
+                "Cook / Chef",
+                "Security Guard",
+                "Driver",
+                "Teacher",
+                "Nurse",
+                "Software Developer",
+              ].map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setTitle(t)}
-                  className="px-2 py-0.5 text-[11px] rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
+                  className={`px-2 py-0.5 text-[11px] rounded border transition-colors cursor-pointer ${
+                    title === t
+                      ? "bg-blue-600 text-white border-blue-600 font-bold"
+                      : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
+                  }`}
                 >
                   {t}
                 </button>
