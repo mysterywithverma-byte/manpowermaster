@@ -25,7 +25,7 @@ import {
   Input,
   Select,
   Modal,
-  message,
+  App,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -66,6 +66,7 @@ interface JobAlert {
 }
 
 export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProps) {
+  const { message } = App.useApp();
   const { user, savedJobs, updateUser } = useAuth();
   const [tab, setTab] = useState("applications");
   const [applications, setApplications] = useState<any[]>([]);

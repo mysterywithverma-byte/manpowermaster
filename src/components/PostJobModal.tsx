@@ -22,7 +22,7 @@ import {
   TimePicker,
   Checkbox,
   Drawer,
-  message,
+  App,
 } from "antd";
 
 const TITLE_AUTOCOMPLETE_OPTIONS = CATALOG_JOB_TITLES.map((t) => ({ value: t, label: t }));
@@ -276,6 +276,7 @@ export function PostJobModal({
   jobToEdit,
   onSwitchToCandidate,
 }: PostJobModalProps) {
+  const { message } = App.useApp();
   const { user, updateUser, loginAsDemo } = useAuth();
 
   // Employer identity

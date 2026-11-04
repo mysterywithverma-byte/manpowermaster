@@ -11,7 +11,7 @@ import {
   Space,
   Typography,
   Input,
-  message,
+  App,
 } from "antd";
 import {
   UserOutlined,
@@ -46,6 +46,7 @@ export function AuthModal({
   onClose,
   initialRole = "seeker",
 }: AuthModalProps) {
+  const { message } = App.useApp();
   const { loginAsDemo, loginWithUser } = useAuth();
   const [role, setRole] = useState<"seeker" | "employer">(initialRole);
   const [loading, setLoading] = useState(false);

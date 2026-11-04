@@ -18,7 +18,7 @@ import {
   Empty,
   Dropdown,
   Modal,
-  message,
+  App,
 } from "antd";
 import type { MenuProps } from "antd";
 import {
@@ -59,6 +59,7 @@ interface NaukriProfileViewProps {
 }
 
 export function NaukriProfileView({ onOpenProfileBuilder }: NaukriProfileViewProps) {
+  const { message } = App.useApp();
   const { user, updateUser } = useAuth();
   const [isResumeBuilderOpen, setIsResumeBuilderOpen] = useState(false);
   const [activeQuickLink, setActiveQuickLink] = useState("resume");
