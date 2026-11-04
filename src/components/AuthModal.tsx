@@ -82,14 +82,22 @@ export function AuthModal({
   // Clean up recaptcha on unmount
   useEffect(() => {
     return () => {
-      if (recaptchaVerifierRef.current) {
-        try {
-          recaptchaVerifierRef.current.clear();
-          recaptchaVerifierRef.current = null;
-        } catch {}
-      }
+      resetRecaptcha();
     };
   }, []);
+
+  const resetRecaptcha = () => {
+    if (recaptchaVerifierRef.current) {
+      try {
+        recaptchaVerifierRef.current.clear();
+      } catch {}
+      recaptchaVerifierRef.current = null;
+    }
+    if (typeof document !== "undefined") {
+      const wrapper = document.getElementById("recaptcha-wrapper");
+      if (wrapper) wrapper.innerHTML = "";
+    }
+  };
 
   // Resend Countdown Timer
   useEffect(() => {
@@ -100,29 +108,36 @@ export function AuthModal({
     return () => clearTimeout(timer);
   }, [resendCountdown]);
 
-  // Initialize invisible reCAPTCHA
+  // Initialize invisible reCAPTCHA with unique dynamic DOM target
   const setupRecaptcha = () => {
     if (typeof window === "undefined") return null;
 
+    // Reuse existing active instance if available
+    if (recaptchaVerifierRef.current) {
+      return recaptchaVerifierRef.current;
+    }
+
     try {
-      if (recaptchaVerifierRef.current) {
-        try {
-          recaptchaVerifierRef.current.clear();
-        } catch {}
-        recaptchaVerifierRef.current = null;
+      let wrapper = document.getElementById("recaptcha-wrapper");
+      if (!wrapper) {
+        wrapper = document.createElement("div");
+        wrapper.id = "recaptcha-wrapper";
+        document.body.appendChild(wrapper);
       }
+      wrapper.innerHTML = "";
 
-      const container = document.getElementById("recaptcha-container");
-      if (!container) return null;
-      container.innerHTML = "";
+      const targetDiv = document.createElement("div");
+      targetDiv.id = `recaptcha-target-${Date.now()}`;
+      wrapper.appendChild(targetDiv);
 
-      const verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+      const verifier = new RecaptchaVerifier(auth, targetDiv, {
         size: "invisible",
         callback: () => {
           // reCAPTCHA solved
         },
         "expired-callback": () => {
           setError("reCAPTCHA expired. Please try sending OTP again.");
+          resetRecaptcha();
         },
       });
 
@@ -130,6 +145,7 @@ export function AuthModal({
       return verifier;
     } catch (err: any) {
       console.error("Recaptcha init error:", err);
+      resetRecaptcha();
       return null;
     }
   };
@@ -187,13 +203,7 @@ export function AuthModal({
       }
       
       setError(userMsg);
-
-      if (recaptchaVerifierRef.current) {
-        try {
-          recaptchaVerifierRef.current.clear();
-          recaptchaVerifierRef.current = null;
-        } catch {}
-      }
+      resetRecaptcha();
     } finally {
       setLoading(false);
     }
@@ -296,7 +306,7 @@ export function AuthModal({
       }}
     >
       {/* Invisible reCAPTCHA container required by Firebase */}
-      <div id="recaptcha-container"></div>
+      <div id="recaptcha-wrapper"></div>
 
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 20 }}>
