@@ -89,6 +89,16 @@ export interface MockUser {
   isReported?: boolean;
   reportReason?: string;
   blockedReason?: string;
+  // WorkIndia Subscriptions & Unlock Credits
+  subscriptionPlan?: string;
+  subscriptionPlanName?: string;
+  subscriptionExpiresAt?: string;
+  candidateUnlockCredits?: number;
+  unlockedCandidates?: string[];
+  activeJobLimit?: number;
+  jobBoostMultiplier?: number;
+  isVipSeeker?: boolean;
+  vipExpiresAt?: string;
   createdAt: string;
 }
 
@@ -283,6 +293,11 @@ export const INITIAL_USERS: MockUser[] = [
         },
       ],
     },
+    subscriptionPlan: "growth",
+    subscriptionPlanName: "Growth (90 Days)",
+    candidateUnlockCredits: 250,
+    unlockedCandidates: ["cand-1", "cand-4"],
+    activeJobLimit: 5,
     savedJobs: [],
     createdAt: new Date().toISOString(),
   },
@@ -298,6 +313,8 @@ export const INITIAL_USERS: MockUser[] = [
     resumeUrl: "",
     skills: ["React.js", "Next.js", "Node.js", "TypeScript", "Tailwind CSS", "MongoDB"],
     profileCompleted: true,
+    isVipSeeker: true,
+    candidateUnlockCredits: 0,
     savedJobs: [],
     isVerified: true,
     createdAt: new Date().toISOString(),

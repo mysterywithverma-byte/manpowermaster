@@ -22,6 +22,8 @@ import {
   LogIn,
   UserPlus,
   CheckCircle2,
+  Search,
+  Zap,
 } from "lucide-react";
 import { TextLogo } from "@/components/TextLogo";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -99,6 +101,12 @@ export function Navbar({
     },
     ...(role === "employer"
       ? [
+          {
+            key: "employer-candidates",
+            icon: <Search className="w-4 h-4 text-blue-600" />,
+            label: "Candidate Database (10L+)",
+            onClick: () => setActiveView("employer-dashboard"),
+          },
           {
             key: "employer-profile",
             icon: <Building2 className="w-4 h-4 text-orange-600" />,

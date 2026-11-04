@@ -47,7 +47,9 @@ import {
   Upload,
   Sparkles,
 } from "lucide-react";
+import { CrownFilled } from "@ant-design/icons";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import SubscriptionModal from "@/components/SubscriptionModal";
 
 const { Text, Title } = Typography;
 
@@ -76,6 +78,7 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
   const [profileModalTab, setProfileModalTab] = useState("basic");
   const [isResumeBuilderOpen, setIsResumeBuilderOpen] = useState(false);
   const [isViewProfileOpen, setIsViewProfileOpen] = useState(false);
+  const [isVipModalOpen, setIsVipModalOpen] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
   const resumeFileInputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -386,6 +389,32 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
                   {user?.name || "Candidate"}
                 </Title>
                 {user?.isVerified && <VerifiedBadge size="sm" label="Verified" />}
+                {user?.isVipSeeker ? (
+                  <Tag
+                    style={{
+                      backgroundColor: "#fef3c7",
+                      color: "#92400e",
+                      borderColor: "#fde68a",
+                      fontWeight: 700,
+                      borderRadius: 6,
+                      fontSize: 11,
+                      padding: "1px 8px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    <CrownFilled style={{ color: "#d97706" }} /> VIP Fast-Track Pass
+                  </Tag>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsVipModalOpen(true)}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-md px-2 py-0.5 transition-colors cursor-pointer"
+                  >
+                    <CrownFilled className="text-amber-600" /> Get VIP Pass
+                  </button>
+                )}
                 <Tag
                   variant="filled"
                   style={{
@@ -502,6 +531,35 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
           </Space>
         </div>
       </Card>
+
+      {/* WorkIndia VIP Fast-Track Banner */}
+      {!user?.isVipSeeker && (
+        <div className="mb-4 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/5 border border-amber-300 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center font-bold shadow-md shadow-amber-500/20 text-lg flex-shrink-0">
+              <CrownFilled />
+            </div>
+            <div>
+              <div className="font-bold text-sm text-amber-950 flex items-center gap-2">
+                WorkIndia VIP Fast-Track Pass
+                <span className="text-[10px] font-extrabold uppercase bg-amber-500 text-white px-2 py-0.5 rounded-full">
+                  Get Hired 3x Faster
+                </span>
+              </div>
+              <div className="text-xs text-amber-900/80 mt-0.5">
+                Direct WhatsApp chat with verified recruiters, top 1% application ranking &amp; golden profile badge. Starting at just ₹199/month.
+              </div>
+            </div>
+          </div>
+          <Button
+            type="primary"
+            className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs h-9 px-4 border-none shadow-sm rounded-lg"
+            onClick={() => setIsVipModalOpen(true)}
+          >
+            Upgrade to VIP (₹199)
+          </Button>
+        </div>
+      )}
 
       {/* Main Tabs */}
       <Tabs
@@ -764,6 +822,19 @@ export function SeekerDashboard({ onSelectJob, onApplyJob }: SeekerDashboardProp
           />
         </div>
       </Modal>
+
+      {/* WorkIndia Seeker VIP Fast-Track Pass Modal */}
+      <SubscriptionModal
+        visible={isVipModalOpen}
+        onClose={() => setIsVipModalOpen(false)}
+        defaultRole="seeker"
+        userId={user?._id || "user-seeker-1"}
+        onSubscriptionSuccess={() => {
+          if (user) {
+            updateUser({ ...user, isVipSeeker: true });
+          }
+        }}
+      />
     </div>
   );
 }

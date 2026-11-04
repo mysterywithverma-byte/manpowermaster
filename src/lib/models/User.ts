@@ -73,6 +73,16 @@ export interface IUser extends Document {
   isReported?: boolean;
   reportReason?: string;
   blockedReason?: string;
+  // WorkIndia Subscription & Candidate DB Credits
+  subscriptionPlan?: "free" | "starter" | "growth" | "enterprise";
+  subscriptionPlanName?: string;
+  subscriptionExpiresAt?: Date;
+  candidateUnlockCredits?: number;
+  unlockedCandidates?: string[];
+  activeJobLimit?: number;
+  jobBoostMultiplier?: number;
+  isVipSeeker?: boolean;
+  vipExpiresAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -118,6 +128,19 @@ const UserSchema = new Schema<IUser>(
     isReported: { type: Boolean, default: false },
     reportReason: { type: String, default: "" },
     blockedReason: { type: String, default: "" },
+    // WorkIndia Subscription & Candidate DB Credits
+    subscriptionPlan: {
+      type: String,
+      default: "free",
+    },
+    subscriptionPlanName: { type: String, default: "Free Plan" },
+    subscriptionExpiresAt: { type: Date },
+    candidateUnlockCredits: { type: Number, default: 5 },
+    unlockedCandidates: { type: [String], default: [] },
+    activeJobLimit: { type: Number, default: 1 },
+    jobBoostMultiplier: { type: Number, default: 1 },
+    isVipSeeker: { type: Boolean, default: false },
+    vipExpiresAt: { type: Date },
   },
   {
     timestamps: true,

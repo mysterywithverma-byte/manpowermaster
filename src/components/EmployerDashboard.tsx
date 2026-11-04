@@ -36,9 +36,15 @@ import {
   ClockCircleOutlined,
   CheckCircleOutlined,
   StopOutlined,
+  ThunderboltFilled,
+  CrownFilled,
+  SearchOutlined,
 } from "@ant-design/icons";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { PostJobModal } from "@/components/PostJobModal";
+import CandidateDatabaseSearch from "@/components/CandidateDatabaseSearch";
+import SubscriptionModal from "@/components/SubscriptionModal";
+import { PRICING_PLANS } from "@/app/api/subscriptions/plans/route";
 import { formatSalary, timeAgo, getDaysRemaining } from "@/lib/utils";
 
 const { Text, Title } = Typography;
@@ -53,6 +59,8 @@ export function EmployerDashboard({
   onOpenEditProfile,
 }: EmployerDashboardProps) {
   const { user } = useAuth();
+  const [activeTabKey, setActiveTabKey] = useState<"vacancies" | "candidates" | "plans">("vacancies");
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [jobs, setJobs] = useState<MockJob[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>("all");
@@ -239,6 +247,26 @@ export function EmployerDashboard({
           </Space>
 
           <Space wrap size={10}>
+            {/* Credit Counter Pill */}
+            <div
+              onClick={() => setIsPricingModalOpen(true)}
+              className="cursor-pointer bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-lg px-3 py-1.5 flex items-center gap-2 hover:border-amber-400 transition-colors shadow-sm"
+              title="Click to recharge candidate unlock credits"
+            >
+              <ThunderboltFilled className="text-amber-500 text-sm" />
+              <div className="leading-tight">
+                <div className="text-[10px] uppercase font-bold text-amber-800">
+                  {user?.subscriptionPlanName || "Growth Plan"}
+                </div>
+                <div className="text-xs font-black text-amber-950">
+                  {user?.candidateUnlockCredits ?? 250} Credits
+                </div>
+              </div>
+              <span className="text-[10px] font-bold bg-amber-500 text-white rounded px-1.5 py-0.5 ml-1">
+                + Add
+              </span>
+            </div>
+
             {onOpenEditProfile && (
               <Button
                 icon={<EditOutlined />}
@@ -271,6 +299,52 @@ export function EmployerDashboard({
               Post Job Opening
             </Button>
           </Space>
+        </div>
+
+        {/* Tab Navigation: Vacancies vs Candidate Database vs Plans */}
+        <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100/90 rounded-lg border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setActiveTabKey("vacancies")}
+              className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all ${
+                activeTabKey === "vacancies"
+                  ? "bg-white text-orange-600 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              💼 Vacancies &amp; Applicants
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTabKey("candidates")}
+              className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTabKey === "candidates"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <SearchOutlined /> Candidate Database (10L+)
+              <span className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.2 rounded-full font-bold">
+                WorkIndia DB
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTabKey("plans")}
+              className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${
+                activeTabKey === "plans"
+                  ? "bg-white text-amber-600 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <CrownFilled className="text-amber-500" /> Plans &amp; Credits
+            </button>
+          </div>
+
+          <div className="text-xs text-slate-500 font-medium">
+            Active Job Limit: <strong className="text-slate-800">{user?.activeJobLimit || 5}</strong> • Boost: <strong className="text-emerald-600">5x High Rank</strong>
+          </div>
         </div>
 
         {syncMessage && (
@@ -438,8 +512,125 @@ export function EmployerDashboard({
         </div>
       </Card>
 
-      {/* Candidate Pipeline Section */}
-      <div style={{ marginBottom: 32 }}>
+      {/* Conditional Tab Views */}
+      {activeTabKey === "candidates" && (
+        <CandidateDatabaseSearch
+          employerId={user?._id || "user-employer-1"}
+          onOpenPricingModal={() => setIsPricingModalOpen(true)}
+        />
+      )}
+
+      {activeTabKey === "plans" && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-blue-900 to-indigo-950 text-white p-6 rounded-2xl shadow border border-blue-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <span className="text-xs uppercase tracking-wider font-bold text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full border border-amber-400/30">
+                WorkIndia Official Hiring Tiers
+              </span>
+              <h2 className="text-xl md:text-2xl font-black mt-2 text-white">
+                Choose the Right Recruitment Plan
+              </h2>
+              <p className="text-xs md:text-sm text-slate-300 mt-1 max-w-xl">
+                Unlock candidate phone numbers, direct WhatsApp connect, and boost your job rankings across verified applicants.
+              </p>
+            </div>
+            <div className="bg-blue-800/60 backdrop-blur border border-blue-700/60 p-3.5 rounded-xl text-center self-stretch md:self-auto">
+              <div className="text-[11px] text-blue-200 uppercase font-semibold">Your Current Balance</div>
+              <div className="text-2xl font-black text-amber-300 mt-0.5">
+                {user?.candidateUnlockCredits ?? 250} Credits
+              </div>
+              <div className="text-[11px] text-slate-300 mt-0.5">
+                Plan: {user?.subscriptionPlanName || "Growth Scaler"}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {PRICING_PLANS.filter((p) => p.targetRole === "employer").map((plan) => (
+              <div
+                key={plan.id}
+                className={`bg-white rounded-2xl p-6 border flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow relative ${
+                  plan.popular ? "border-blue-600 ring-2 ring-blue-500/20" : "border-slate-200"
+                }`}
+              >
+                {plan.badge && (
+                  <span
+                    className={`absolute -top-3 right-5 text-[10px] uppercase font-bold tracking-wider px-3 py-0.5 rounded-full ${
+                      plan.popular ? "bg-blue-600 text-white shadow" : "bg-slate-800 text-white"
+                    }`}
+                  >
+                    {plan.badge}
+                  </span>
+                )}
+                <div>
+                  <h3 className="font-bold text-lg text-slate-900">{plan.name}</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">{plan.durationLabel}</p>
+
+                  <div className="mt-4 mb-3">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-black text-slate-900">
+                        ₹{plan.price.toLocaleString("en-IN")}
+                      </span>
+                      <span className="text-xs text-slate-400 line-through">
+                        ₹{plan.originalPrice.toLocaleString("en-IN")}
+                      </span>
+                      <Tag color="green" className="text-[10px] font-bold">
+                        {plan.discountPercent}% OFF
+                      </Tag>
+                    </div>
+                    <span className="text-[11px] text-slate-400 block mt-0.5">+ 18% GST Applicable</span>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 my-4 space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between font-bold text-slate-800">
+                      <span className="flex items-center gap-1.5 text-amber-600">
+                        <ThunderboltFilled /> Candidate Unlocks
+                      </span>
+                      <span className="text-blue-700 font-extrabold">{plan.credits} Candidates</span>
+                    </div>
+                    {plan.activeJobLimit && (
+                      <div className="flex items-center justify-between text-slate-600">
+                        <span>Live Active Jobs</span>
+                        <span className="font-semibold text-slate-800">{plan.activeJobLimit} Jobs</span>
+                      </div>
+                    )}
+                    {plan.jobBoostMultiplier && (
+                      <div className="flex items-center justify-between text-slate-600">
+                        <span>Candidate Boost</span>
+                        <span className="font-semibold text-emerald-600">{plan.jobBoostMultiplier}x Views</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2 text-xs text-slate-600 mb-6">
+                    {plan.features.map((feat, idx) => (
+                      <div key={idx} className="flex items-start gap-2">
+                        <CheckCircleFilled className="text-emerald-500 text-xs mt-0.5 flex-shrink-0" />
+                        <span>{feat}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Button
+                  type="primary"
+                  onClick={() => setIsPricingModalOpen(true)}
+                  className={`w-full font-bold h-11 rounded-xl ${
+                    plan.popular ? "bg-blue-600 hover:bg-blue-700 shadow" : "bg-slate-900 hover:bg-black"
+                  }`}
+                >
+                  Activate {plan.name}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTabKey === "vacancies" && (
+        <>
+          {/* Candidate Pipeline Section */}
+          <div style={{ marginBottom: 32 }}>
         <div
           style={{
             display: "flex",
@@ -802,6 +993,8 @@ export function EmployerDashboard({
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* Edit Job Modal */}
       {editingJob && (
@@ -815,6 +1008,17 @@ export function EmployerDashboard({
           jobToEdit={editingJob}
         />
       )}
+
+      {/* WorkIndia Subscription & Credit Packages Modal */}
+      <SubscriptionModal
+        visible={isPricingModalOpen}
+        onClose={() => setIsPricingModalOpen(false)}
+        defaultRole="employer"
+        userId={user?._id || "user-employer-1"}
+        onSubscriptionSuccess={() => {
+          fetchData();
+        }}
+      />
     </div>
   );
 }
