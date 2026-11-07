@@ -457,3 +457,4 @@ export const CANDIDATE_DATABASE: CandidateProfile[] = [
     summary: "Supervised 20,000 sq ft logistics hub managing 1,500 daily shipments with 99.8% dispatch accuracy.",
   },
 ];
+

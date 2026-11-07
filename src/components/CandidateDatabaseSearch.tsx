@@ -531,3 +531,4 @@ export default function CandidateDatabaseSearch({
     </div>
   );
 }
+

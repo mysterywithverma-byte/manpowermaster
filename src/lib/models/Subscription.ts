@@ -58,3 +58,4 @@ const SubscriptionSchema = new Schema<ISubscription>(
 
 export const Subscription =
   models.Subscription || model<ISubscription>("Subscription", SubscriptionSchema);
+

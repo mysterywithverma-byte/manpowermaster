@@ -17,6 +17,12 @@ import { EmployerDashboard } from "@/components/EmployerDashboard";
 import { Footer } from "@/components/Footer";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { JobJsonLd } from "@/components/JobJsonLd";
+import WorkIndiaHeroBar from "@/components/WorkIndiaHeroBar";
+import WorkIndiaCitySelector from "@/components/WorkIndiaCitySelector";
+import WorkIndiaCategoryGrid from "@/components/WorkIndiaCategoryGrid";
+import WorkIndiaQuickFilters from "@/components/WorkIndiaQuickFilters";
+import WorkIndiaFooterDirectory from "@/components/WorkIndiaFooterDirectory";
+import CallHrModal from "@/components/CallHrModal";
 import {
   SlidersHorizontal,
   ArrowUpDown,
@@ -49,10 +55,12 @@ export default function HomePage() {
 
   // Modals state
   const [jobToApply, setJobToApply] = useState<MockJob | null>(null);
+  const [jobToCallHr, setJobToCallHr] = useState<MockJob | null>(null);
   const [isPostJobOpen, setIsPostJobOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authInitialRole, setAuthInitialRole] = useState<"seeker" | "employer">("seeker");
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [isHindi, setIsHindi] = useState(false);
 
   // Filters & Search state
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
@@ -235,6 +243,27 @@ export default function HomePage() {
         onSelectJobId={handleSelectJobById}
       />
 
+      {/* WorkIndia Top Value Bar & Bilingual (Hindi/English) Switcher */}
+      <WorkIndiaHeroBar
+        isHindi={isHindi}
+        onToggleLanguage={() => setIsHindi((prev) => !prev)}
+        onOpenEmployerPosting={() => {
+          if (!user) {
+            setAuthInitialRole("employer");
+            setIsAuthOpen(true);
+          } else {
+            setIsPostJobOpen(true);
+          }
+        }}
+      />
+
+      {/* WorkIndia Quick City Selector Bar */}
+      <WorkIndiaCitySelector
+        selectedCity={filters.location}
+        onSelectCity={(city) => setFilters((prev) => ({ ...prev, location: city }))}
+        isHindi={isHindi}
+      />
+
       {/* Main View Switching with mobile bottom nav padding */}
       <main className="flex-1 bg-transparent pb-20 md:pb-0">
         {activeView === "explore" && (
@@ -248,6 +277,19 @@ export default function HomePage() {
               onSearch={handleSearchSubmit}
               onTagClick={handleTagClick}
               totalJobsCount={jobs.length}
+            />
+
+            {/* WorkIndia Popular Job Categories Grid */}
+            <WorkIndiaCategoryGrid
+              onSelectCategory={(cat) => setFilters((prev) => ({ ...prev, search: cat }))}
+              selectedCategory={filters.search}
+              isHindi={isHindi}
+            />
+
+            {/* WorkIndia Quick Attributes Filter Bar */}
+            <WorkIndiaQuickFilters
+              onQuickFilter={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))}
+              isHindi={isHindi}
             />
 
             {/* Jobs Explorer Grid Container */}
@@ -392,6 +434,7 @@ export default function HomePage() {
                         setJobToApply(j);
                       }
                     }}
+                    onCallHr={(j) => setJobToCallHr(j)}
                     onResetFilters={handleResetFilters}
                   />
                 </div>
@@ -493,6 +536,13 @@ export default function HomePage() {
         )}
       </main>
 
+      {/* WorkIndia Comprehensive City & Role SEO Directory */}
+      <WorkIndiaFooterDirectory
+        onSelectCity={(city) => setFilters((prev) => ({ ...prev, location: city }))}
+        onSelectRole={(role) => setFilters((prev) => ({ ...prev, search: role }))}
+        isHindi={isHindi}
+      />
+
       {/* Footer */}
       <Footer />
 
@@ -513,6 +563,13 @@ export default function HomePage() {
       />
 
       {/* Interactive Modals */}
+
+      {/* WorkIndia Direct Recruiter Call Modal */}
+      <CallHrModal
+        job={jobToCallHr}
+        visible={!!jobToCallHr}
+        onClose={() => setJobToCallHr(null)}
+      />
 
       <ApplyJobModal
         job={jobToApply}

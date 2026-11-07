@@ -16,6 +16,7 @@ import {
   Star,
   Building2,
   MessageCircle,
+  PhoneCall,
 } from "lucide-react";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 
@@ -25,6 +26,7 @@ interface JobCardProps {
   job: MockJob;
   onSelectJob: (job: MockJob) => void;
   onApplyJob: (job: MockJob) => void;
+  onCallHr?: (job: MockJob) => void;
   isSelected?: boolean;
 }
 
@@ -92,7 +94,7 @@ function getJobTags(job: MockJob) {
   return tags.slice(0, 3);
 }
 
-export function JobCard({ job, onSelectJob, onApplyJob, isSelected }: JobCardProps) {
+export function JobCard({ job, onSelectJob, onApplyJob, onCallHr, isSelected }: JobCardProps) {
   const { user, isJobSaved, toggleSaveJob } = useAuth();
   const saved = isJobSaved(job._id);
 
@@ -260,9 +262,33 @@ export function JobCard({ job, onSelectJob, onApplyJob, isSelected }: JobCardPro
 
         {/* Action Buttons */}
         <div
-          className="flex items-center gap-2 w-full sm:w-auto"
+          className="flex items-center gap-1.5 w-full sm:w-auto"
           onClick={(e) => e.stopPropagation()}
         >
+          <Tooltip title={`Direct Recruiter Dial: ${job.recruiterWhatsApp || "+91 98726 20706"}`}>
+            <Button
+              size="middle"
+              icon={<PhoneCall className="w-3.5 h-3.5 text-emerald-700" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onCallHr) {
+                  onCallHr(job);
+                } else {
+                  const phone = job.recruiterWhatsApp?.replace(/[^0-9]/g, "") || "919872620706";
+                  window.location.href = `tel:+${phone}`;
+                }
+              }}
+              className="flex-1 sm:flex-initial h-9 sm:h-7 text-xs font-bold rounded-xl sm:rounded-lg active:scale-95"
+              style={{
+                borderColor: "#86efac",
+                backgroundColor: "#dcfce7",
+                color: "#166534",
+              }}
+            >
+              Call HR
+            </Button>
+          </Tooltip>
+
           <Button
             size="middle"
             icon={<MessageCircle className="w-3.5 h-3.5 text-emerald-600" />}

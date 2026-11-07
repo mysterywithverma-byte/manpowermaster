@@ -38,6 +38,8 @@ import {
   Building,
   CheckCircle,
   MapPin,
+  PhoneCall,
+  ShieldAlert,
 } from "lucide-react";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 
@@ -47,6 +49,7 @@ interface JobSplitViewProps {
   jobs: MockJob[];
   loading: boolean;
   onApplyJob: (job: MockJob) => void;
+  onCallHr?: (job: MockJob) => void;
   onResetFilters: () => void;
 }
 
@@ -71,6 +74,7 @@ export function JobSplitView({
   jobs,
   loading,
   onApplyJob,
+  onCallHr,
   onResetFilters,
 }: JobSplitViewProps) {
   const { user, isJobSaved, toggleSaveJob } = useAuth();
@@ -354,7 +358,7 @@ export function JobSplitView({
           </div>
 
           {/* Action Buttons for Desktop / Header */}
-          <div className="hidden sm:flex items-center gap-2.5">
+          <div className="hidden sm:flex items-center gap-2">
             {isInactive ? (
               <Button
                 disabled
@@ -369,28 +373,52 @@ export function JobSplitView({
                 size="large"
                 icon={<ArrowRight className="w-4 h-4" />}
                 onClick={() => onApplyJob(job)}
-                style={{ fontWeight: 600, borderRadius: 8, flex: 1 }}
+                style={{ fontWeight: 600, borderRadius: 8 }}
               >
                 Apply Now
               </Button>
             )}
 
-          <Tooltip title="Chat with HR on WhatsApp">
-            <Button
-              size="large"
-              icon={<MessageCircle className="w-4 h-4 text-emerald-600" />}
-              onClick={() => handleWhatsApp(job)}
-              style={{
-                borderColor: "#bbf7d0",
-                backgroundColor: "#f0fdf4",
-                fontWeight: 600,
-                borderRadius: 8,
-              }}
-            >
-              WhatsApp HR
-            </Button>
-          </Tooltip>
-        </div>
+            <Tooltip title={`Direct Recruiter Dial: ${job.recruiterWhatsApp || "+91 98726 20706"}`}>
+              <Button
+                size="large"
+                icon={<PhoneCall className="w-4 h-4 text-emerald-700" />}
+                onClick={() => {
+                  if (onCallHr) {
+                    onCallHr(job);
+                  } else {
+                    const phone = job.recruiterWhatsApp?.replace(/[^0-9]/g, "") || "919872620706";
+                    window.location.href = `tel:+${phone}`;
+                  }
+                }}
+                style={{
+                  borderColor: "#86efac",
+                  backgroundColor: "#dcfce7",
+                  color: "#166534",
+                  fontWeight: 700,
+                  borderRadius: 8,
+                }}
+              >
+                Call HR
+              </Button>
+            </Tooltip>
+
+            <Tooltip title="Chat with HR on WhatsApp">
+              <Button
+                size="large"
+                icon={<MessageCircle className="w-4 h-4 text-emerald-600" />}
+                onClick={() => handleWhatsApp(job)}
+                style={{
+                  borderColor: "#bbf7d0",
+                  backgroundColor: "#f0fdf4",
+                  fontWeight: 600,
+                  borderRadius: 8,
+                }}
+              >
+                WhatsApp HR
+              </Button>
+            </Tooltip>
+          </div>
       </div>
 
       {/* Detail Content Sections */}
@@ -675,6 +703,29 @@ export function JobSplitView({
             </Tag>
           </div>
         )}
+
+        {/* WorkIndia 100% Free Placement & Safety Alert */}
+        <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 text-xs text-amber-900 space-y-1.5">
+          <div className="flex items-center gap-1.5 font-bold text-amber-950">
+            <ShieldAlert className="w-4 h-4 text-amber-600" />
+            <span>WorkIndia 100% Free Job Guarantee:</span>
+          </div>
+          <p className="text-[11px] leading-relaxed text-amber-900/90">
+            Never pay any money for interview, registration, uniform, or training. Genuine employers never charge candidates.
+          </p>
+          <div className="pt-1 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => {
+                if (onCallHr) onCallHr(job);
+              }}
+              className="text-[11px] text-red-600 hover:text-red-700 font-bold underline cursor-pointer"
+            >
+              Report Fake / Suspicious Job
+            </button>
+            <span className="text-[10px] text-amber-700/70 font-medium">Verified Direct Listing</span>
+          </div>
+        </div>
       </div>
     </div>
     );
@@ -696,6 +747,7 @@ export function JobSplitView({
               }
             }}
             onApplyJob={onApplyJob}
+            onCallHr={onCallHr}
           />
         ))}
       </div>
