@@ -89,12 +89,10 @@ export function AuthModal({
     if (recaptchaVerifierRef.current) {
       try {
         recaptchaVerifierRef.current.clear();
-      } catch {}
+      } catch (e) {
+        console.warn("Recaptcha clear error:", e);
+      }
       recaptchaVerifierRef.current = null;
-    }
-    if (typeof document !== "undefined") {
-      const wrapper = document.getElementById("recaptcha-wrapper");
-      if (wrapper) wrapper.innerHTML = "";
     }
   };
 
@@ -107,29 +105,18 @@ export function AuthModal({
     return () => clearTimeout(timer);
   }, [resendCountdown]);
 
-  // Initialize invisible reCAPTCHA with unique dynamic DOM target
+  // Initialize invisible reCAPTCHA with a clean DOM target
   const setupRecaptcha = () => {
     if (typeof window === "undefined") return null;
 
-    // Reuse existing active instance if available
-    if (recaptchaVerifierRef.current) {
-      return recaptchaVerifierRef.current;
-    }
+    resetRecaptcha();
+
+    const container = document.getElementById("recaptcha-container");
+    if (!container) return null;
+    container.innerHTML = "";
 
     try {
-      let wrapper = document.getElementById("recaptcha-wrapper");
-      if (!wrapper) {
-        wrapper = document.createElement("div");
-        wrapper.id = "recaptcha-wrapper";
-        document.body.appendChild(wrapper);
-      }
-      wrapper.innerHTML = "";
-
-      const targetDiv = document.createElement("div");
-      targetDiv.id = `recaptcha-target-${Date.now()}`;
-      wrapper.appendChild(targetDiv);
-
-      const verifier = new RecaptchaVerifier(auth, targetDiv, {
+      const verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
         size: "invisible",
         callback: () => {
           // reCAPTCHA solved
@@ -173,19 +160,39 @@ export function AuthModal({
       setConfirmationResult(confirmation);
       setOtpSent(true);
       setIsFallbackOtpMode(false);
+      setOtpCode(""); // Keep OTP input empty so user can enter the received code!
       setResendCountdown(60);
       message.success(`OTP code sent to +91 ${cleaned}`);
     } catch (err: any) {
-      console.warn("Firebase live SMS not available for this number, using smart OTP fallback:", err?.code || err?.message);
-      
-      // Seamlessly transition to OTP verification without throwing errors
-      setConfirmationResult(null);
-      setIsFallbackOtpMode(true);
-      setOtpSent(true);
-      setOtpCode("123456");
-      setResendCountdown(60);
-      message.info(`Verification code for +91 ${cleaned}: 123456`);
+      console.error("Firebase live SMS error:", err);
       resetRecaptcha();
+
+      setConfirmationResult(null);
+      setOtpSent(false); // Stay on phone screen on failure!
+      setOtpCode("");
+
+      let userMsg = "Failed to send SMS OTP. Please check your phone number.";
+      const errorCode = err?.code || "";
+      const errorStr = (err?.message || "").toLowerCase();
+
+      if (errorCode === "auth/quota-exceeded" || errorStr.includes("quota")) {
+        userMsg = "Daily SMS quota exceeded on Firebase free tier (10 SMS/day limit). Please add billing in Firebase Console or use test number (+91 7973369644).";
+      } else if (errorCode === "auth/too-many-requests" || errorStr.includes("too-many-requests")) {
+        userMsg = "Too many SMS requests from this device/number. Please wait a few minutes.";
+      } else if (errorCode === "auth/captcha-check-failed" || errorStr.includes("captcha")) {
+        userMsg = "Security reCAPTCHA verification failed. Please try again.";
+      } else if (errorCode === "auth/invalid-phone-number" || errorStr.includes("invalid-phone-number")) {
+        userMsg = "Invalid mobile number. Please enter a valid 10-digit Indian number.";
+      } else if (errorCode === "auth/billing-not-enabled") {
+        userMsg = "Live SMS requires Firebase Blaze billing plan. Please use test numbers or enable billing.";
+      } else if (errorCode === "auth/app-not-authorized") {
+        userMsg = "Domain 'localhost' is not authorized in Firebase Console (Authentication > Settings > Authorized Domains).";
+      } else if (err?.message) {
+        userMsg = err.message;
+      }
+
+      setError(userMsg);
+      message.error(userMsg);
     } finally {
       setLoading(false);
     }
@@ -202,8 +209,8 @@ export function AuthModal({
     setConfirmationResult(null);
     setIsFallbackOtpMode(true);
     setOtpSent(true);
-    setOtpCode("123456");
-    message.info("Test OTP 123456 generated! Click 'Verify OTP & Login'.");
+    setOtpCode(""); // Keep input empty so user types or uses autofill button
+    message.info("Test Mode activated: Enter OTP '123456' to verify.");
   };
 
   // Verify OTP & Synchronize with Database
@@ -296,7 +303,7 @@ export function AuthModal({
       }}
     >
       {/* Invisible reCAPTCHA container required by Firebase */}
-      <div id="recaptcha-wrapper"></div>
+      <div id="recaptcha-container"></div>
 
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 20 }}>
@@ -434,33 +441,24 @@ export function AuthModal({
               background: "#ea580c",
               borderColor: "#ea580c",
               boxShadow: "0 2px 6px rgba(234, 88, 12, 0.3)",
-              marginBottom: isFallbackOtpMode ? 8 : 0,
+              marginBottom: 0,
             }}
           >
             Get OTP to Continue
           </Button>
 
-          {/* Instant Test OTP / Fallback Bypass button if Firebase fails or in test */}
-          {isFallbackOtpMode && (
+          {/* Quick Test Mode Option */}
+          <div style={{ marginTop: 12, textAlign: "center" }}>
             <Button
-              type="dashed"
-              block
-              size="middle"
+              type="link"
+              size="small"
               icon={<ThunderboltFilled style={{ color: "#f59e0b" }} />}
               onClick={handleProceedWithTestOtp}
-              style={{
-                height: 40,
-                borderRadius: 10,
-                fontSize: 13,
-                fontWeight: 700,
-                borderColor: "#f59e0b",
-                color: "#b45309",
-                background: "#fef3c7",
-              }}
+              style={{ fontSize: 12, color: "#d97706" }}
             >
-              Continue with Test OTP (123456)
+              Or continue with Test Mode (123456)
             </Button>
-          )}
+          </div>
         </div>
       ) : (
         /* OTP Verification Step */
@@ -488,24 +486,33 @@ export function AuthModal({
             Enter 6-Digit OTP Code
           </label>
 
-          {isFallbackOtpMode && (
+          {(isFallbackOtpMode || phoneNumber.includes("7973369644")) && (
             <div
               style={{
-                background: "#f0fdf4",
-                border: "1px solid #bbf7d0",
+                background: "#fffbeb",
+                border: "1px solid #fde68a",
                 borderRadius: 8,
                 padding: "8px 12px",
                 marginBottom: 12,
                 fontSize: 12,
-                color: "#166534",
+                color: "#92400e",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
+                justifyContent: "space-between",
               }}
             >
-              <CheckCircleFilled style={{ color: "#16a34a" }} />
-              <span>Test OTP Code: <strong>123456</strong></span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <CheckCircleFilled style={{ color: "#d97706" }} />
+                <span>Test Code: <strong>123456</strong></span>
+              </div>
+              <Button
+                size="small"
+                type="link"
+                onClick={() => setOtpCode("123456")}
+                style={{ fontSize: 11, padding: 0, height: "auto", fontWeight: 700, color: "#b45309" }}
+              >
+                Auto-fill
+              </Button>
             </div>
           )}
 
